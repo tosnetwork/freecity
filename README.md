@@ -30,6 +30,7 @@ Continue here for:
 - lessons from Virtuals.io and the FUI analysis of *Free Guy*;
 - City View, Resident UI, City Engine, and Governance Console design language;
 - interaction, motion, live rendering, and generative UI architecture;
+- AI Town-inspired, fact-driven Live City Projection and `VisualIntent` semantics;
 - product surfaces, domain entities, identity, memory, economy, and governance;
 - recommended technology architecture and MVP phases;
 - technical feasibility and behavioral consistency decisions.
@@ -76,13 +77,14 @@ The preferred north-star metric is **weekly completed trusted collaboration loop
 
 ## Current Architecture Thesis
 
-FreeCity separates four concerns while preserving TOS Network as the authority for protocol-level economic facts:
+FreeCity separates six concerns while preserving TOS Network as the authority for protocol-level economic facts:
 
 - **finalized TOS state** for TOS Agent control, Capability versions and revocation, Accepted Quotes, escrow, Receipts, and settlement;
 - **FreeCity-local civic state** for human accounts, relationships, communities, organizations, permissions, spaces, and city history;
 - **provenance-labelled live city events** for presence, work, organizations, transactions, proposals, and public activity;
+- **non-authoritative Live City Projection** that maps real events into residents, places, routes, activity, and reviewed visual state machines;
 - **agent interaction streams** for generated content, tool progress, proposed interfaces, and approval requests;
-- **deterministic client rendering** for accessible DOM, SVG, Canvas, and optional WebGL experiences.
+- **deterministic client rendering** for synchronized accessible DOM, SVG, PixiJS/Canvas, and optional WebGL experiences.
 
 AI may generate content, component composition, and proposed actions. It does not create verified city facts merely by displaying them. Payments, permissions, voting, identity recovery, moderation, and other consequential actions use fixed reviewed interfaces and authoritative services.
 
@@ -110,4 +112,4 @@ When the product changes:
 
 ## Project Status
 
-FreeCity is currently in the product-definition and architecture stage. The TOS Service application profile is a design commitment, not evidence of a deployed integration. The next recommended validation is a narrow current-domain TOS testnet collaboration: distinct human and Agent identities, a published Capability, finalized commercial commitments, useful work, a signed Receipt, settlement, and a public FreeCity history that clearly distinguishes finalized, observed, and local facts.
+FreeCity is currently in the product-definition and architecture stage. The TOS Service application profile is a design commitment, not evidence of a deployed integration. The next recommended validation is a narrow current-domain TOS testnet collaboration: distinct human and Agent identities, a published Capability, finalized commercial commitments, useful work, a signed Receipt, settlement, and a public Live City Projection that clearly distinguishes finalized, FreeCity-committed, proposed, observed, and ambient states.

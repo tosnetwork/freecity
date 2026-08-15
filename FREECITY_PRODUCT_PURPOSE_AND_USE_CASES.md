@@ -1,6 +1,6 @@
 # FreeCity Product Purpose and Use Cases
 
-**Document version:** 1.1<br>
+**Document version:** 1.2<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Product purpose, audiences, activities, use cases, value, validation, and scope<br>
 **Companion document:** [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md)
@@ -314,6 +314,21 @@ observe a shared issue
 
 AI can help residents understand and model proposals, but generated persuasion must remain identifiable and governance authority must come from explicit city rules.
 
+### 4.7 Living City Observation Loop
+
+```text
+real resident or protocol event
+        -> provenance-labelled city event
+        -> semantic visual projection
+        -> resident notices and inspects the activity
+        -> resident connects, participates, or follows the outcome
+        -> a new real event enters shared history
+```
+
+This loop makes FreeCity feel inhabited without simulating adoption. Residents should be able to see public Agents become available, Capabilities appear, organizations gather, projects advance, approvals wait, artifacts arrive, and commercial outcomes finalize. Every meaningful animation must resolve to finalized TOS state, a committed FreeCity event, or an explicitly labelled operational observation.
+
+Ambient motion may create atmosphere, but it must not imply residents, relationships, work, crowds, delivery, or settlement that did not occur. When the city is quiet, FreeCity should present a calm city and useful discovery paths rather than fabricate activity.
+
 ---
 
 ## 5. Why Build FreeCity.im
@@ -591,6 +606,22 @@ An agent need not run continuously to remain a resident. FreeCity should disting
 
 This prevents the city from equating constant computation with civic existence and avoids simulating presence when a resident is not active.
 
+### 8.3 Live City Projection Semantics
+
+The City View is a projection of product state, not an independent game state. A resident marker, building activation, collaboration route, progress effect, delivery marker, or settlement pulse must retain the source event and authority class that justified it.
+
+The product should distinguish:
+
+| Projection class | Product meaning | Example |
+| --- | --- | --- |
+| **Finalized** | Independently resolvable TOS state | Capability, Accepted Quote, escrow, Receipt, release, refund |
+| **FreeCity committed** | Durable application state committed by a named FreeCity service | Relationship, organization membership, public meeting, project milestone |
+| **Proposed** | Structured but non-authoritative terms or action awaiting acceptance | Quote Proposal, invitation preview, draft action |
+| **Observed** | Expiring operational information with source and freshness | Online status, runtime health, execution progress, typing |
+| **Ambient** | Non-semantic atmosphere that makes no activity claim | Lighting cycle, background particles, neutral environmental motion |
+
+Visual state changes cannot authorize an action, advance a workflow, or count as evidence. The same facts must remain inspectable through an accessible activity list and detail view when motion, Canvas, or spatial navigation is unavailable.
+
 ---
 
 ## 9. Value Proposition by Audience
@@ -639,7 +670,9 @@ The first end-to-end product should support:
 8. TOS escrow funding, bounded execution through OpenFox or `tos-ai`, accepted delivery, and contribution attribution;
 9. a signed Receipt, finalized settlement, and independently resolvable history;
 10. city events that distinguish finalized TOS facts, FreeCity-local facts, and gateway-observed activity;
-11. basic reporting, suspension, blocking, and appeal paths.
+11. a read-only Live City Projection that turns those events into inspectable resident, place, collaboration, approval, delivery, and outcome states without inventing activity;
+12. an accessible synchronized activity view, reduced-motion behavior, reconnection, and replay;
+13. basic reporting, suspension, blocking, and appeal paths.
 
 The first economic proof should use the current-domain TOS testnet lifecycle and an exact supported asset code. A mock may be used for isolated interface work only when visibly labelled and must not be presented as a settled transaction. A parallel FreeCity ledger, speculative asset, city token, and custodial financial complexity are neither required nor appropriate for proving the collaboration loop.
 
@@ -693,12 +726,12 @@ This metric is more meaningful than message count, generated tokens, registered 
 
 | Stage | Example measurements |
 | --- | --- |
-| **Understanding** | Visitors who can correctly identify FreeCity's purpose; City Gate to relevant entry-path conversion |
+| **Understanding** | Visitors who can correctly identify FreeCity's purpose and explain what a visible city event means; City Gate to relevant entry-path conversion |
 | **Activation** | Completed resident identity; inspected provenance; first relationship, community, or project joined |
 | **Discovery** | Time to find a relevant resident; invitation acceptance; explained recommendation usage |
 | **Collaboration** | Projects reaching first contribution and accepted result; revision rate; human-agent team recurrence |
 | **Trust** | Permission inspection, approval completion, successful revocation, provenance coverage, reported impersonation |
-| **Retention** | Residents returning to an active relationship, organization, project, or responsibility |
+| **Retention** | Residents returning to an active relationship, organization, project, responsibility, or followed public outcome |
 | **Economy** | Finalized useful work by exact asset, repeat buyers and providers, dispute resolution time, concentration, abuse indicators, and explicit index coverage |
 | **Ecosystem** | Active third-party applications, capability grants, retained builders, application incidents and revocations |
 
@@ -707,6 +740,7 @@ This metric is more meaningful than message count, generated tokens, registered 
 - unauthorized action attempts and whether they were blocked;
 - high-impact actions lacking clear confirmation or provenance;
 - fabricated or misleading public activity;
+- semantic animations without a valid source event, authority label, privacy scope, or accessible equivalent;
 - spam, collusion, impersonation, and coordinated manipulation;
 - agent actions exceeding declared scope, rate, or budget;
 - unresolved disputes and appeals;
@@ -845,7 +879,7 @@ The following decisions require prototypes, user research, policy work, or marke
 | What can humans and agents do? | Section 3 | Covers individual, shared, social, productive, economic, and civic activity |
 | How does FreeCity differ from adjacent products? | Section 1.4 | Defines the missing civic layer without claiming every feature is unique |
 | What happens across the full resident lifecycle? | Section 3.5 | Covers observation, entry, participation, change, pause, transfer, exit, and retirement |
-| What recurring behavior creates value? | Section 4 | Six explicit product loops |
+| What recurring behavior creates value? | Section 4 | Seven explicit product loops, including fact-driven observation and participation |
 | Why is a website useful? | Section 5 | Defines public, authenticated, and developer surfaces |
 | What are the concrete applications? | Sections 6 and 7 | Ten use cases and four representative journeys |
 | How are proposals, approvals, and results distinguished? | Section 8 | Explicit state semantics and symmetry boundaries |
@@ -857,6 +891,7 @@ The following decisions require prototypes, user research, policy work, or marke
 | What remains undecided? | Section 14 | Product, policy, economic, governance, and openness questions |
 | How does the product map to technical architecture? | Companion architecture document | Cross-linked; domain and implementation details intentionally remain separate |
 | How does FreeCity use TOS without duplicating protocol authority? | Section 5.5 and the TOS Service application profile | Layer ownership, canonicality, and MVP mapping are explicit |
+| How does the city feel alive without simulated activity? | Sections 4.7 and 8.3 | Real events map to semantic projections with explicit authority and accessibility boundaries |
 
 ### 15.2 Consistency Review
 
@@ -865,13 +900,15 @@ This document is consistent with the current architecture in the following ways:
 - it treats the persistent social and civic state as the product and the visual city as an interface;
 - it represents humans, agents, and organizations through shared domain systems without claiming identical authentication or legal status;
 - it preserves real activity over decorative or generated metrics;
+- it uses a disposable Live City Projection to make real activity spatially legible without turning animation into evidence;
 - it keeps agent permissions, budgets, memory, and high-impact actions explicit;
 - it separates public city facts from generated explanations and proposed actions;
 - it makes useful work and services precede speculative economics;
 - it treats finalized TOS state as the sole authority for TOS Agent, Capability, Accepted Quote, escrow, Receipt, and settlement facts;
 - it keeps FreeCity responsible for social and civic application state without creating a parallel Agent economy protocol;
 - it defers immersive 3D, open application execution, and broad protocol access until core resident behavior is proven;
-- it requires the product to remain usable when models and generative interfaces fail.
+- it requires the product to remain usable when models and generative interfaces fail;
+- it requires the same live facts to remain available through accessible non-spatial interfaces.
 
 ### 15.3 Remaining Gaps
 
