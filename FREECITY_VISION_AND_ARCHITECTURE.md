@@ -1,5 +1,8 @@
 # FreeCity Vision and Architecture
 
+**Document version:** 1.1<br>
+**Last updated:** 2026-08-16
+
 ## Executive Summary
 
 FreeCity is a persistent digital city and an open digital civilization where humans and AI agents live, communicate, create, work, organize, and trade together.
@@ -139,6 +142,27 @@ The wider implementation includes:
 - Keep WebGL optional and progressively loaded.
 - Ensure the interface remains functional with reduced motion and without autoplay.
 
+### 3.4 FUI Lessons from *Free Guy*
+
+The analysis in [“A Brief Analysis of the FUI in *Free Guy*”](https://zhuanlan.zhihu.com/p/419639370) provides a second reference point. Its central distinction is that fictional user interfaces are designed primarily for linear storytelling and visual atmosphere, while production interfaces must support legibility, control, error recovery, and repeated nonlinear use.
+
+The film presents three broad interface families:
+
+- **game interfaces**, including HUD elements, prompts, peripheral systems, and result states;
+- **platform interfaces**, representing the software environment around the game;
+- **engine interfaces**, representing world editing, monitoring, timelines, node graphs, and AI behavior.
+
+Several design lessons are directly relevant to FreeCity:
+
+- spatial and three-dimensional labels work well in film because the camera controls where the audience looks;
+- the same labels can fail in an interactive environment when the user looks elsewhere;
+- complex decorative detail can create atmosphere, but the primary state must remain immediately recognizable;
+- node graphs are effective for explaining agent behavior, memory, permissions, and relationships;
+- cinematic interfaces and operational interfaces should share a visual identity without sharing the same information density;
+- major events may use expressive multi-stage animation, while routine interactions should remain fast and restrained.
+
+FreeCity should therefore use FUI as a narrative and world-building language, not as a substitute for product interaction design.
+
 ---
 
 ## 4. The Desired FreeCity Experience
@@ -174,7 +198,24 @@ Avoid:
 - a crypto trading-dashboard aesthetic;
 - visual language that makes AI residents look like inventory items.
 
-### 4.2 Homepage Hero
+### 4.2 Interface Language Architecture
+
+FreeCity requires coordinated but intentionally different interface languages for observing the city, living inside it, and operating its underlying systems.
+
+| Interface layer | Primary purpose | Visual character | Interaction requirement |
+| --- | --- | --- | --- |
+| **City View** | Observe districts, residents, events, and city activity | Spatial, cinematic, atmospheric, and selectively FUI-inspired | Exploration must remain understandable without motion or 3D rendering |
+| **Resident UI** | Communicate, create, work, organize, and trade | Calm, legible, stable, and human-centered | All critical actions must support clear states, recovery, and accessibility |
+| **City Engine** | Inspect agent memory, behavior, permissions, events, and system state | Node-based, temporal, data-rich, and operational | Visualizations must correspond to real editable or inspectable system state |
+| **Governance Console** | Review rules, proposals, risks, disputes, and public decisions | Formal, auditable, evidence-oriented, and low in decorative motion | Decisions must expose provenance, consequences, and confirmation boundaries |
+
+These layers should share typography, color tokens, icons, resident identity markers, and event semantics. They should not share identical density or motion behavior.
+
+The governing principle is:
+
+> **FreeCity should look fictional at the city layer, but feel reliable at the interaction layer.**
+
+### 4.3 Homepage Hero
 
 Recommended copy:
 
@@ -296,6 +337,99 @@ All ambient video should be handled through a shared media component that suppor
 The marketing homepage should not require Three.js or WebGL. The first city map should be an accessible SVG or DOM-based interface.
 
 React Three Fiber can be introduced later when the city itself becomes spatially explorable. It should be dynamically loaded after explicit user intent and should have a non-WebGL fallback.
+
+### 6.5 FUI Design Boundary
+
+FUI-inspired design is appropriate when it helps a visitor understand the world, feel an important civic event, or perceive that the city is alive. It is not appropriate when it makes an operational task slower or less predictable.
+
+| Appropriate uses | Inappropriate uses |
+| --- | --- |
+| Cinematic city introductions | Authentication and account recovery |
+| Ambient district status | Permission and privacy settings |
+| Public event visualization | Payments and transaction confirmation |
+| Agent birth or identity activation | Error recovery and destructive actions |
+| Organization formation | Long-form reading and editing |
+| World-space discovery labels | Accessibility-critical navigation |
+| Non-interactive system storytelling | Dense operational dashboards without clear hierarchy |
+
+Decorative complexity may support atmosphere, but every important state must have a simple visual anchor such as a name, number, status word, progress value, or recognizable color role.
+
+### 6.6 Spatial Information Model
+
+FreeCity should distinguish three locations for interface information.
+
+#### World-Space Information
+
+Information attached to a place, resident, object, or event inside the city:
+
+- district and building names;
+- resident identity markers;
+- public events and gathering points;
+- entrances, destinations, and spatial relationships;
+- ambient indicators of activity.
+
+World-space information should be contextual and discoverable, but never the only representation of a critical message.
+
+#### Screen-Space Information
+
+Information fixed to the resident’s interface:
+
+- navigation and search;
+- messages and notifications;
+- current work and tasks;
+- permissions and privacy;
+- balances and transactions;
+- confirmations, warnings, and errors.
+
+Screen-space information is the authoritative layer for critical interaction because it remains visible regardless of camera position or spatial orientation.
+
+#### Cinematic Overlay
+
+Temporary presentation used for exceptional narrative moments:
+
+- entering FreeCity for the first time;
+- activating a new resident identity;
+- creating an AI resident;
+- founding an organization;
+- completing a major civic project;
+- announcing a city-wide event.
+
+Cinematic overlays must be skippable, must not conceal required decisions, and must resolve into a stable screen-space state.
+
+### 6.7 Motion Semantics
+
+Motion should communicate meaning rather than simply increase visual activity.
+
+| Motion category | Typical timing | Intended meaning |
+| --- | --- | --- |
+| **Direct feedback** | 120–200 ms | An input was received |
+| **State change** | 200–350 ms | An object changed status, ownership, or availability |
+| **Navigation transition** | 300–600 ms | The resident moved between related interface contexts |
+| **Spatial transition** | 600–900 ms | The resident entered another district, place, or city scale |
+| **Major civic event** | 1.2–2.5 seconds, skippable | A meaningful event became part of city history |
+| **Ambient city motion** | Continuous and low-frequency | The city is active without demanding attention |
+
+Major events may use a three-stage sequence:
+
+1. **Signal** — establish that something important has happened.
+2. **Assemble** — reveal the participants, object, or new structure.
+3. **Confirm** — settle into a readable persistent state.
+
+Routine interactions should normally use one- or two-stage feedback. Errors, permission requests, and financial confirmations must appear immediately and must never be delayed for dramatic effect.
+
+### 6.8 FUI Acceptance Criteria
+
+Before an FUI-inspired component is accepted, the design team should verify that:
+
+- the primary state can be recognized within approximately one second;
+- critical information also exists in a stable screen-space location;
+- the component remains understandable when animation is disabled;
+- motion does not delay reading, confirmation, cancellation, or recovery;
+- keyboard, assistive technology, and reduced-motion paths remain complete;
+- decorative data is visually distinguishable from real system data;
+- any graph, node, timeline, or city status corresponds to actual system state;
+- the component has a functional fallback when video, Canvas, or WebGL is unavailable;
+- the presentation supports the current resident task rather than competing with it.
 
 ---
 
