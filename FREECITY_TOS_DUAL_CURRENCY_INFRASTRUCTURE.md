@@ -1,9 +1,9 @@
 # FreeCity TOS Dual-Currency Infrastructure
 
-**Document version:** 1.0<br>
+**Document version:** 1.1<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Audited TOS infrastructure baseline, dual-currency target architecture, implementation sequence, interfaces, readiness gates, and acceptance criteria<br>
-**Companion documents:** [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), and [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md)<br>
+**Companion documents:** [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), [District Simulation Runtime](FREECITY_DISTRICT_SIMULATION_RUNTIME.md), and [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md)<br>
 **Normative protocol reference:** [TOS Service specification](https://github.com/tosnetwork/tos-service-spec) and its [FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md)
 
 ## Status and Evidence Rule
@@ -387,6 +387,8 @@ FreeCity needs a TOS Projection service that:
 - can be deleted and rebuilt without changing economic or civic state.
 
 Live balances remain live chain-derived values. A cached balance must expose freshness and must not authorize spending.
+
+The [District Simulation Runtime](FREECITY_DISTRICT_SIMULATION_RUNTIME.md) consumes a payment or protocol transition only through this verified projection and a versioned external-event adapter. The runtime may unlock a gameplay consequence after the applicable finalized event, but it cannot submit economic consent on a resident's behalf, infer finality from a client or room server, alter the TOS lifecycle, or turn a pending animation into settlement.
 
 ### 6.8 Security and Operations
 

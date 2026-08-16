@@ -1,9 +1,9 @@
 # FreeCity Product Purpose and Use Cases
 
-**Document version:** 1.5<br>
+**Document version:** 1.6<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Product purpose, audiences, activities, use cases, value, validation, and scope<br>
-**Companion documents:** [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md), and [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)
+**Companion documents:** [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), [District Simulation Runtime](FREECITY_DISTRICT_SIMULATION_RUNTIME.md), [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md), and [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)
 
 ## Executive Summary
 
@@ -762,7 +762,7 @@ The first playable season is **District Zero**:
 - one ceremonial or narrowly bounded District Steward election; and
 - an accessible season Archive and evidence-based retrospective.
 
-External residents must not be invited until an implemented build passes the P0 launch checklist and a ten-person compressed internal dry run. Recruitment, staffing, the daily schedule, TOS testing, incident handling, research, and stop conditions are defined in the [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md).
+External residents must not be invited until an implemented build passes the P0 launch checklist and a ten-person compressed internal dry run. The gameplay state must also pass the ordering, idempotency, deterministic replay, bounded offline progression, recovery, projection rebuild, and accessible synchronization gates in [District Simulation Runtime](FREECITY_DISTRICT_SIMULATION_RUNTIME.md). Recruitment, staffing, the daily schedule, TOS testing, incident handling, research, and stop conditions are defined in the [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md).
 
 ---
 
@@ -815,6 +815,7 @@ This metric is more meaningful than message count, generated tokens, registered 
 - memory access, correction, deletion, and export failures;
 - accessibility completion rates for critical tasks;
 - core-task availability when models or generated UI are unavailable;
+- duplicate gameplay effects, replay divergence, overdue scheduled effects, failed catch-up, stale client state, and inaccessible renderer-only actions;
 - distribution of economic opportunity across residents and operators.
 
 ---
@@ -962,6 +963,7 @@ Every monetary relationship must use native TOS or an exact supported stablecoin
 | How are future features checked for consistency? | Section 13 | Ten product decision tests |
 | What remains undecided? | Section 14 | Product, policy, economic, governance, and openness questions |
 | How does the product map to technical architecture? | Companion architecture document | Cross-linked; domain and implementation details intentionally remain separate |
+| How do player inputs become ordered, replayable consequences while residents are online or away? | District Simulation Runtime companion | Authority, command, time, offline, persistence, synchronization, failure, framework, and acceptance boundaries are explicit |
 | How does FreeCity use TOS without duplicating protocol authority? | Section 5.5 and the TOS Service application profile | Layer ownership, canonicality, and MVP mapping are explicit |
 | What TOS dual-currency infrastructure exists and what remains missing? | TOS Dual-Currency Infrastructure companion | Audited account, Jetton, wallet, index, escrow, Gateway, Gas-sponsorship, asset-registry, payment-orchestration, projection, and governance status is explicit |
 | How does the city feel alive without simulated activity? | Sections 4.7 and 8.3 | Real events map to semantic projections with explicit authority and accessibility boundaries |

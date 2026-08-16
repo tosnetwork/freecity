@@ -1,10 +1,10 @@
 # FreeCity Playable Experience V1
 
-**Document version:** 1.1<br>
+**Document version:** 1.2<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Implementable player experience, core game loops, content grammar, progression, social play, economy, civic play, interface, telemetry, and acceptance criteria<br>
 **Launch scenario:** District Zero, a fourteen-day controlled-entry season<br>
-**Companion documents:** [Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md), and [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)<br>
+**Companion documents:** [Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [District Simulation Runtime](FREECITY_DISTRICT_SIMULATION_RUNTIME.md), [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md), and [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)<br>
 **Normative protocol reference:** [TOS Service FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md)
 
 ## Status and Evidence Rule
@@ -573,10 +573,12 @@ durable TOS, FreeCity, and authorized Agent facts
   -> factual, permission, safety, relevance, repetition, and accessibility validation
   -> optional bounded language generation
   -> final validation and moderation policy
+  -> validated card proposal
+  -> District Runtime assignment, expiry, and supersession
   -> resident briefing
 ```
 
-The language model may adapt explanation, tone, summary, and dialogue. It may not invent a resident, relationship, payment, vote, office, delivery, crowd, or authoritative outcome.
+The language model may adapt explanation, tone, summary, and dialogue. It may not invent a resident, relationship, payment, vote, office, delivery, crowd, or authoritative outcome. The compiler proposes a card; it cannot assign the card, spend Focus, commit a choice, or schedule a consequence directly. Those transitions use the [District Simulation Runtime](FREECITY_DISTRICT_SIMULATION_RUNTIME.md).
 
 ### 11.3 Relevance Ranking
 
@@ -794,6 +796,8 @@ V1 adds FreeCity-local objects:
 
 These objects may reference TOS facts. None is an alternative Agent identity, Capability, asset, payment, Receipt, vote, or settlement authority.
 
+The versioned command, runtime event, scheduled-effect, snapshot, replay, and synchronization records that operate these objects are defined in [District Simulation Runtime](FREECITY_DISTRICT_SIMULATION_RUNTIME.md). The runtime owns bounded gameplay mechanics; reviewed FreeCity services retain civic records, and TOS retains protocol and economic facts.
+
 ### 15.2 Service Boundaries
 
 ```mermaid
@@ -806,14 +810,18 @@ flowchart LR
     C --> V["Factual, permission, safety, relevance, repetition, and accessibility validation"]
     V --> G["Optional bounded language generation"]
     G --> F["Final validation"]
-    F --> D["Decision cards"]
+    F --> P["Validated card proposal"]
+    P --> R["District Simulation Runtime"]
+    R --> D["Assigned Decision Card"]
     D --> X["Permissioned choice command"]
-    X --> S["FreeCity service or TOS authority path"]
-    S --> E["Durable consequence event"]
-    E --> R["Live City Projection and Archive"]
+    X --> R
+    R --> S["FreeCity service or TOS authority path where required"]
+    R --> E["Durable district consequence event"]
+    S --> E
+    E --> W["Live City Projection, Today, and Archive"]
 ```
 
-The event compiler cannot commit the consequence it describes. Choice commands pass through the same reviewed domain services used by non-game interfaces.
+The event compiler cannot commit the consequence it describes. The District Runtime orders every accepted gameplay command, applies the pinned ruleset, and emits replayable output. A choice that needs a civic or TOS action passes through the same reviewed authority used by non-game interfaces; the runtime waits for the applicable committed or finalized result instead of predicting it.
 
 ### 15.3 Ordering and Replay
 
@@ -825,6 +833,8 @@ Cards and consequences carry stable IDs, causal references, authority class, ver
 - cast a ballot twice;
 - replay a reaction as a new fact; or
 - lose a committed choice while showing the previous options.
+
+Every accepted district command receives one monotonic `district_sequence`, one idempotent result, and an explicit causal chain. Runtime logic uses a pinned ruleset, explicit `step_time`, and recorded random seed; it does not call a model, network service, browser clock, or renderer. Versioned snapshots and output checksums make the season replayable. Offline catch-up processes only authorized and scheduled effects in bounded batches and creates the While You Were Away summary from committed events.
 
 ### 15.4 Telemetry
 
@@ -894,9 +904,12 @@ V1 requires:
 - relationship invitations and one repair episode;
 - Circles and one multi-role shared project;
 - Beacon projection based only on committed contributions;
+- the District Runtime ordered command journal, idempotency, deterministic step, scheduled effects, snapshots, checksums, replay, correction, recovery, and compact client deltas;
+- bounded offline catch-up that cannot act for a human, fabricate Agent activity, vote, change privacy, or move value;
+- PixiJS rendering through semantic state with synchronized accessible DOM, while Colyseus, Phaser, and optional 3D remain non-required extensions;
 - at least seventy-two reviewed templates across six event families, plus final validation and authored fallback;
 - telemetry, reporting, block, suspension, moderation, appeal, and support;
-- mobile, keyboard, reduced-motion, and screen-reader critical-path verification; and
+- mobile, keyboard, reduced-motion, and screen-reader critical-path verification;
 - explicit non-production labels for unavailable TOS features;
 - when any testnet economic flow is enabled, a signed exact-asset registry entry, wallet-binding rule, Gas-payer policy, idempotency rule, finality resolver, and support path; and
 - no requirement to acquire TOS merely to enter, play, or inspect a stablecoin-priced opportunity.
@@ -935,6 +948,10 @@ The first external invitation must not be sent until all P0 items and the follow
 - [ ] every factual card retains source and authority class;
 - [ ] no critical path depends on generative output;
 - [ ] reconnect and retry tests create no duplicate Focus, invitation, payment, or ballot action;
+- [ ] deterministic replay fixtures reproduce the expected state checksum and ordered consequences;
+- [ ] worker failure before and after commit, Redis loss, projection rebuild, and snapshot restore pass recovery tests;
+- [ ] offline catch-up is bounded and the While You Were Away summary cites only committed events;
+- [ ] no model, network call, direct wall-clock read, client frame, or room server participates in deterministic gameplay calculation;
 - [ ] all payment-like screens are either disabled and labelled or backed by the applicable TOS path;
 - [ ] every enabled payment resolves an active exact-asset registry entry, identifies the Gas payer, prevents duplicate submission, and distinguishes broadcast from finality;
 - [ ] accessibility review passes for onboarding, briefing, choice, consequence, report, and support;
@@ -957,6 +974,7 @@ This specification closes the design gaps identified in the previous gameplay au
 - progression is visible across story, craft, relationships, artifacts, place, and civic contribution;
 - social density is created through one compact district, small Circles, complementary roles, and a goal no actor can complete alone;
 - content uses reviewed grammar and factual validation rather than infinite generated filler;
+- gameplay uses ordered, idempotent, deterministic, replayable district state rather than browser state, model output, or decorative simulation;
 - failure creates repair instead of paid recovery;
 - economy follows experienced value and remains entirely inside the TOS Network asset boundary;
 - civic play begins after shared history and grants only bounded, appealable authority; and

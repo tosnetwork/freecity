@@ -1,11 +1,11 @@
 # FreeCity District Zero First Cohort Playbook
 
-**Document version:** 1.1<br>
+**Document version:** 1.2<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Recruitment, readiness, staffing, schedule, live operations, research, safety, TOS economic validation, metrics, stop conditions, and post-cohort decisions<br>
 **Cohort format:** Approximately fifty adult human residents and fifty sponsored AI residents over fourteen days<br>
 **Playable specification:** [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md)<br>
-**Companion documents:** [Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), and [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)
+**Companion documents:** [Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [District Simulation Runtime](FREECITY_DISTRICT_SIMULATION_RUNTIME.md), and [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)
 
 ## Operational Status
 
@@ -202,7 +202,11 @@ Do not request wallet seed phrases, unnecessary identity documents, financial ho
 - [ ] every card has a source, authority class, expiry, and accessible summary;
 - [ ] the district has no fake resident, relationship, economic, or governance activity;
 - [ ] the Beacon accepts only attributable committed contributions;
-- [ ] reconnect and retry tests create no duplicate command; and
+- [ ] reconnect and retry tests create no duplicate command;
+- [ ] runtime release fixtures reproduce the expected state checksum and ordered consequence events;
+- [ ] worker crash, Redis loss, snapshot restore, projection rebuild, and bounded offline catch-up tests pass;
+- [ ] While You Were Away summaries cite only committed events and cannot imply unauthorized Agent or human action;
+- [ ] the district remains usable through the synchronized accessible DOM when the PixiJS projection is disabled;
 - [ ] an authored degraded mode works without model generation.
 
 ### 4.2 Content Gate
@@ -259,7 +263,7 @@ If the TOS gate does not pass, the cohort continues without a committed payment.
 
 ### 4.6 Internal Dry Run
 
-Ten internal testers who did not author the relevant flow must complete a forty-eight-hour compressed season. The dry run includes onboarding, return, Circle, conflict, Beacon contribution, degraded Agent runtime, TOS resolver failure, report, moderator correction, campaign, ballot retry, and Archive close.
+Ten internal testers who did not author the relevant flow must complete a forty-eight-hour compressed season. The dry run includes onboarding, return, Circle, conflict, Beacon contribution, duplicate and stale command delivery, runtime worker failure before and after commit, Redis loss, snapshot restore, deterministic replay, bounded offline catch-up, projection rebuild, degraded Agent runtime, disabled PixiJS projection, TOS resolver failure, report, moderator correction, campaign, ballot retry, and Archive close.
 
 External launch requires a signed readiness record naming the reviewed commit, deployment, known issues, exceptions, owners, and decision time.
 
@@ -302,6 +306,7 @@ Outside live windows, publish response expectations. Do not imply continuous hum
 Staff require a private operations console with:
 
 - cohort and deployment version;
+- District Runtime version, ruleset, queue age, last step, snapshot age, replay status, and suspended command types;
 - active and stale resident sessions;
 - Agent runtime health and autonomy scope;
 - card pipeline, source, validation, assignment, and cancellation;
@@ -499,6 +504,7 @@ Do not make an external chat server the only place to receive critical informati
 ### Before the Resident Day
 
 - review runtime, resolver, moderation, and accessibility health;
+- verify district queue age, scheduled-effect lateness, snapshot age, replay status, and projection checkpoint health;
 - inspect scheduled cards and unresolved consequences;
 - check actor, template, and option repetition;
 - verify every factual and economic source;
@@ -852,6 +858,7 @@ The Cohort Director records **GO**, **CONDITIONAL GO**, or **NO-GO** for each ca
 
 - [ ] implemented core loop;
 - [ ] internal dry run;
+- [ ] deterministic runtime replay, recovery, catch-up, and projection-rebuild gates;
 - [ ] content inventory;
 - [ ] Agent scope and suspension;
 - [ ] TOS feature accuracy;
