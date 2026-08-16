@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @freecity/web dev",
+    "dev:api": "pnpm --filter @freecity/application-api dev",
     "db:migrate": "node-pg-migrate -m migrations --migrations-schema public up",
     "replay": "pnpm --filter @freecity/district-runtime replay",
     "lint": "eslint .",

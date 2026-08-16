@@ -43,8 +43,10 @@ SQL in one transaction.
 contracts        ← (nothing internal)
 district-rules   ← contracts
 client-world     ← contracts
-application-api  ← contracts
 district-runtime ← contracts, district-rules
+application-api  ← contracts, district-runtime   (command gateway reuses the
+                   journal/step/catch-up library; the worker process stays
+                   the only scheduled-wake owner)
 web              ← contracts, client-world
 ```
 
@@ -205,9 +207,10 @@ demonstrably executable.
 
 ## 7. Open decisions and spec ambiguities (resolve before/during PR noted)
 
-1. **Auth for Phase 1** (PR4): Playable P0 requires "passkey or equally
-   low-friction entry". Proposal: dev email-code login now, passkeys before
-   the external cohort. Needs confirmation.
+1. **Auth for Phase 1** — **resolved in PR4**: dev email-code login
+   (six-digit single-use code, ten-minute expiry, bearer sessions; the code
+   is returned in-response only under `authMode: "dev"`). Passkeys are a
+   hard requirement before any external cohort.
 2. **Focus refresh rule** — **resolved in PR2**: refresh sets Focus to at
    least 3 at the UTC day-key rollover, applied inside
    `runtime.run_due_effects`; being away several days grants at most one
@@ -216,9 +219,10 @@ demonstrably executable.
 3. **Card expiry** — **resolved in PR2**: template-defined
    `expiresAfterHours` (default 48, max 336); expiry emits `CardExpired`
    plus a non-punitive Archive entry.
-4. **SSE vs WebSocket** (PR4): Runtime allows either. Proposal: SSE
-   (simpler reconnection semantics, no bidirectional need — commands go over
-   HTTP POST).
+4. **SSE vs WebSocket** — **resolved in PR4**: SSE with
+   `?from=<sequence>` / `Last-Event-ID` resume over the committed event log
+   (DB-tail polling for now; a Redis notify optimization may come with
+   PR5/PR6). Commands go over HTTP POST.
 5. **Immediate reaction representation** — **resolved in PR2**: it is a
    committed `ImmediateReactionRecorded` event carrying the authored
    reaction text, not derived UI text.

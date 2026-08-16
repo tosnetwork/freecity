@@ -26,4 +26,6 @@ export type { ReplayReport } from "./replay.js";
 export { drainOutbox } from "./outbox.js";
 export type { OutboxEvent } from "./outbox.js";
 export { findDueDistricts, hasDueEffects, syncScheduledEffects } from "./schedule.js";
-export { runWorkerOnce } from "./worker.js";
+export { catchUpDistrict, runWorkerOnce } from "./worker.js";
+export { createTestDatabase } from "./testdb.js";
+export type { TestDatabase } from "./testdb.js";
