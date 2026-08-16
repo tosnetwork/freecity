@@ -203,6 +203,159 @@ describe("consequences and Archive", () => {
   });
 });
 
+async function loginAs(email: string): Promise<string> {
+  const request = await app.inject({
+    method: "POST",
+    url: "/api/auth/request-code",
+    payload: { email },
+  });
+  const verify = await app.inject({
+    method: "POST",
+    url: "/api/auth/verify",
+    payload: { email, code: request.json().devCode },
+  });
+  return verify.json().token as string;
+}
+
+async function ensureListening(): Promise<string> {
+  let address = app.server.address();
+  if (address === null || typeof address === "string") {
+    await app.listen({ port: 0, host: "127.0.0.1" });
+    address = app.server.address();
+  }
+  if (address === null || typeof address === "string") throw new Error("no port");
+  return `http://127.0.0.1:${address.port}`;
+}
+
+describe("P1 regression: idempotency keys are resident-scoped", () => {
+  it("two residents reusing the same client Idempotency-Key stay independent", async () => {
+    const bobToken = await loginAs("bob@example.com");
+    const danaToken = await loginAs("dana@example.com");
+    const enter = async (t: string, name: string) =>
+      (
+        await app.inject({
+          method: "POST",
+          url: "/api/season/enter",
+          headers: { authorization: `Bearer ${t}` },
+          payload: { role: "creator", displayName: name },
+        })
+      ).json().residentId as string;
+    const bobResidentId = await enter(bobToken, "Bob");
+    const danaResidentId = await enter(danaToken, "Dana");
+
+    const sharedKey = "shared-client-key";
+    const bobChoose = await app.inject({
+      method: "POST",
+      url: `/api/cards/relationship-boundary-test:${bobResidentId}/choose`,
+      headers: { authorization: `Bearer ${bobToken}`, "idempotency-key": sharedKey },
+      payload: { optionId: "opt-share" },
+    });
+    expect(bobChoose.statusCode).toBe(200);
+    expect(bobChoose.json().duplicate).toBe(false);
+
+    const danaChoose = await app.inject({
+      method: "POST",
+      url: `/api/cards/relationship-boundary-test:${danaResidentId}/choose`,
+      headers: { authorization: `Bearer ${danaToken}`, "idempotency-key": sharedKey },
+      payload: { optionId: "opt-share" },
+    });
+    expect(danaChoose.statusCode).toBe(200);
+    expect(danaChoose.json().duplicate).toBe(false); // not mistaken for Bob's command
+    expect(danaChoose.json().commandId).not.toBe(bobChoose.json().commandId);
+
+    const danaToday = await app.inject({
+      method: "GET",
+      url: "/api/today",
+      headers: { authorization: `Bearer ${danaToken}` },
+    });
+    expect(danaToday.json().focus).toBe(2); // Dana's choice actually executed
+  });
+
+  it("a resident's default key cannot be pre-claimed by another resident", async () => {
+    const eveToken = await loginAs("eve@example.com");
+    await app.inject({
+      method: "POST",
+      url: "/api/season/enter",
+      headers: { authorization: `Bearer ${eveToken}` },
+      payload: { role: "reporter", displayName: "Eve" },
+    });
+    const victimCard = `district-competing-plans:${residentId}`;
+    // Eve submits Ada's default composite key as her own client key. It lands
+    // on Eve's namespace (and is rejected there: not her card) …
+    const eve = await app.inject({
+      method: "POST",
+      url: `/api/cards/${victimCard}/choose`,
+      headers: {
+        authorization: `Bearer ${eveToken}`,
+        "idempotency-key": `choose:${victimCard}:opt-exhibition`,
+      },
+      payload: { optionId: "opt-exhibition" },
+    });
+    expect(eve.statusCode).toBe(409);
+    expect(eve.json().result.code).toBe("CARD_NOT_FOUND");
+    // … while Ada's later default-key submission is untouched by it. (Her
+    // card was declined earlier in the suite, so the command itself is
+    // rejected — the point is that it is HER fresh command, not Eve's
+    // duplicate.)
+    const ada = await app.inject({
+      method: "POST",
+      url: `/api/cards/${victimCard}/choose`,
+      headers: authHeaders(),
+      payload: { optionId: "opt-exhibition" },
+    });
+    expect(ada.json().duplicate).toBe(false);
+    expect(ada.json().commandId).not.toBe(eve.json().commandId);
+  });
+});
+
+describe("P1 regression: season entry heals from partial state", () => {
+  it("recovers when membership was committed but runtime commands were lost", async () => {
+    const carolToken = await loginAs("carol@example.com");
+    const account = await db.pool.query(`SELECT account_id FROM app.account WHERE email = $1`, [
+      "carol@example.com",
+    ]);
+    const carolAccountId = account.rows[0].account_id as string;
+    const carolResidentId = `human-${carolAccountId}`;
+    const carolAiId = `ai-${carolAccountId}`;
+
+    // Simulate the crash window: app rows committed, nothing journaled.
+    await db.pool.query(
+      `INSERT INTO app.resident (resident_id, account_id, kind, role, display_name)
+       VALUES ($1, $2, 'human', 'mediator', 'Carol')`,
+      [carolResidentId, carolAccountId],
+    );
+    await db.pool.query(
+      `INSERT INTO app.resident (resident_id, account_id, kind, role, display_name)
+       VALUES ($1, NULL, 'ai', 'mediator', 'Mira')`,
+      [carolAiId],
+    );
+    await db.pool.query(
+      `INSERT INTO app.season_member
+         (district_id, season_id, resident_id, role, sponsored_ai_resident_id)
+       VALUES ($1, $2, $3, 'mediator', $4)`,
+      [CONFIG.districtId, CONFIG.seasonId, carolResidentId, carolAiId],
+    );
+
+    const enter = await app.inject({
+      method: "POST",
+      url: "/api/season/enter",
+      headers: { authorization: `Bearer ${carolToken}` },
+      payload: { role: "builder", displayName: "Ignored" },
+    });
+    expect(enter.statusCode).toBe(200);
+    expect(enter.json().role).toBe("mediator"); // stored membership pins the role
+
+    const today = await app.inject({
+      method: "GET",
+      url: "/api/today",
+      headers: { authorization: `Bearer ${carolToken}` },
+    });
+    expect(today.statusCode).toBe(200); // was 500 before the fix
+    expect(today.json().focus).toBe(3);
+    expect(today.json().activeCards).toHaveLength(3);
+  });
+});
+
 describe("SSE stream", () => {
   async function readEvents(url: string, minCount: number): Promise<string[]> {
     const controller = new AbortController();
@@ -225,10 +378,7 @@ describe("SSE stream", () => {
   }
 
   it("replays committed events from a cursor and supports resume", async () => {
-    await app.listen({ port: 0, host: "127.0.0.1" });
-    const address = app.server.address();
-    if (address === null || typeof address === "string") throw new Error("no port");
-    const base = `http://127.0.0.1:${address.port}`;
+    const base = await ensureListening();
 
     const all = await readEvents(`${base}/api/events?from=0`, 5);
     expect(all.length).toBeGreaterThanOrEqual(5);
@@ -244,5 +394,62 @@ describe("SSE stream", () => {
     for (const raw of tail) {
       expect((JSON.parse(raw) as { sequence: number }).sequence).toBeGreaterThan(resumeFrom);
     }
+  });
+
+  it("P1 regression: resuming mid-sequence delivers the remaining events of that command", async () => {
+    const base = await ensureListening();
+    // Ada's committed choice produced one sequence with five events
+    // (FocusSpent .. ArchiveEntryRecorded). Disconnecting after id "N:0"
+    // must resume at N:1, not skip to N+1.
+    const row = await db.pool.query(
+      `SELECT district_sequence FROM district.district_event
+        WHERE district_id = $1 AND season_id = $2
+          AND event_type = 'FocusSpent' AND payload->>'residentId' = $3
+        ORDER BY district_sequence LIMIT 1`,
+      [CONFIG.districtId, CONFIG.seasonId, residentId],
+    );
+    const seq = Number(row.rows[0].district_sequence);
+
+    const controller = new AbortController();
+    const response = await fetch(`${base}/api/events`, {
+      headers: { ...authHeaders(), "last-event-id": `${seq}:0` },
+      signal: controller.signal,
+    });
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    const deadline = Date.now() + 5000;
+    while ((buffer.match(/^id: /gm) ?? []).length < 4 && Date.now() < deadline) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+    }
+    controller.abort();
+
+    const ids = (buffer.match(/^id: (.*)$/gm) ?? []).map((line) => line.slice("id: ".length));
+    expect(ids[0]).toBe(`${seq}:1`); // continues within the same sequence
+    expect(ids).toContain(`${seq}:2`);
+    expect(ids).toContain(`${seq}:3`);
+    expect(ids).toContain(`${seq}:4`);
+  });
+
+  it("P1 regression: tuple-cursor pagination never truncates inside a sequence", async () => {
+    const { eventsAfter, cursorAfterSequence } = await import("./queries.js");
+    const full = await eventsAfter(db.pool, CONFIG, cursorAfterSequence(0), 10_000);
+    expect(full.length).toBeGreaterThan(5);
+
+    // Walk the log two events at a time — a page size guaranteed to split
+    // multi-event sequences — and require exact equality with the full read.
+    const walked: { sequence: number; eventSeq: number }[] = [];
+    let cursor = cursorAfterSequence(0);
+    for (;;) {
+      const page = await eventsAfter(db.pool, CONFIG, cursor, 2);
+      if (page.length === 0) break;
+      for (const view of page) {
+        walked.push({ sequence: view.sequence, eventSeq: view.eventSeq });
+        cursor = { sequence: view.sequence, eventSeq: view.eventSeq };
+      }
+    }
+    expect(walked).toEqual(full.map((v) => ({ sequence: v.sequence, eventSeq: v.eventSeq })));
   });
 });

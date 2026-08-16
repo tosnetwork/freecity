@@ -16,7 +16,13 @@ import {
 } from "@freecity/district-runtime";
 
 import { requestCode, resolveSession, verifyCode } from "./auth.js";
-import { buildArchive, buildToday, eventsAfter } from "./queries.js";
+import {
+  buildArchive,
+  buildToday,
+  cursorAfterSequence,
+  eventsAfter,
+  type EventCursor,
+} from "./queries.js";
 import { ensureDistrict, enterSeason, findMembership, type SeasonConfig } from "./season.js";
 
 export interface ServerOptions {
@@ -113,7 +119,12 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     defaultIdempotencyKey: string,
   ) {
     const headerKey = request.headers["idempotency-key"];
-    const idempotencyKey = typeof headerKey === "string" ? headerKey : defaultIdempotencyKey;
+    const clientKey = typeof headerKey === "string" ? headerKey : defaultIdempotencyKey;
+    // Journal uniqueness is (district, season, key), so the server namespaces
+    // every key by the authenticated resident: two residents reusing the same
+    // client key stay independent, and nobody can pre-claim another
+    // resident's default key.
+    const idempotencyKey = `resident:${residentId}:${clientKey}`;
     const envelope: DistrictCommandEnvelope = {
       commandId: randomUUID(),
       idempotencyKey,
@@ -198,12 +209,20 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     const auth = await requireMembership(request);
     if (!auth?.membership) return reply.code(401).send({ error: "unauthorized" });
 
+    // Resume position: Last-Event-ID names the exact last delivered event
+    // ("sequence:eventSeq"); ?from=<sequence> means "everything after that
+    // whole sequence". Both resolve to a tuple cursor so a disconnect in the
+    // middle of one command's events never skips the remainder.
     const query = request.query as { from?: string };
     const lastEventId = request.headers["last-event-id"];
-    const fromHeader =
-      typeof lastEventId === "string" ? Number(lastEventId.split(":")[0]) : undefined;
-    let cursor = Number.isFinite(fromHeader) ? (fromHeader as number) : Number(query.from ?? 0);
-    if (!Number.isFinite(cursor) || cursor < 0) cursor = 0;
+    let cursor: EventCursor;
+    if (typeof lastEventId === "string" && /^\d+:\d+$/.test(lastEventId)) {
+      const [sequencePart, eventSeqPart] = lastEventId.split(":");
+      cursor = { sequence: Number(sequencePart), eventSeq: Number(eventSeqPart) };
+    } else {
+      const from = Number(query.from ?? 0);
+      cursor = cursorAfterSequence(Number.isFinite(from) && from > 0 ? from : 0);
+    }
 
     reply.raw.writeHead(200, {
       "content-type": "text/event-stream",
@@ -223,7 +242,7 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
         reply.raw.write(
           `id: ${view.sequence}:${view.eventSeq}\nevent: district\ndata: ${JSON.stringify(view)}\n\n`,
         );
-        cursor = Math.max(cursor, view.sequence);
+        cursor = { sequence: view.sequence, eventSeq: view.eventSeq };
       }
       if (!open) break;
       await new Promise((resolve) => setTimeout(resolve, pollMs));

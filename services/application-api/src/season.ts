@@ -83,22 +83,28 @@ export async function findMembership(
 /**
  * "Enter District Zero": create the human resident and its pre-provisioned AI
  * resident, journal the provisioning and the three authored cards, and
- * process the district. Idempotent per account — re-entering returns the
- * existing membership.
+ * process the district. Idempotent per account, and safe to retry from any
+ * partial state: the app rows are upserts and every runtime command carries a
+ * stable idempotency key, so a crash between the membership commit and the
+ * command journal is healed by simply calling enter again — the journal
+ * collapses duplicates and the step applies whatever is still missing.
  */
 export async function enterSeason(
   pool: Pool,
   config: SeasonConfig,
   accountId: string,
-  role: Role,
-  displayName: string,
+  requestedRole: Role,
+  requestedDisplayName: string,
   now: string,
 ): Promise<Membership> {
+  // A pre-existing membership pins role and display name; the request only
+  // supplies them on first entry.
   const existing = await findMembership(pool, config, accountId);
-  if (existing) return existing;
+  const role = existing?.role ?? requestedRole;
+  const displayName = existing?.displayName ?? requestedDisplayName;
 
-  const residentId = `human-${accountId}`;
-  const aiResidentId = `ai-${accountId}`;
+  const residentId = existing?.residentId ?? `human-${accountId}`;
+  const aiResidentId = existing?.aiResidentId ?? `ai-${accountId}`;
   const aiDisplayName = "Mira";
 
   await withTransaction(pool, async (client) => {

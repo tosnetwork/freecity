@@ -112,20 +112,39 @@ export async function buildArchive(
   return views.filter((v) => v.event.eventType === "ArchiveEntryRecorded");
 }
 
-/** Committed events after a client's acknowledged sequence, for SSE resume. */
+/**
+ * Position within the committed event log. Events are totally ordered by
+ * (sequence, eventSeq); a cursor names the last event already delivered.
+ */
+export interface EventCursor {
+  sequence: number;
+  eventSeq: number;
+}
+
+/** Cursor meaning "everything strictly after district sequence N". */
+export function cursorAfterSequence(sequence: number): EventCursor {
+  return { sequence, eventSeq: Number.MAX_SAFE_INTEGER };
+}
+
+/**
+ * Committed events strictly after the cursor, for SSE replay and resume.
+ * Tuple comparison (not sequence-only) so that a disconnect or page boundary
+ * in the middle of one command's events never skips the remainder.
+ */
 export async function eventsAfter(
   pool: Pool,
   config: SeasonConfig,
-  afterSequence: number,
+  cursor: EventCursor,
   limit = 500,
 ): Promise<CommittedEventView[]> {
   const result = await pool.query(
     `SELECT district_sequence, event_seq, payload
        FROM district.district_event
-      WHERE district_id = $1 AND season_id = $2 AND district_sequence > $3
+      WHERE district_id = $1 AND season_id = $2
+        AND (district_sequence, event_seq) > ($3::bigint, $4::bigint)
       ORDER BY district_sequence, event_seq
-      LIMIT $4`,
-    [config.districtId, config.seasonId, afterSequence, limit],
+      LIMIT $5`,
+    [config.districtId, config.seasonId, cursor.sequence, cursor.eventSeq, limit],
   );
   return result.rows.map((row) => ({
     sequence: Number(row.district_sequence),
