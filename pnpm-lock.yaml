@@ -93,6 +93,9 @@ importers:
       '@freecity/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@freecity/district-rules':
+        specifier: workspace:^
+        version: link:../../packages/district-rules
       '@freecity/district-runtime':
         specifier: workspace:*
         version: link:../../workers/district-runtime

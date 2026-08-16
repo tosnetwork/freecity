@@ -13,6 +13,7 @@
   "dependencies": {
     "@fastify/cors": "^11.3.0",
     "@freecity/contracts": "workspace:*",
+    "@freecity/district-rules": "workspace:^",
     "@freecity/district-runtime": "workspace:*",
     "fastify": "^5.2.0",
     "zod": "^3.24.1"

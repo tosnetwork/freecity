@@ -43,6 +43,15 @@ export interface ServerOptions {
    * cookies, so the CORS surface stays narrow.
    */
   webOrigin?: string;
+  /**
+   * Registers the /api/dev/* test-control endpoints (clock override,
+   * kill-streams). OFF by default and independent of authMode: an ordinary
+   * dev deployment must not let signed-in users move the district clock or
+   * sever everyone's streams. Requires dev authMode AND testControlKey.
+   */
+  enableTestControls?: boolean;
+  /** Shared secret held only by the test process; sent as x-test-control-key. */
+  testControlKey?: string;
 }
 
 const emailSchema = z.object({ email: z.string().email() });
@@ -120,10 +129,25 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
 
   app.get("/healthz", async (_request, reply) => reply.send({ ok: true }));
 
-  if (opts.authMode === "dev") {
-    app.post("/api/dev/clock", async (request, reply) => {
+  if (opts.enableTestControls === true && opts.authMode === "dev") {
+    const controlKey = opts.testControlKey;
+    if (!controlKey) {
+      throw new Error("enableTestControls requires a testControlKey");
+    }
+    const authorizeControl = async (
+      request: FastifyRequest,
+    ): Promise<{ code: number; error: string } | null> => {
       const accountId = await authenticate(request);
-      if (!accountId) return reply.code(401).send({ error: "unauthorized" });
+      if (!accountId) return { code: 401, error: "unauthorized" };
+      if (request.headers["x-test-control-key"] !== controlKey) {
+        return { code: 403, error: "forbidden" };
+      }
+      return null;
+    };
+
+    app.post("/api/dev/clock", async (request, reply) => {
+      const denied = await authorizeControl(request);
+      if (denied) return reply.code(denied.code).send({ error: denied.error });
       const body = devClockSchema.parse(request.body);
       devClockOverride = body.now;
       return reply.send({ now: devClockOverride });
@@ -132,8 +156,8 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     // Severs every active SSE connection — a deploy/restart stand-in that
     // lets e2e tests exercise real mid-mount reconnection.
     app.post("/api/dev/kill-streams", async (request, reply) => {
-      const accountId = await authenticate(request);
-      if (!accountId) return reply.code(401).send({ error: "unauthorized" });
+      const denied = await authorizeControl(request);
+      if (denied) return reply.code(denied.code).send({ error: denied.error });
       const killed = activeStreams.size;
       for (const socket of activeStreams) socket.destroy();
       activeStreams.clear();

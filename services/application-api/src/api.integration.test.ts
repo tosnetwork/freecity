@@ -21,8 +21,14 @@ beforeAll(async () => {
     authMode: "dev",
     ssePollMs: 25,
     now: () => clock,
+    enableTestControls: true,
+    testControlKey: "itest-control-key",
   });
 }, 60_000);
+
+function controlHeaders() {
+  return { ...authHeaders(), "x-test-control-key": "itest-control-key" };
+}
 
 afterAll(async () => {
   await app.close();
@@ -691,7 +697,7 @@ describe("dev clock (test-only)", () => {
     const set = await app.inject({
       method: "POST",
       url: "/api/dev/clock",
-      headers: authHeaders(),
+      headers: controlHeaders(),
       payload: { now: "2026-09-03T10:00:00.000Z" },
     });
     expect(set.statusCode).toBe(200);
@@ -704,14 +710,14 @@ describe("dev clock (test-only)", () => {
     const reset = await app.inject({
       method: "POST",
       url: "/api/dev/clock",
-      headers: authHeaders(),
+      headers: controlHeaders(),
       payload: { now: null },
     });
     expect(reset.statusCode).toBe(200);
     expect(reset.json().now).toBeNull();
   });
 
-  it("requires auth in dev mode and does not exist in production mode", async () => {
+  it("requires a session AND the control key; absent without the explicit opt-in", async () => {
     const anonymous = await app.inject({
       method: "POST",
       url: "/api/dev/clock",
@@ -719,16 +725,58 @@ describe("dev clock (test-only)", () => {
     });
     expect(anonymous.statusCode).toBe(401);
 
+    const wrongKey = await app.inject({
+      method: "POST",
+      url: "/api/dev/clock",
+      headers: { ...authHeaders(), "x-test-control-key": "not-the-key" },
+      payload: { now: null },
+    });
+    expect(wrongKey.statusCode).toBe(403);
+
+    const missingKey = await app.inject({
+      method: "POST",
+      url: "/api/dev/clock",
+      headers: authHeaders(),
+      payload: { now: null },
+    });
+    expect(missingKey.statusCode).toBe(403);
+
+    // An ordinary dev deployment (test controls not opted in) has NO
+    // /api/dev/* surface at all — dev auth mode alone must not expose it.
+    const plainDev = await buildServer({
+      pool: db.pool,
+      config: CONFIG,
+      authMode: "dev",
+      now: () => clock,
+    });
+    try {
+      for (const url of ["/api/dev/clock", "/api/dev/kill-streams"]) {
+        const response = await plainDev.inject({
+          method: "POST",
+          url,
+          headers: controlHeaders(),
+          payload: { now: null },
+        });
+        expect(response.statusCode, url).toBe(404);
+      }
+    } finally {
+      await plainDev.close();
+    }
+
+    // Production mode never registers them, opt-in or not.
     const production = await buildServer({
       pool: db.pool,
       config: CONFIG,
       authMode: "production",
       now: () => clock,
+      enableTestControls: true,
+      testControlKey: "itest-control-key",
     });
     try {
       const response = await production.inject({
         method: "POST",
         url: "/api/dev/clock",
+        headers: controlHeaders(),
         payload: { now: null },
       });
       expect(response.statusCode).toBe(404);

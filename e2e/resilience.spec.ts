@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { enterDistrict } from "./helpers";
+import { enterDistrict, TEST_CONTROL_KEY } from "./helpers";
 
 /**
  * Chaos at the browser boundary: duplicate submissions, refresh mid-choice,
@@ -110,7 +110,7 @@ test("SSE stream reconnects mid-mount via Last-Event-ID with no loss or duplicat
   // stream.
   const authed = { authorization: `Bearer ${token}`, "content-type": "application/json" };
   const kill = await request.post("http://localhost:3001/api/dev/kill-streams", {
-    headers: authed,
+    headers: { ...authed, "x-test-control-key": TEST_CONTROL_KEY },
     data: {},
   });
   expect(kill.status()).toBe(200);

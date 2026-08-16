@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { enterDistrict, signIn } from "./helpers";
+import { enterDistrict, signIn, TEST_CONTROL_KEY } from "./helpers";
 
 /**
  * The complete Phase 1 vertical slice, end to end, keyboard-first:
@@ -34,15 +34,22 @@ test("full slice: enter, choose, decline, district parity, archive", async ({ pa
   // "return" to Today, and the WYWA must cite the committed
   // ConsequenceResolved — the full return journey of the Phase 1 slice.
   const setClock = (now: string | null) =>
-    page.evaluate(async (value) => {
-      const token = window.localStorage.getItem("freecity_token");
-      const response = await fetch("/api/dev/clock", {
-        method: "POST",
-        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-        body: JSON.stringify({ now: value }),
-      });
-      if (!response.ok) throw new Error(`dev clock: ${response.status}`);
-    }, now);
+    page.evaluate(
+      async ({ value, controlKey }) => {
+        const token = window.localStorage.getItem("freecity_token");
+        const response = await fetch("/api/dev/clock", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${token}`,
+            "x-test-control-key": controlKey,
+          },
+          body: JSON.stringify({ now: value }),
+        });
+        if (!response.ok) throw new Error(`dev clock: ${response.status}`);
+      },
+      { value: now, controlKey: TEST_CONTROL_KEY },
+    );
   try {
     await setClock(new Date(Date.now() + 2 * 3_600_000).toISOString());
     await page.reload();

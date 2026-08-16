@@ -16,9 +16,15 @@ import { randomUUID } from "node:crypto";
 
 import type { FastifyInstance } from "fastify";
 
+import { canonicalJson, districtCommandSchema, districtStateSchema } from "@freecity/contracts";
+import { applyCommand } from "@freecity/district-rules";
 import { createSnapshot, createTestDatabase, replayDistrict } from "@freecity/district-runtime";
 
 import { buildServer } from "../src/server.js";
+
+function sortRecord(record: Record<string, number>): Record<string, number> {
+  return Object.fromEntries(Object.entries(record).sort(([a], [b]) => a.localeCompare(b)));
+}
 
 const CONFIG = { districtId: "district-zero", seasonId: "season-0" };
 let clock = "2026-09-01T08:00:00.000Z";
@@ -172,11 +178,73 @@ try {
     FocusRefreshed: 4, // day-2 rollover for every day-1 resident: 2 humans + their 2 AI residents
     ArchiveEntryRecorded: 7, // 2 choices + 2 declines + 2 consequences + 1 expiry
   };
-  for (const [type, expected] of Object.entries(expectedEvents)) {
-    check(
-      (eventCounts[type] ?? 0) === expected,
-      `event census: ${type} expected ${expected}, got ${eventCounts[type] ?? 0}`,
+  // Exact BOTH-WAY census equality: an extra event type is as fatal as a
+  // missing one.
+  const censusMismatch =
+    canonicalJson(sortRecord(eventCounts)) !== canonicalJson(sortRecord(expectedEvents));
+  check(
+    !censusMismatch,
+    `event census mismatch:\n  expected ${JSON.stringify(sortRecord(expectedEvents))}\n  got      ${JSON.stringify(sortRecord(eventCounts))}`,
+  );
+
+  // Full event-stream verification: re-derive EVERY event from the genesis
+  // state and the applied journal through the pure ruleset, then compare
+  // one-to-one — order, identity, and canonical payload — against the stored
+  // event log. Injected, missing, or mutated events all fail here.
+  const genesisRow = await db.pool.query(
+    `SELECT state FROM district.district_snapshot
+      WHERE district_id = $1 AND season_id = $2 ORDER BY snapshot_id ASC LIMIT 1`,
+    [CONFIG.districtId, CONFIG.seasonId],
+  );
+  let derivedState = districtStateSchema.parse(genesisRow.rows[0].state);
+  const derivedEvents: { sequence: number; eventSeq: number; payload: unknown }[] = [];
+  const journal = await db.pool.query(
+    `SELECT command_id, command_type, payload, district_sequence, step_time
+       FROM district.district_command
+      WHERE district_id = $1 AND season_id = $2 AND status = 'applied'
+      ORDER BY district_sequence ASC`,
+    [CONFIG.districtId, CONFIG.seasonId],
+  );
+  for (const row of journal.rows) {
+    const result = applyCommand(
+      derivedState,
+      {
+        commandId: row.command_id as string,
+        sequence: Number(row.district_sequence),
+        command: districtCommandSchema.parse({ type: row.command_type, payload: row.payload }),
+      },
+      row.step_time as string,
     );
+    check(result.ok, `journal re-derivation: command ${row.command_id} rejected`);
+    if (!result.ok) break;
+    derivedState = result.state;
+    for (const [eventSeq, event] of result.events.entries()) {
+      derivedEvents.push({ sequence: Number(row.district_sequence), eventSeq, payload: event });
+    }
+  }
+  const storedEvents = await db.pool.query(
+    `SELECT district_sequence, event_seq, payload FROM district.district_event
+      WHERE district_id = $1 AND season_id = $2
+      ORDER BY district_sequence, event_seq`,
+    [CONFIG.districtId, CONFIG.seasonId],
+  );
+  check(
+    storedEvents.rows.length === derivedEvents.length,
+    `event log length: stored ${storedEvents.rows.length}, derived ${derivedEvents.length}`,
+  );
+  const comparable = Math.min(storedEvents.rows.length, derivedEvents.length);
+  for (let i = 0; i < comparable; i += 1) {
+    const stored = storedEvents.rows[i];
+    const derived = derivedEvents[i]!;
+    const same =
+      Number(stored.district_sequence) === derived.sequence &&
+      Number(stored.event_seq) === derived.eventSeq &&
+      canonicalJson(stored.payload) === canonicalJson(derived.payload);
+    check(
+      same,
+      `event log divergence at ${stored.district_sequence}:${stored.event_seq} (derived ${derived.sequence}:${derived.eventSeq})`,
+    );
+    if (!same) break;
   }
 
   const fromGenesis = await replayDistrict(db.pool, CONFIG.districtId, CONFIG.seasonId);

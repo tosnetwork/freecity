@@ -1,5 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
+import { TEST_CONTROL_KEY } from "./e2e/helpers";
+
 const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgres://freecity:freecity@localhost:5433/freecity";
 
@@ -18,7 +20,12 @@ export default defineConfig({
       url: "http://localhost:3001/healthz",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
-      env: { DATABASE_URL, AUTH_MODE: "dev" },
+      env: {
+        DATABASE_URL,
+        AUTH_MODE: "dev",
+        FREECITY_TEST_CONTROLS: "1",
+        FREECITY_TEST_CONTROL_KEY: TEST_CONTROL_KEY,
+      },
     },
     {
       command: "pnpm --filter @freecity/web dev",

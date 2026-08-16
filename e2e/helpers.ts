@@ -1,5 +1,12 @@
 import { expect, type Page } from "@playwright/test";
 
+/**
+ * Shared secret for the /api/dev/* test-control endpoints. Held only by the
+ * test process: playwright.config.ts passes it to the API server it boots,
+ * and tests send it as x-test-control-key.
+ */
+export const TEST_CONTROL_KEY = "freecity-e2e-test-controls";
+
 /** Signs in through the dev email-code flow and returns the email used. */
 export async function signIn(page: Page, email?: string): Promise<string> {
   const address = email ?? `e2e-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
