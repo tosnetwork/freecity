@@ -685,3 +685,55 @@ describe("SSE stream", () => {
     expect(walked).toEqual(full.map((v) => ({ sequence: v.sequence, eventSeq: v.eventSeq })));
   });
 });
+
+describe("dev clock (test-only)", () => {
+  it("overrides the API wall clock in dev mode and resets to null", async () => {
+    const set = await app.inject({
+      method: "POST",
+      url: "/api/dev/clock",
+      headers: authHeaders(),
+      payload: { now: "2026-09-03T10:00:00.000Z" },
+    });
+    expect(set.statusCode).toBe(200);
+    expect(set.json().now).toBe("2026-09-03T10:00:00.000Z");
+
+    // The override wins over the injected clock: day-3 catch-up refreshes Focus.
+    const today = await app.inject({ method: "GET", url: "/api/today", headers: authHeaders() });
+    expect(today.json().focus).toBe(3);
+
+    const reset = await app.inject({
+      method: "POST",
+      url: "/api/dev/clock",
+      headers: authHeaders(),
+      payload: { now: null },
+    });
+    expect(reset.statusCode).toBe(200);
+    expect(reset.json().now).toBeNull();
+  });
+
+  it("requires auth in dev mode and does not exist in production mode", async () => {
+    const anonymous = await app.inject({
+      method: "POST",
+      url: "/api/dev/clock",
+      payload: { now: null },
+    });
+    expect(anonymous.statusCode).toBe(401);
+
+    const production = await buildServer({
+      pool: db.pool,
+      config: CONFIG,
+      authMode: "production",
+      now: () => clock,
+    });
+    try {
+      const response = await production.inject({
+        method: "POST",
+        url: "/api/dev/clock",
+        payload: { now: null },
+      });
+      expect(response.statusCode).toBe(404);
+    } finally {
+      await production.close();
+    }
+  });
+});

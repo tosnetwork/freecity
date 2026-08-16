@@ -28,6 +28,31 @@ test("full slice: enter, choose, decline, district parity, archive", async ({ pa
   await page.getByRole("button", { name: "Decline" }).first().click();
   await expect(page.locator("article.card")).toHaveCount(1);
   await expect(page.getByTestId("focus")).toHaveText("2");
+  await expect(page.getByRole("heading", { name: "Coming up" })).toBeVisible();
+
+  // Delayed consequence: advance the dev clock past the 60-minute delay,
+  // "return" to Today, and the WYWA must cite the committed
+  // ConsequenceResolved — the full return journey of the Phase 1 slice.
+  const setClock = (now: string | null) =>
+    page.evaluate(async (value) => {
+      const token = window.localStorage.getItem("freecity_token");
+      const response = await fetch("/api/dev/clock", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+        body: JSON.stringify({ now: value }),
+      });
+      if (!response.ok) throw new Error(`dev clock: ${response.status}`);
+    }, now);
+  try {
+    await setClock(new Date(Date.now() + 2 * 3_600_000).toISOString());
+    await page.reload();
+    await expect(page.getByTestId("wywa")).toContainText(
+      "The Studio Circle read the shared draft and sent back two responses.",
+    );
+    await expect(page.getByRole("heading", { name: "Coming up" })).toBeHidden();
+  } finally {
+    await setClock(null);
+  }
 
   // District: accessible DOM parity with the projection disabled.
   await page.getByRole("link", { name: "District" }).click();

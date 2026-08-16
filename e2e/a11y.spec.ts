@@ -56,13 +56,23 @@ test("enter, today, district, and archive pass axe", async ({ page }) => {
 test("full slice is keyboard-operable end to end", async ({ page }) => {
   await enterDistrict(page, "Keyla", "reporter");
   // Fresh load so focus starts at the top of the document, then the first
-  // Tab lands on the skip link.
+  // Tab lands on the skip link — and ACTIVATING it must move focus into main.
   await page.goto("/today");
   await page.locator("article.card").first().waitFor();
-  const share = page.getByRole("button", { name: /Share this version/ });
   await page.keyboard.press("Tab");
   await expect(page.locator(".skip-link")).toBeFocused();
-  await share.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("main#main")).toBeFocused();
+
+  // From main, Tab order continues into the page content; reach the first
+  // card option by keyboard only and activate it.
+  const share = page.getByRole("button", { name: /Share this version/ });
+  let hops = 0;
+  while (!(await share.evaluate((el) => el === document.activeElement))) {
+    await page.keyboard.press("Tab");
+    hops += 1;
+    expect(hops, "option not reachable by Tab").toBeLessThan(30);
+  }
   await page.keyboard.press("Enter");
   await expect(page.getByTestId("reaction")).toBeVisible();
   await expect(page.getByTestId("focus")).toHaveText("2");

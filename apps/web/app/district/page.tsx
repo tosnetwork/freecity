@@ -160,6 +160,7 @@ export default function DistrictPage() {
                 <li key={item.id}>
                   <button
                     type="button"
+                    data-event-id={item.id}
                     aria-current={selected?.id === item.id}
                     onClick={() => setSelected(item)}
                   >

@@ -5,6 +5,7 @@ import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import { z, ZodError } from "zod";
 
 import {
+  isoTimestampSchema,
   roleSchema,
   type DistrictCommand,
   type DistrictCommandEnvelope,
@@ -53,10 +54,19 @@ const chooseSchema = z.object({
 });
 const declineSchema = z.object({ reason: z.string().min(1).max(200).nullable().default(null) });
 const ackSchema = z.object({ sequence: z.number().int().min(0) });
+const devClockSchema = z.object({ now: isoTimestampSchema.nullable() });
 
 export async function buildServer(opts: ServerOptions): Promise<FastifyInstance> {
   const { pool, config } = opts;
-  const now = opts.now ?? (() => new Date().toISOString());
+  const baseNow = opts.now ?? (() => new Date().toISOString());
+  // Dev-only test clock (set via POST /api/dev/clock, registered exclusively
+  // in dev mode below) so e2e tests can drive delayed consequences. It only
+  // shifts the API-boundary wall clock; deterministic-step semantics are
+  // untouched — the override becomes the recorded explicit step time.
+  let devClockOverride: string | null = null;
+  const now = () => devClockOverride ?? baseNow();
+  /** Active SSE sockets, so the dev kill-streams hook can sever them. */
+  const activeStreams = new Set<import("node:net").Socket>();
   const app = Fastify({ logger: false });
 
   await app.register(cors, {
@@ -109,6 +119,27 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
   }
 
   app.get("/healthz", async (_request, reply) => reply.send({ ok: true }));
+
+  if (opts.authMode === "dev") {
+    app.post("/api/dev/clock", async (request, reply) => {
+      const accountId = await authenticate(request);
+      if (!accountId) return reply.code(401).send({ error: "unauthorized" });
+      const body = devClockSchema.parse(request.body);
+      devClockOverride = body.now;
+      return reply.send({ now: devClockOverride });
+    });
+
+    // Severs every active SSE connection — a deploy/restart stand-in that
+    // lets e2e tests exercise real mid-mount reconnection.
+    app.post("/api/dev/kill-streams", async (request, reply) => {
+      const accountId = await authenticate(request);
+      if (!accountId) return reply.code(401).send({ error: "unauthorized" });
+      const killed = activeStreams.size;
+      for (const socket of activeStreams) socket.destroy();
+      activeStreams.clear();
+      return reply.send({ killed });
+    });
+  }
 
   app.post("/api/auth/request-code", async (request, reply) => {
     const body = emailSchema.parse(request.body);
@@ -309,8 +340,10 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     reply.raw.flushHeaders();
 
     let open = true;
+    activeStreams.add(request.raw.socket);
     request.raw.on("close", () => {
       open = false;
+      activeStreams.delete(request.raw.socket);
     });
 
     const pollMs = opts.ssePollMs ?? 1000;

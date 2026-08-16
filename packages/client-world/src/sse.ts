@@ -88,6 +88,9 @@ export function streamDistrictEvents(options: StreamOptions): StreamHandle {
             options.onEvent(JSON.parse(frame.data) as CommittedEventView);
           }
         }
+        // The server never ends this stream on purpose; an end without a
+        // local close() is a disconnect (server restart, dropped socket).
+        if (!closed) options.onStatus?.("error");
       } catch {
         if (!closed) options.onStatus?.("error");
       }
