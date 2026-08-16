@@ -50,7 +50,10 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
   const now = opts.now ?? (() => new Date().toISOString());
   const app = Fastify({ logger: false });
 
-  // Malformed input is the client's error, never a 500.
+  // Malformed input is the client's error, never a 500 — whether zod caught
+  // it (semantic validation) or fastify did (broken JSON, wrong content
+  // type). Client-classified fastify errors carry a 4xx statusCode; preserve
+  // it instead of masking it as a server fault.
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof ZodError) {
       return reply.code(400).send({
@@ -60,6 +63,13 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
           message: issue.message,
         })),
       });
+    }
+    const statusCode =
+      typeof error.statusCode === "number" && error.statusCode >= 400 && error.statusCode < 500
+        ? error.statusCode
+        : 500;
+    if (statusCode < 500) {
+      return reply.code(statusCode).send({ error: "invalid_request", message: error.message });
     }
     return reply.code(500).send({ error: "internal_error" });
   });

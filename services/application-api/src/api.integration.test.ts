@@ -436,6 +436,26 @@ describe("P1 regression: malformed request bodies are 400, not 500", () => {
     expect(missingOption.statusCode).toBe(400);
     expect(missingOption.json().issues[0].path).toBe("optionId");
   });
+
+  it("broken JSON keeps fastify's own 400 instead of becoming a 500", async () => {
+    const brokenJson = await app.inject({
+      method: "POST",
+      url: "/api/auth/request-code",
+      headers: { "content-type": "application/json" },
+      payload: '{"email":',
+    });
+    expect(brokenJson.statusCode).toBe(400);
+    expect(brokenJson.json().error).toBe("invalid_request");
+
+    const emptyJsonBody = await app.inject({
+      method: "POST",
+      url: "/api/auth/request-code",
+      headers: { "content-type": "application/json" },
+      payload: "",
+    });
+    expect(emptyJsonBody.statusCode).toBe(400);
+    expect(emptyJsonBody.json().error).toBe("invalid_request");
+  });
 });
 
 describe("P1 regression: season entry heals from partial state", () => {
