@@ -1,6 +1,15 @@
 "use client";
 
-import type { CardInstance, PendingConsequence, Role } from "@freecity/contracts";
+import type {
+  CardInstance,
+  CityState,
+  ContributionKind,
+  PendingConsequence,
+  PlaceId,
+  Role,
+  ResidentPreferences,
+  SocialWorldState,
+} from "@freecity/contracts";
 import type { CommittedEventView, PublicCitySnapshot } from "@freecity/client-world";
 
 export type { PublicCitySnapshot } from "@freecity/client-world";
@@ -47,6 +56,24 @@ export interface CommandResponse {
   status: "applied" | "rejected" | "received";
   districtSequence: number | null;
   result: { ok: boolean; code?: string; message?: string } | null;
+}
+
+export interface CityWorldResponse {
+  districtId: string;
+  seasonId: string;
+  stateVersion: number;
+  lastSequence: number;
+  stepTime: string;
+  residents: Array<{
+    residentId: string;
+    kind: "human" | "ai";
+    role: Role;
+    displayName: string;
+    sponsoredAiResidentId: string | null;
+  }>;
+  city: CityState;
+  world: SocialWorldState;
+  selfPreferences: ResidentPreferences;
 }
 
 export function getToken(): string | null {
@@ -131,8 +158,22 @@ export function isNotAResident(error: unknown): boolean {
  * shape, and an idempotency-key conflict is normalized into one.
  */
 async function commandRequest(path: string, payload: unknown): Promise<CommandResponse> {
+  const idempotencyKey = crypto.randomUUID();
+  const submit = () =>
+    api<CommandResponse>(path, {
+      method: "POST",
+      headers: { "idempotency-key": idempotencyKey },
+      body: JSON.stringify(payload),
+    });
   try {
-    return await api<CommandResponse>(path, { method: "POST", body: JSON.stringify(payload) });
+    try {
+      return await submit();
+    } catch (error) {
+      // One transport-only retry reuses the exact same key. If the first
+      // response was lost after commit, the journal returns that result.
+      if (!(error instanceof TypeError)) throw error;
+      return await submit();
+    }
   } catch (error) {
     if (error instanceof ApiError && error.status === 409) {
       const body = error.body as Record<string, unknown>;
@@ -184,6 +225,132 @@ export async function ensureMembership(): Promise<Membership> {
 
 export function fetchArchive(): Promise<{ entries: CommittedEventView[] }> {
   return api("/api/archive");
+}
+
+export function fetchWorld(): Promise<CityWorldResponse> {
+  return api("/api/world");
+}
+
+export function visitPlace(placeId: PlaceId): Promise<CommandResponse> {
+  return commandRequest(`/api/places/${encodeURIComponent(placeId)}/visit`, {});
+}
+
+export function updateResidentPreferences(
+  preferences: ResidentPreferences,
+): Promise<CommandResponse> {
+  return commandRequest("/api/resident/preferences", preferences);
+}
+
+export function inviteRelationship(
+  addresseeId: string,
+  note: string | null,
+): Promise<CommandResponse> {
+  return commandRequest("/api/social/invitations", { addresseeId, note });
+}
+
+export function respondRelationship(
+  relationshipId: string,
+  response: "accept" | "decline",
+): Promise<CommandResponse> {
+  return commandRequest(`/api/social/${encodeURIComponent(relationshipId)}/respond`, { response });
+}
+
+export function cancelRelationship(relationshipId: string): Promise<CommandResponse> {
+  return commandRequest(`/api/social/${encodeURIComponent(relationshipId)}/cancel`, {});
+}
+
+export function repairRelationship(relationshipId: string, note: string): Promise<CommandResponse> {
+  return commandRequest(`/api/social/${encodeURIComponent(relationshipId)}/repair`, { note });
+}
+
+export function createCircle(name: string, purpose: string): Promise<CommandResponse> {
+  return commandRequest("/api/circles", { name, purpose });
+}
+
+export function inviteToCircle(circleId: string, addresseeId: string): Promise<CommandResponse> {
+  return commandRequest(`/api/circles/${encodeURIComponent(circleId)}/invite`, { addresseeId });
+}
+
+export function respondCircle(
+  circleId: string,
+  response: "accept" | "decline",
+): Promise<CommandResponse> {
+  return commandRequest(`/api/circles/${encodeURIComponent(circleId)}/respond`, { response });
+}
+
+export function joinProject(projectId: string): Promise<CommandResponse> {
+  return commandRequest(`/api/projects/${encodeURIComponent(projectId)}/join`, {});
+}
+
+export function claimProjectTask(projectId: string, taskId: string): Promise<CommandResponse> {
+  return commandRequest(
+    `/api/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}/claim`,
+    {},
+  );
+}
+
+export function submitProjectContribution(
+  projectId: string,
+  taskId: string | null,
+  kind: ContributionKind,
+  summary: string,
+  artifactUrl: string | null,
+): Promise<CommandResponse> {
+  return commandRequest(`/api/projects/${encodeURIComponent(projectId)}/contributions`, {
+    taskId,
+    kind,
+    summary,
+    artifactUrl,
+  });
+}
+
+export function reviewProjectContribution(
+  projectId: string,
+  contributionId: string,
+  decision: "approve" | "request_changes",
+  note: string | null,
+): Promise<CommandResponse> {
+  return commandRequest(
+    `/api/projects/${encodeURIComponent(projectId)}/contributions/${encodeURIComponent(contributionId)}/review`,
+    { decision, note },
+  );
+}
+
+export function createMarketNeed(
+  title: string,
+  description: string,
+  mode: "collaboration" | "payment" = "collaboration",
+): Promise<CommandResponse> {
+  return commandRequest("/api/market/needs", { title, description, mode });
+}
+
+export function submitMarketProposal(needId: string, summary: string): Promise<CommandResponse> {
+  return commandRequest(`/api/market/needs/${encodeURIComponent(needId)}/proposals`, {
+    summary,
+    amountMinor: null,
+    assetCode: null,
+  });
+}
+
+export function respondMarketProposal(
+  proposalId: string,
+  response: "accept" | "decline",
+): Promise<CommandResponse> {
+  return commandRequest(`/api/market/proposals/${encodeURIComponent(proposalId)}/respond`, {
+    response,
+  });
+}
+
+export function declareCandidacy(statement: string): Promise<CommandResponse> {
+  return commandRequest("/api/civic/candidacy", { statement });
+}
+
+export function castCivicVote(candidateResidentId: string): Promise<CommandResponse> {
+  return commandRequest("/api/civic/vote", { candidateResidentId });
+}
+
+export function fileCivicChallenge(reason: string): Promise<CommandResponse> {
+  return commandRequest("/api/civic/challenges", { reason });
 }
 
 /** Advances the While You Were Away marker; idempotent and monotonic. */

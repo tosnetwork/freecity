@@ -110,6 +110,24 @@ const RESIDENT_PATHS: Record<CityPlaceId, [number, number][]> = {
     [7, 5],
     [7, 6],
   ],
+  market: [
+    [7, 8],
+    [8, 8],
+    [8, 9],
+    [9, 9],
+  ],
+  "civic-hall": [
+    [5, 7],
+    [6, 7],
+    [7, 7],
+    [7, 6],
+  ],
+  archive: [
+    [4, 6],
+    [5, 6],
+    [5, 7],
+    [5, 8],
+  ],
 };
 
 function iso(gridX: number, gridY: number): { x: number; y: number } {

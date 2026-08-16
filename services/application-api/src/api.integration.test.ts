@@ -621,6 +621,265 @@ describe("P1 regression: season entry heals from partial state", () => {
   });
 });
 
+describe("City World R2 command surface", () => {
+  it("runs relationships, Circles, projects and collaboration market through committed commands", async () => {
+    const secondToken = await loginAs(`r2-${Date.now()}@example.com`);
+    const secondEnter = await app.inject({
+      method: "POST",
+      url: "/api/season/enter",
+      headers: { authorization: `Bearer ${secondToken}` },
+      payload: { role: "creator", displayName: "Lin" },
+    });
+    expect(secondEnter.statusCode).toBe(200);
+    const secondResidentId = secondEnter.json().residentId as string;
+    const secondHeaders = { authorization: `Bearer ${secondToken}` };
+
+    const initialWorld = await app.inject({
+      method: "GET",
+      url: "/api/world",
+      headers: authHeaders(),
+    });
+    expect(initialWorld.statusCode).toBe(200);
+    expect(initialWorld.json().residents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ residentId }),
+        expect.objectContaining({ residentId: secondResidentId }),
+      ]),
+    );
+    expect(initialWorld.json().residents[0]).not.toHaveProperty("focus");
+    expect(initialWorld.json().world.projects["east-relay"]).toBeDefined();
+    expect(initialWorld.json().selfPreferences).toMatchObject({
+      publicPresence: true,
+      aiMayPrepare: true,
+      memoryScope: "private",
+    });
+
+    const hidePresence = await app.inject({
+      method: "POST",
+      url: "/api/resident/preferences",
+      headers: authHeaders(),
+      payload: {
+        publicPresence: false,
+        aiMayPrepare: false,
+        memoryScope: "circle",
+        relationshipInvites: "humans",
+      },
+    });
+    expect(hidePresence.statusCode).toBe(200);
+    const hiddenPublic = await app.inject({ method: "GET", url: "/api/city/public" });
+    expect(
+      hiddenPublic
+        .json()
+        .residents.some((item: { residentId: string }) => item.residentId === residentId),
+    ).toBe(false);
+    const showPresence = await app.inject({
+      method: "POST",
+      url: "/api/resident/preferences",
+      headers: authHeaders(),
+      payload: {
+        publicPresence: true,
+        aiMayPrepare: true,
+        memoryScope: "private",
+        relationshipInvites: "humans",
+      },
+    });
+    expect(showPresence.statusCode).toBe(200);
+
+    const invite = await app.inject({
+      method: "POST",
+      url: "/api/social/invitations",
+      headers: { ...authHeaders(), "idempotency-key": "r2-invite-lin" },
+      payload: { addresseeId: secondResidentId, note: "Build the relay together" },
+    });
+    expect(invite.statusCode).toBe(200);
+    const inviteRetry = await app.inject({
+      method: "POST",
+      url: "/api/social/invitations",
+      headers: { ...authHeaders(), "idempotency-key": "r2-invite-lin" },
+      payload: { addresseeId: secondResidentId, note: "Build the relay together" },
+    });
+    expect(inviteRetry.statusCode).toBe(200);
+    expect(inviteRetry.json().duplicate).toBe(true);
+    expect(inviteRetry.json().commandId).toBe(invite.json().commandId);
+    const afterInvite = await app.inject({
+      method: "GET",
+      url: "/api/world",
+      headers: authHeaders(),
+    });
+    const relationship = (
+      Object.values(afterInvite.json().world.relationships) as Array<{
+        relationshipId: string;
+        requesterId: string;
+        addresseeId: string;
+      }>
+    ).find((item) => item.requesterId === residentId && item.addresseeId === secondResidentId)!;
+    const accept = await app.inject({
+      method: "POST",
+      url: `/api/social/${relationship.relationshipId}/respond`,
+      headers: secondHeaders,
+      payload: { response: "accept" },
+    });
+    expect(accept.statusCode).toBe(200);
+
+    const circleCreate = await app.inject({
+      method: "POST",
+      url: "/api/circles",
+      headers: authHeaders(),
+      payload: { name: "Relay Circle", purpose: "Keep the route accountable" },
+    });
+    expect(circleCreate.statusCode).toBe(200);
+    const afterCircle = await app.inject({
+      method: "GET",
+      url: "/api/world",
+      headers: authHeaders(),
+    });
+    const circle = (
+      Object.values(afterCircle.json().world.circles) as Array<{
+        circleId: string;
+        name: string;
+      }>
+    ).find((item) => item.name === "Relay Circle")!;
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: `/api/circles/${circle.circleId}/invite`,
+          headers: authHeaders(),
+          payload: { addresseeId: secondResidentId },
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: `/api/circles/${circle.circleId}/respond`,
+          headers: secondHeaders,
+          payload: { response: "accept" },
+        })
+      ).statusCode,
+    ).toBe(200);
+
+    for (const headers of [authHeaders(), secondHeaders]) {
+      expect(
+        (
+          await app.inject({
+            method: "POST",
+            url: "/api/projects/east-relay/join",
+            headers,
+            payload: {},
+          })
+        ).statusCode,
+      ).toBe(200);
+    }
+    const contribute = await app.inject({
+      method: "POST",
+      url: "/api/projects/east-relay/contributions",
+      headers: authHeaders(),
+      payload: { kind: "work", summary: "Documented the committed relay route", artifactUrl: null },
+    });
+    expect(contribute.statusCode).toBe(200);
+    const afterContribution = await app.inject({
+      method: "GET",
+      url: "/api/world",
+      headers: authHeaders(),
+    });
+    const contributionId = afterContribution
+      .json()
+      .world.projects["east-relay"].contributions.find(
+        (item: { residentId: string }) => item.residentId === residentId,
+      ).contributionId as string;
+    const review = await app.inject({
+      method: "POST",
+      url: `/api/projects/east-relay/contributions/${contributionId}/review`,
+      headers: secondHeaders,
+      payload: { decision: "approve", note: "Verified in the project room" },
+    });
+    expect(review.statusCode).toBe(200);
+
+    const paid = await app.inject({
+      method: "POST",
+      url: "/api/market/needs",
+      headers: authHeaders(),
+      payload: { title: "Paid task", description: "Must not fake settlement", mode: "payment" },
+    });
+    expect(paid.statusCode).toBe(409);
+    expect(paid.json().result.code).toBe("MARKET_PAYMENT_UNAVAILABLE");
+    const need = await app.inject({
+      method: "POST",
+      url: "/api/market/needs",
+      headers: authHeaders(),
+      payload: {
+        title: "Observe the relay",
+        description: "Record one open repair session",
+        mode: "collaboration",
+      },
+    });
+    expect(need.statusCode).toBe(200);
+    const afterNeed = await app.inject({
+      method: "GET",
+      url: "/api/world",
+      headers: authHeaders(),
+    });
+    const needId = (
+      Object.values(afterNeed.json().world.market.needs) as Array<{
+        needId: string;
+        title: string;
+      }>
+    ).find((item) => item.title === "Observe the relay")!.needId;
+    const propose = await app.inject({
+      method: "POST",
+      url: `/api/market/needs/${needId}/proposals`,
+      headers: secondHeaders,
+      payload: {
+        summary: "I will observe and publish the trace",
+        amountMinor: null,
+        assetCode: null,
+      },
+    });
+    expect(propose.statusCode).toBe(200);
+    const afterProposal = await app.inject({
+      method: "GET",
+      url: "/api/world",
+      headers: authHeaders(),
+    });
+    const proposalId = (
+      Object.values(afterProposal.json().world.market.proposals) as Array<{
+        proposalId: string;
+        needId: string;
+      }>
+    ).find((item) => item.needId === needId)!.proposalId;
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: `/api/market/proposals/${proposalId}/respond`,
+          headers: authHeaders(),
+          payload: { response: "accept" },
+        })
+      ).statusCode,
+    ).toBe(200);
+
+    const finalWorld = await app.inject({
+      method: "GET",
+      url: "/api/world",
+      headers: authHeaders(),
+    });
+    expect(finalWorld.json().world.relationships[relationship.relationshipId].status).toBe(
+      "active",
+    );
+    expect(finalWorld.json().world.circles[circle.circleId].memberIds).toContain(secondResidentId);
+    expect(
+      finalWorld
+        .json()
+        .world.projects["east-relay"].contributions.find(
+          (item: { contributionId: string }) => item.contributionId === contributionId,
+        ).status,
+    ).toBe("approved");
+    expect(finalWorld.json().world.market.proposals[proposalId].status).toBe("accepted");
+  });
+});
+
 describe("SSE stream", () => {
   async function readEvents(url: string, minCount: number): Promise<string[]> {
     const controller = new AbortController();

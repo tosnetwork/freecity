@@ -23,10 +23,25 @@ export function NavBar() {
         <span>F</span> FREECITY <small>D0</small>
       </Link>
       <Link href="/today" aria-current={pathname === "/today" ? "page" : undefined}>
-        Tonight
+        Today
+      </Link>
+      <Link href="/resident" aria-current={pathname.startsWith("/resident") ? "page" : undefined}>
+        Resident
       </Link>
       <Link href="/district" aria-current={pathname === "/district" ? "page" : undefined}>
         District
+      </Link>
+      <Link href="/people" aria-current={pathname === "/people" ? "page" : undefined}>
+        People
+      </Link>
+      <Link href="/projects" aria-current={pathname.startsWith("/projects") ? "page" : undefined}>
+        Projects
+      </Link>
+      <Link href="/market" aria-current={pathname === "/market" ? "page" : undefined}>
+        Market
+      </Link>
+      <Link href="/civic" aria-current={pathname === "/civic" ? "page" : undefined}>
+        Civic
       </Link>
       <Link href="/archive" aria-current={pathname === "/archive" ? "page" : undefined}>
         Archive

@@ -14,8 +14,16 @@ import {
   type ResidentState,
   type RunDueEffectsPayload,
   type UpgradeBuildingPayload,
+  type UpdateResidentPreferencesPayload,
+  createDefaultResidentPreferences,
 } from "@freecity/contracts";
 
+import {
+  WORLD_REJECTION_CODES,
+  advanceCivicElection,
+  applyCityWorldCommand,
+  maybeOpenCivicElection,
+} from "./city-world.js";
 import { addHours, addMinutes, dayKey, isDue } from "./time.js";
 
 export const REJECTION_CODES = [
@@ -36,6 +44,7 @@ export const REJECTION_CODES = [
   "PARCEL_ALREADY_UNLOCKED",
   "PARCEL_NOT_ADJACENT",
   "INSUFFICIENT_CIVIC_CAPACITY",
+  ...WORLD_REJECTION_CODES,
 ] as const;
 export type RejectionCode = (typeof REJECTION_CODES)[number];
 
@@ -106,6 +115,35 @@ export function applyCommand(
       events = result.events;
       break;
     }
+    case "resident.update_preferences": {
+      const result = updateResidentPreferences(next, command.payload);
+      if (!result.ok) return result;
+      events = result.events;
+      break;
+    }
+    case "place.visit":
+    case "social.invite":
+    case "social.respond":
+    case "social.cancel":
+    case "social.repair":
+    case "circle.create":
+    case "circle.invite":
+    case "circle.respond":
+    case "project.join":
+    case "project.claim_task":
+    case "project.submit_contribution":
+    case "project.review_contribution":
+    case "market.create_need":
+    case "market.submit_proposal":
+    case "market.respond_proposal":
+    case "civic.declare_candidacy":
+    case "civic.cast_vote":
+    case "civic.file_challenge": {
+      const result = applyCityWorldCommand(next, command, stepTime);
+      if (!result.ok) return result;
+      events = result.events;
+      break;
+    }
     case "runtime.run_due_effects": {
       const result = runDueEffects(next, command.payload, stepTime);
       if (!result.ok) return result;
@@ -170,6 +208,27 @@ function upgradeBuilding(state: DistrictState, payload: UpgradeBuildingPayload):
         cardId: null,
         consequenceId: null,
         summary: `Upgraded ${building.name} to level ${building.level}`,
+      },
+    ],
+  };
+}
+
+function updateResidentPreferences(
+  state: DistrictState,
+  payload: UpdateResidentPreferencesPayload,
+): StepOutcome {
+  const resident = state.residents[payload.residentId];
+  if (!resident) {
+    return reject("RESIDENT_NOT_FOUND", `resident ${payload.residentId} is not provisioned`);
+  }
+  resident.preferences = payload.preferences;
+  return {
+    ok: true,
+    events: [
+      {
+        eventType: "ResidentPreferencesUpdated",
+        residentId: payload.residentId,
+        preferences: payload.preferences,
       },
     ],
   };
@@ -248,8 +307,11 @@ function provisionResident(
     lastFocusRefreshDayKey: dayKey(stepTime),
     activeCards: [],
     pendingConsequences: [],
+    preferences: createDefaultResidentPreferences(),
   };
   state.residents[payload.residentId] = resident;
+  state.world.presence[payload.residentId] = "arrival-hall";
+  const civicEvents = maybeOpenCivicElection(state, payload.residentId, stepTime);
   return {
     ok: true,
     events: [
@@ -262,6 +324,7 @@ function provisionResident(
         sponsoredAiResidentId: payload.sponsoredAiResidentId,
         initialFocus: FOCUS_DAILY,
       },
+      ...civicEvents,
     ],
   };
 }
@@ -553,6 +616,12 @@ function runDueEffects(
       });
       budget -= 1;
     }
+  }
+
+  // 4. Advance at most one civic phase per bounded wake.
+  if (budget > 0) {
+    const civicEvents = advanceCivicElection(state, stepTime);
+    if (civicEvents.length > 0) events.push(...civicEvents);
   }
 
   return { ok: true, events };

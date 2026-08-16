@@ -2,11 +2,11 @@
   "name": "slice-happy-path",
   "initialState": {
     "districtId": "district-zero",
-    "seasonId": "season-0",
+    "seasonId": "season-r2-test",
     "stateVersion": 0,
     "sequence": 0,
     "stepTime": "2026-09-01T08:00:00.000Z",
-    "rulesetVersion": "district-zero-r0",
+    "rulesetVersion": "district-zero-r2",
     "rngSeed": "fixture-seed-1",
     "residents": {}
   },
@@ -231,7 +231,7 @@
     }
   ],
   "expected": {
-    "finalChecksum": "8b12d79bca4fd8d7b5e37594829f6b9859a1058466313470c93b217a33c40aa7",
+    "finalChecksum": "4a3984936b94c1edf3a3d58e9b2332c6132c4ff56762f739832e441031adcccc",
     "outcomes": [
       {
         "sequence": 1,

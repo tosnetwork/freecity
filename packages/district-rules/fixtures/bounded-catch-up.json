@@ -2,11 +2,11 @@
   "name": "bounded-catch-up",
   "initialState": {
     "districtId": "district-zero",
-    "seasonId": "season-0",
+    "seasonId": "season-r2-test",
     "stateVersion": 0,
     "sequence": 0,
     "stepTime": "2026-09-01T08:00:00.000Z",
-    "rulesetVersion": "district-zero-r0",
+    "rulesetVersion": "district-zero-r2",
     "rngSeed": "fixture-seed-2",
     "residents": {}
   },
@@ -167,7 +167,7 @@
     }
   ],
   "expected": {
-    "finalChecksum": "b1597af1ca67133a4cf934c944b64b96b0ce7f6b9b60d88ae1cde9aa1893c15e",
+    "finalChecksum": "b85c3156f3e85721957c904c864407a90be3ee5088d1660bdef591a59b1ab1c6",
     "outcomes": [
       {
         "sequence": 1,

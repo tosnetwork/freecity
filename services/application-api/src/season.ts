@@ -48,7 +48,7 @@ function systemEnvelope(
     commandId: randomUUID(),
     idempotencyKey,
     commandType: command.type,
-    schemaVersion: 1,
+    schemaVersion: 2,
     districtId: config.districtId,
     seasonId: config.seasonId,
     actorRef,

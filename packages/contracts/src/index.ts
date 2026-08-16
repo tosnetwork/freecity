@@ -5,9 +5,10 @@
  * (worker, API, browser) shares the exact same wire shapes.
  */
 
-export const CONTRACTS_SCHEMA_VERSION = 1;
+export const CONTRACTS_SCHEMA_VERSION = 2;
 
 export * from "./state.js";
+export * from "./city-world.js";
 export * from "./commands.js";
 export * from "./events.js";
 export * from "./envelope.js";

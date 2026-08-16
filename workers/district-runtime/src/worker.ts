@@ -30,7 +30,7 @@ export async function catchUpDistrict(
       // collapse in the journal.
       idempotencyKey: `run-due:${now}`,
       commandType: "runtime.run_due_effects",
-      schemaVersion: 1,
+      schemaVersion: 2,
       districtId,
       seasonId,
       actorRef: "system:scheduler",

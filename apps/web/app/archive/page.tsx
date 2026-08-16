@@ -12,6 +12,8 @@ import { CitySky } from "../../components/CitySky";
 export default function ArchivePage() {
   const router = useRouter();
   const [entries, setEntries] = useState<CommittedEventView[] | null>(null);
+  const [entryType, setEntryType] = useState("all");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     void fetchArchive()
@@ -26,6 +28,31 @@ export default function ArchivePage() {
   }, [router]);
 
   if (entries === null) return <p>Loading Archive…</p>;
+  const archiveEvents = entries.filter(
+    (
+      view,
+    ): view is CommittedEventView & {
+      event: Extract<CommittedEventView["event"], { eventType: "ArchiveEntryRecorded" }>;
+    } => view.event.eventType === "ArchiveEntryRecorded",
+  );
+  const entryTypes = [...new Set(archiveEvents.map((view) => view.event.entryType))].sort();
+  const visibleEntries = archiveEvents.filter(
+    (view) =>
+      (entryType === "all" || view.event.entryType === entryType) &&
+      `${view.event.entryType} ${view.event.summary}`.toLowerCase().includes(query.toLowerCase()),
+  );
+  const entryTitles: Record<string, string> = {
+    relationship: "Relationship chapter",
+    circle: "Circle chapter",
+    project: "Project chapter",
+    contribution: "Contribution chapter",
+    artifact: "Artifact recorded",
+    market: "Market chapter",
+    civic: "Civic chapter",
+    beacon: "Beacon chapter",
+    place_visit: "Place visited",
+  };
+  const entryTitle = (type: string) => entryTitles[type] ?? "District consequence";
 
   return (
     <div className="archive-page">
@@ -47,7 +74,30 @@ export default function ArchivePage() {
           </small>
         </div>
       </header>
-      {entries.length === 0 ? (
+      {archiveEvents.length > 0 && (
+        <section className="world-toolbar archive-toolbar" aria-label="Archive filters">
+          <label>
+            Search memory
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Summary or event type"
+            />
+          </label>
+          <label>
+            Chapter type
+            <select value={entryType} onChange={(event) => setEntryType(event.target.value)}>
+              <option value="all">All chapters</option>
+              {entryTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type.replaceAll("_", " ")}
+                </option>
+              ))}
+            </select>
+          </label>
+        </section>
+      )}
+      {archiveEvents.length === 0 ? (
         <div className="empty-archive">
           <span>◇</span>
           <h2>No chapters yet</h2>
@@ -55,9 +105,8 @@ export default function ArchivePage() {
         </div>
       ) : (
         <ol className="archive-timeline" data-testid="archive">
-          {entries.map((view) => {
+          {visibleEntries.map((view) => {
             const event = view.event;
-            if (event.eventType !== "ArchiveEntryRecorded") return null;
             const story = event.cardId ? storyForCardId(event.cardId) : null;
             return (
               <li
@@ -72,7 +121,7 @@ export default function ArchivePage() {
                       committed event {view.sequence}:{view.eventSeq}
                     </small>
                   </div>
-                  <h2>{story?.title ?? "District consequence"}</h2>
+                  <h2>{story?.title ?? entryTitle(event.entryType)}</h2>
                   <p>{event.summary}</p>
                   {story && (
                     <footer>
@@ -83,6 +132,14 @@ export default function ArchivePage() {
               </li>
             );
           })}
+          {visibleEntries.length === 0 && (
+            <li className="archive-entry">
+              <article>
+                <h2>No matching chapters</h2>
+                <p>Change the search or chapter filter to reopen more of the city memory.</p>
+              </article>
+            </li>
+          )}
         </ol>
       )}
     </div>

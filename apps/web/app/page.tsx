@@ -49,7 +49,7 @@ export default function HomePage() {
         <div className="gate-story-intro">
           <span className="eyebrow">PEOPLE ALREADY LIVE HERE</span>
           <h2 id="tonight-heading">
-            Three residents. Five living places. A future still being negotiated.
+            Three residents. Eight living places. A future still being negotiated.
           </h2>
         </div>
         <div className="gate-residents">

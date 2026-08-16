@@ -196,7 +196,8 @@ try {
     FocusRefreshed: 6, // day-2 rollover: 2 humans + 2 Miras + Nia + Orin
     BuildingUpgraded: 1,
     DistrictExpanded: 1,
-    ArchiveEntryRecorded: 9, // story records + building upgrade + district expansion
+    CivicElectionOpened: 1, // exactly the third committed human opens the founding election
+    ArchiveEntryRecorded: 10, // story records + city changes + election opening
   };
   // Exact BOTH-WAY census equality: an extra event type is as fatal as a
   // missing one.

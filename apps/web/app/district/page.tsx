@@ -12,7 +12,7 @@ import {
   type StreamStatus,
   type WorldState,
 } from "@freecity/client-world";
-import type { CityBuilding, CityBuildingType, CityParcel } from "@freecity/contracts";
+import type { CityBuilding, CityBuildingType, CityParcel, PlaceId } from "@freecity/contracts";
 
 import { apiOrigin, expandDistrict, getToken, upgradeBuilding } from "../../lib/api";
 import {
@@ -70,6 +70,15 @@ const BUILDING_STORY: Record<
     purpose: "The harbor loop connects distant parcels into one continuous lived city.",
     benefit: "Higher levels increase traffic, accessibility and cross-district movement.",
   },
+};
+
+const BUILDING_PLACE: Partial<Record<CityBuildingType, PlaceId>> = {
+  arrival_hall: "arrival-hall",
+  signal_garden: "signal-garden",
+  night_workshop: "workshop",
+  echo_studio: "studio",
+  beacon_tower: "beacon-square",
+  market_hall: "market",
 };
 
 function gridPosition(x: number, y: number): { left: string; top: string } {
@@ -175,6 +184,7 @@ export default function DistrictPage() {
   const selectedBuilding =
     world.city.buildings[selectedBuildingId] ?? world.city.buildings["beacon-square"]!;
   const selectedStory = BUILDING_STORY[selectedBuilding.type];
+  const selectedPlace = BUILDING_PLACE[selectedBuilding.type];
   const upgradeCost = selectedBuilding.level * 2 + 1;
 
   const submitUpgrade = async () => {
@@ -222,6 +232,27 @@ export default function DistrictPage() {
           Tonight&apos;s civic stories <span>→</span>
         </Link>
       </header>
+
+      <nav className="place-rail" aria-label="District places">
+        {[
+          ["arrival-hall", "Arrival"],
+          ["signal-garden", "Signal Garden"],
+          ["workshop", "Workshop"],
+          ["studio", "Studio"],
+          ["beacon-square", "Beacon"],
+          ["market", "Market Hall"],
+          ["civic-hall", "Civic Hall"],
+          ["archive", "Archive"],
+        ].map(([placeId, label]) => (
+          <Link
+            key={placeId}
+            href={`/places/${placeId}`}
+            aria-label={placeId === "archive" ? "Enter the city memory place" : undefined}
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
 
       <section className="living-city-shell" aria-labelledby="city-heading">
         <div className="city-command-bar">
@@ -354,6 +385,11 @@ export default function DistrictPage() {
               ))}
             </div>
             <small>{selectedStory.benefit}</small>
+            {selectedPlace && (
+              <Link className="text-link" href={`/places/${selectedPlace}`}>
+                Enter this place →
+              </Link>
+            )}
             <button
               type="button"
               className="upgrade-building-button"

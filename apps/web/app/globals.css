@@ -103,7 +103,8 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -126,7 +127,8 @@ button[disabled] {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   padding: 0.85rem 0.95rem;
   color: var(--ink);
@@ -137,6 +139,12 @@ select {
 
 input::placeholder {
   color: var(--soft);
+}
+
+textarea {
+  width: 100%;
+  min-height: 6rem;
+  resize: vertical;
 }
 
 :focus-visible {

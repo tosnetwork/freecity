@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 import cors from "@fastify/cors";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
@@ -6,6 +6,8 @@ import { z, ZodError } from "zod";
 
 import {
   isoTimestampSchema,
+  contributionKindSchema,
+  placeIdSchema,
   roleSchema,
   type DistrictCommand,
   type DistrictCommandEnvelope,
@@ -21,6 +23,7 @@ import { requestCode, resolveSession, verifyCode } from "./auth.js";
 import {
   ackToday,
   buildArchive,
+  buildCityWorld,
   buildPublicCitySnapshot,
   buildToday,
   cursorAfterSequence,
@@ -66,6 +69,46 @@ const declineSchema = z.object({ reason: z.string().min(1).max(200).nullable().d
 const ackSchema = z.object({ sequence: z.number().int().min(0) });
 const upgradeBuildingSchema = z.object({ expectedLevel: z.number().int().min(1) });
 const devClockSchema = z.object({ now: isoTimestampSchema.nullable() });
+const relationshipInviteSchema = z.object({
+  addresseeId: z.string().min(1),
+  note: z.string().min(1).max(280).nullable().default(null),
+});
+const responseSchema = z.object({ response: z.enum(["accept", "decline"]) });
+const repairSchema = z.object({ note: z.string().min(1).max(280) });
+const createCircleSchema = z.object({
+  name: z.string().min(1).max(60),
+  purpose: z.string().min(1).max(280),
+});
+const circleInviteSchema = z.object({ addresseeId: z.string().min(1) });
+const contributionSchema = z.object({
+  taskId: z.string().min(1).nullable().default(null),
+  kind: contributionKindSchema,
+  summary: z.string().min(1).max(500),
+  artifactUrl: z.string().url().nullable().default(null),
+});
+const reviewContributionSchema = z.object({
+  decision: z.enum(["approve", "request_changes"]),
+  note: z.string().min(1).max(280).nullable().default(null),
+});
+const createNeedSchema = z.object({
+  title: z.string().min(1).max(120),
+  description: z.string().min(1).max(500),
+  mode: z.enum(["collaboration", "payment"]).default("collaboration"),
+});
+const proposalSchema = z.object({
+  summary: z.string().min(1).max(500),
+  amountMinor: z.number().int().positive().nullable().default(null),
+  assetCode: z.enum(["TOS", "USDT", "USDC"]).nullable().default(null),
+});
+const candidacySchema = z.object({ statement: z.string().min(1).max(500) });
+const voteSchema = z.object({ candidateResidentId: z.string().min(1) });
+const challengeSchema = z.object({ reason: z.string().min(1).max(500) });
+const preferencesSchema = z.object({
+  publicPresence: z.boolean(),
+  aiMayPrepare: z.boolean(),
+  memoryScope: z.enum(["private", "circle", "district"]),
+  relationshipInvites: z.enum(["humans", "all", "none"]),
+});
 
 export async function buildServer(opts: ServerOptions): Promise<FastifyInstance> {
   const { pool, config } = opts;
@@ -210,6 +253,33 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     return reply.send(auth.membership);
   });
 
+  app.get("/api/world", async (request, reply) => {
+    const auth = await requireMembership(request);
+    if (!auth) return reply.code(401).send({ error: "unauthorized" });
+    if (!auth.membership) return reply.code(409).send({ error: "not_a_resident" });
+    await catchUpDistrict(pool, config.districtId, config.seasonId, now());
+    reply.header("cache-control", "no-store");
+    return reply.send(await buildCityWorld(pool, config, auth.membership.residentId));
+  });
+
+  app.post("/api/resident/preferences", async (request, reply) => {
+    const auth = await requireMembership(request);
+    if (!auth) return reply.code(401).send({ error: "unauthorized" });
+    if (!auth.membership) return reply.code(409).send({ error: "not_a_resident" });
+    const preferences = preferencesSchema.parse(request.body);
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "resident.update_preferences",
+        payload: { residentId: auth.membership.residentId, preferences },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `preferences:${JSON.stringify(preferences)}`,
+    );
+  });
+
   app.get("/api/today", async (request, reply) => {
     const auth = await requireMembership(request);
     if (!auth) return reply.code(401).send({ error: "unauthorized" });
@@ -255,7 +325,7 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
       commandId: randomUUID(),
       idempotencyKey,
       commandType: command.type,
-      schemaVersion: 1,
+      schemaVersion: 2,
       districtId: config.districtId,
       seasonId: config.seasonId,
       actorRef: `resident:${residentId}`,
@@ -295,6 +365,16 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
       districtSequence: row.district_sequence === null ? null : Number(row.district_sequence),
       result,
     });
+  }
+
+  function requestObjectId(request: FastifyRequest, residentId: string, prefix: string): string {
+    const headerKey = request.headers["idempotency-key"];
+    if (typeof headerKey !== "string") return `${prefix}-${randomUUID()}`;
+    const digest = createHash("sha256")
+      .update(`${residentId}:${prefix}:${headerKey}`)
+      .digest("hex")
+      .slice(0, 24);
+    return `${prefix}-${digest}`;
   }
 
   app.post("/api/cards/:cardId/choose", async (request, reply) => {
@@ -368,6 +448,370 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
       residentId,
       auth.accountId,
       `expand:${parcelId}`,
+    );
+  });
+
+  const memberForCommand = async (request: FastifyRequest) => requireMembership(request);
+
+  app.post("/api/places/:placeId/visit", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const { placeId: rawPlaceId } = request.params as { placeId: string };
+    const placeId = placeIdSchema.parse(rawPlaceId);
+    return submitCardCommand(
+      request,
+      reply,
+      { type: "place.visit", payload: { residentId: auth.membership.residentId, placeId } },
+      auth.membership.residentId,
+      auth.accountId,
+      `visit:${placeId}`,
+    );
+  });
+
+  app.post("/api/social/invitations", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const body = relationshipInviteSchema.parse(request.body);
+    const relationshipId = requestObjectId(request, auth.membership.residentId, "relationship");
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "social.invite",
+        payload: {
+          residentId: auth.membership.residentId,
+          relationshipId,
+          addresseeId: body.addresseeId,
+          note: body.note,
+        },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `relationship-invite:${relationshipId}`,
+    );
+  });
+
+  app.post("/api/social/:relationshipId/respond", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const { relationshipId } = request.params as { relationshipId: string };
+    const body = responseSchema.parse(request.body);
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "social.respond",
+        payload: {
+          residentId: auth.membership.residentId,
+          relationshipId,
+          response: body.response,
+        },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `relationship-respond:${relationshipId}:${body.response}`,
+    );
+  });
+
+  app.post("/api/social/:relationshipId/cancel", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const { relationshipId } = request.params as { relationshipId: string };
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "social.cancel",
+        payload: { residentId: auth.membership.residentId, relationshipId },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `relationship-cancel:${relationshipId}`,
+    );
+  });
+
+  app.post("/api/social/:relationshipId/repair", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const { relationshipId } = request.params as { relationshipId: string };
+    const body = repairSchema.parse(request.body);
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "social.repair",
+        payload: { residentId: auth.membership.residentId, relationshipId, note: body.note },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `relationship-repair:${relationshipId}:${randomUUID()}`,
+    );
+  });
+
+  app.post("/api/circles", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const body = createCircleSchema.parse(request.body);
+    const circleId = requestObjectId(request, auth.membership.residentId, "circle");
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "circle.create",
+        payload: {
+          residentId: auth.membership.residentId,
+          circleId,
+          name: body.name,
+          purpose: body.purpose,
+        },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `circle-create:${circleId}`,
+    );
+  });
+
+  app.post("/api/circles/:circleId/invite", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const { circleId } = request.params as { circleId: string };
+    const body = circleInviteSchema.parse(request.body);
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "circle.invite",
+        payload: {
+          residentId: auth.membership.residentId,
+          circleId,
+          addresseeId: body.addresseeId,
+        },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `circle-invite:${circleId}:${body.addresseeId}`,
+    );
+  });
+
+  app.post("/api/circles/:circleId/respond", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const { circleId } = request.params as { circleId: string };
+    const body = responseSchema.parse(request.body);
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "circle.respond",
+        payload: { residentId: auth.membership.residentId, circleId, response: body.response },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `circle-respond:${circleId}:${body.response}`,
+    );
+  });
+
+  app.post("/api/projects/:projectId/join", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const { projectId } = request.params as { projectId: string };
+    return submitCardCommand(
+      request,
+      reply,
+      { type: "project.join", payload: { residentId: auth.membership.residentId, projectId } },
+      auth.membership.residentId,
+      auth.accountId,
+      `project-join:${projectId}`,
+    );
+  });
+
+  app.post("/api/projects/:projectId/tasks/:taskId/claim", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const { projectId, taskId } = request.params as { projectId: string; taskId: string };
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "project.claim_task",
+        payload: { residentId: auth.membership.residentId, projectId, taskId },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `project-task:${projectId}:${taskId}`,
+    );
+  });
+
+  app.post("/api/projects/:projectId/contributions", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const { projectId } = request.params as { projectId: string };
+    const body = contributionSchema.parse(request.body);
+    const contributionId = requestObjectId(request, auth.membership.residentId, "contribution");
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "project.submit_contribution",
+        payload: { residentId: auth.membership.residentId, projectId, contributionId, ...body },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `project-contribution:${contributionId}`,
+    );
+  });
+
+  app.post(
+    "/api/projects/:projectId/contributions/:contributionId/review",
+    async (request, reply) => {
+      const auth = await memberForCommand(request);
+      if (!auth?.membership)
+        return reply
+          .code(auth ? 409 : 401)
+          .send({ error: auth ? "not_a_resident" : "unauthorized" });
+      const { projectId, contributionId } = request.params as {
+        projectId: string;
+        contributionId: string;
+      };
+      const body = reviewContributionSchema.parse(request.body);
+      return submitCardCommand(
+        request,
+        reply,
+        {
+          type: "project.review_contribution",
+          payload: { residentId: auth.membership.residentId, projectId, contributionId, ...body },
+        },
+        auth.membership.residentId,
+        auth.accountId,
+        `project-review:${contributionId}`,
+      );
+    },
+  );
+
+  app.post("/api/market/needs", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const body = createNeedSchema.parse(request.body);
+    const needId = requestObjectId(request, auth.membership.residentId, "need");
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "market.create_need",
+        payload: { residentId: auth.membership.residentId, needId, ...body },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `market-need:${needId}`,
+    );
+  });
+
+  app.post("/api/market/needs/:needId/proposals", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const { needId } = request.params as { needId: string };
+    const body = proposalSchema.parse(request.body);
+    const proposalId = requestObjectId(request, auth.membership.residentId, "proposal");
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "market.submit_proposal",
+        payload: { residentId: auth.membership.residentId, proposalId, needId, ...body },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `market-proposal:${proposalId}`,
+    );
+  });
+
+  app.post("/api/market/proposals/:proposalId/respond", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const { proposalId } = request.params as { proposalId: string };
+    const body = responseSchema.parse(request.body);
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "market.respond_proposal",
+        payload: { residentId: auth.membership.residentId, proposalId, response: body.response },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `market-respond:${proposalId}:${body.response}`,
+    );
+  });
+
+  app.post("/api/civic/candidacy", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const body = candidacySchema.parse(request.body);
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "civic.declare_candidacy",
+        payload: { residentId: auth.membership.residentId, statement: body.statement },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      "civic-candidacy",
+    );
+  });
+
+  app.post("/api/civic/vote", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const body = voteSchema.parse(request.body);
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "civic.cast_vote",
+        payload: {
+          residentId: auth.membership.residentId,
+          candidateResidentId: body.candidateResidentId,
+        },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      "civic-vote",
+    );
+  });
+
+  app.post("/api/civic/challenges", async (request, reply) => {
+    const auth = await memberForCommand(request);
+    if (!auth?.membership)
+      return reply.code(auth ? 409 : 401).send({ error: auth ? "not_a_resident" : "unauthorized" });
+    const body = challengeSchema.parse(request.body);
+    const challengeId = requestObjectId(request, auth.membership.residentId, "challenge");
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "civic.file_challenge",
+        payload: { residentId: auth.membership.residentId, challengeId, reason: body.reason },
+      },
+      auth.membership.residentId,
+      auth.accountId,
+      `civic-challenge:${challengeId}`,
     );
   });
 

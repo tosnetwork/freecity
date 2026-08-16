@@ -38,6 +38,21 @@ export async function syncScheduledEffects(
     const nextRollover = `${dayKey(addHours(state.stepTime, 24))}T00:00:00.000Z`;
     rows.push({ key: "focus_rollover", type: "focus_rollover", dueAt: nextRollover });
   }
+  const election = state.world.civic.election;
+  if (election.phase === "open" && election.closesAt) {
+    rows.push({
+      key: `civic-close:${election.electionId}`,
+      type: "civic_vote_close",
+      dueAt: election.closesAt,
+    });
+  }
+  if (election.phase === "challenge" && election.challengeEndsAt) {
+    rows.push({
+      key: `civic-finalize:${election.electionId}`,
+      type: "civic_challenge_close",
+      dueAt: election.challengeEndsAt,
+    });
+  }
 
   for (const row of rows) {
     await client.query(

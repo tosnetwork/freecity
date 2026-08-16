@@ -639,3 +639,387 @@ table.residents td {
     background: transparent;
   }
 }
+
+/* City World R2 surfaces: the city master remains behind one continuous,
+ * hard-edged information layer. These are places and ledgers, not SaaS cards. */
+
+.world-surface {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  width: 100vw;
+  min-height: 100vh;
+  margin: -2rem calc(50% - 50vw) -7rem;
+  padding: 0 clamp(1rem, 3vw, 3rem) 5rem;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.world-surface > .city-sky {
+  pointer-events: none;
+}
+
+.world-surface-header,
+.world-panel,
+.world-toolbar,
+.world-notice,
+.readiness-banner {
+  position: relative;
+  color: var(--hud-white);
+  background: linear-gradient(102deg, rgba(2, 14, 18, 0.88), rgba(4, 24, 27, 0.6));
+  border-top: 1px solid var(--hud-line);
+  border-bottom: 1px solid rgba(231, 200, 113, 0.34);
+  box-shadow: 0 0.8rem 2.4rem rgba(0, 9, 12, 0.26);
+  backdrop-filter: blur(4px) saturate(1.05);
+  clip-path: var(--hud-cut);
+}
+
+.world-surface-header {
+  width: min(67rem, 88%);
+  margin-top: clamp(8rem, 16vw, 13rem);
+  padding: clamp(1.2rem, 3vw, 2.3rem);
+  border-left: 0.28rem solid rgba(255, 253, 245, 0.9);
+}
+
+.world-surface-header h1 {
+  max-width: 16ch;
+  margin: 0.25rem 0 0.7rem;
+  color: var(--hud-white);
+  font-family: var(--sans);
+  font-size: clamp(2.3rem, 5vw, 5.2rem);
+  font-weight: 900;
+  line-height: 0.95;
+  text-shadow: 0 2px 10px rgba(0, 8, 10, 0.74);
+}
+
+.world-surface-header p {
+  max-width: 54rem;
+  margin: 0;
+  color: var(--hud-muted);
+  font-size: clamp(0.95rem, 1.5vw, 1.18rem);
+}
+
+.world-notice,
+.readiness-banner {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--hud-gold);
+}
+
+.world-surface-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.world-grid,
+.project-board,
+.resident-directory {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.world-panel {
+  grid-column: span 4;
+  padding: 1.15rem;
+}
+
+.world-panel-wide {
+  grid-column: span 8;
+}
+
+.world-panel h2 {
+  margin: 0.25rem 0 0.65rem;
+  color: var(--hud-white);
+  font-family: var(--sans);
+  font-size: clamp(1.35rem, 2.4vw, 2.25rem);
+  font-weight: 850;
+}
+
+.world-panel > strong {
+  display: block;
+  color: var(--hud-gold);
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+.world-panel > span:not(.eyebrow):not(.resident-glyph) {
+  color: var(--hud-muted);
+}
+
+.world-panel label,
+.world-toolbar label,
+.inline-form label {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.7rem 0;
+  color: var(--hud-muted);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.world-panel input,
+.world-panel select,
+.world-panel textarea,
+.world-toolbar input,
+.world-toolbar select {
+  color: var(--hud-white);
+  background: rgba(0, 10, 13, 0.42);
+  border: 0;
+  border-bottom: 1px solid rgba(255, 253, 245, 0.54);
+  scroll-margin-top: 5.5rem;
+}
+
+.world-panel .toggle-field {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  text-transform: none;
+}
+
+.world-panel .toggle-field input {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.world-panel button,
+.world-actions button,
+.readiness-banner button {
+  color: #102a29;
+  background: linear-gradient(105deg, #fff1af, #d6a83f);
+  border: 0;
+  clip-path: var(--hud-cut-small);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  scroll-margin-top: 5.5rem;
+}
+
+.world-panel button[disabled],
+.readiness-banner button[disabled] {
+  color: var(--hud-muted);
+  background: rgba(255, 255, 255, 0.1);
+  cursor: not-allowed;
+}
+
+.world-facts,
+.project-stats,
+.beacon-paths {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.world-facts div,
+.project-stats div,
+.beacon-paths div {
+  padding: 0.7rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 2px solid rgba(231, 200, 113, 0.45);
+}
+
+.world-facts dt,
+.project-stats dt,
+.beacon-paths dt {
+  color: var(--hud-gold);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.world-facts dd,
+.project-stats dd,
+.beacon-paths dd {
+  margin: 0.2rem 0 0;
+}
+
+.world-toolbar {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+}
+
+.resident-card,
+.project-card,
+.market-need {
+  grid-column: span 6;
+}
+
+.resident-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.9rem;
+}
+
+.resident-glyph,
+.project-place-mark {
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  color: #102a29;
+  background: linear-gradient(135deg, #fff1af, #d6a83f);
+  font-size: 1.25rem;
+  font-weight: 900;
+  transform: rotate(45deg);
+}
+
+.resident-glyph.kind-ai {
+  background: linear-gradient(135deg, #a5e9ff, #72f1c6);
+}
+
+.resident-card > .resident-glyph {
+  padding: 0;
+}
+
+.resident-card .resident-glyph::first-letter {
+  transform: rotate(-45deg);
+}
+
+.resident-card .world-actions {
+  grid-column: 1 / -1;
+}
+
+.world-actions,
+.project-room-actions,
+.readiness-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.project-board .project-card {
+  grid-column: span 6;
+}
+
+.project-place-mark {
+  float: right;
+  margin: 0.5rem;
+}
+
+.world-list {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0;
+  list-style: none;
+}
+
+.world-list li {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 2px solid rgba(231, 200, 113, 0.45);
+}
+
+.world-list li > div:first-child {
+  display: grid;
+  flex: 1;
+  gap: 0.15rem;
+}
+
+.world-list span,
+.world-list small,
+.market-need > small {
+  color: var(--hud-muted);
+}
+
+.readiness-banner {
+  justify-content: space-between;
+}
+
+.readiness-banner strong {
+  color: var(--hud-gold);
+  font-family: var(--mono);
+}
+
+.charter-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.world-loading {
+  margin: 18vh auto;
+  padding: 1rem;
+  color: var(--hud-gold);
+  font-family: var(--mono);
+  text-align: center;
+}
+
+.place-rail {
+  display: flex;
+  gap: 1px;
+  overflow-x: auto;
+  background: rgba(255, 253, 245, 0.18);
+}
+
+.place-rail a {
+  flex: 1 0 auto;
+  padding: 0.65rem 0.8rem;
+  color: var(--hud-white);
+  background: rgba(2, 14, 18, 0.84);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.place-rail a:hover {
+  color: #102a29;
+  background: var(--hud-gold);
+}
+
+@media (max-width: 68rem) {
+  .site-nav {
+    overflow-x: auto;
+  }
+
+  .site-nav .spacer {
+    min-width: 0.5rem;
+  }
+
+  .world-panel,
+  .world-panel-wide,
+  .resident-card,
+  .project-board .project-card,
+  .market-need {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 48rem) {
+  .site-nav {
+    gap: 1rem;
+  }
+
+  .world-surface-header {
+    width: 100%;
+    margin-top: 8rem;
+  }
+
+  .world-panel,
+  .world-panel-wide,
+  .resident-card,
+  .project-board .project-card,
+  .market-need {
+    grid-column: 1 / -1;
+  }
+
+  .world-toolbar,
+  .charter-columns,
+  .world-facts {
+    grid-template-columns: 1fr;
+  }
+}

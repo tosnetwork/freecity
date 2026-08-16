@@ -43,7 +43,7 @@ describe("committed city projection", () => {
     const scene = projectCityScene(world);
     expect(scene.residents["ai-district-nia"]?.activity).toContain("Beacon");
     expect(scene.residents["human-1"]?.sponsoredAiResidentId).toBe("ai-human-1");
-    expect(scene.residents["human-1"]?.placeId).toBe("workshop");
+    expect(scene.residents["human-1"]?.placeId).toBe("arrival-hall");
   });
 
   it("turns a committed choice and consequence into visible movement and place change", () => {
@@ -163,7 +163,7 @@ describe("committed city projection", () => {
     expect(snapshot.residents[0]).toMatchObject({
       residentId: "human-1",
       displayName: "Ari",
-      placeId: "workshop",
+      placeId: "arrival-hall",
       sourceEventId: "1:0",
     });
     expect(snapshot.residents[0]).not.toHaveProperty("focus");

@@ -1,4 +1,4 @@
-import type { DistrictEventType, Role } from "@freecity/contracts";
+import type { DistrictEventType, PlaceId, Role } from "@freecity/contracts";
 
 import type { ActivityItem, WorldResident, WorldState } from "./world.js";
 
@@ -9,8 +9,7 @@ import type { ActivityItem, WorldResident, WorldState } from "./world.js";
  * authority.
  */
 
-export type CityPlaceId =
-  "arrival-hall" | "signal-garden" | "workshop" | "studio" | "beacon-square";
+export type CityPlaceId = PlaceId;
 
 export interface CityPlace {
   placeId: CityPlaceId;
@@ -165,6 +164,30 @@ const PLACE_DEFINITIONS: Record<CityPlaceId, Omit<CityPlace, "status" | "intensi
     y: 0.54,
     color: 0x72f1c6,
   },
+  market: {
+    placeId: "market",
+    name: "Commons Market",
+    shortName: "MARKET",
+    x: 0.67,
+    y: 0.73,
+    color: 0xe7c871,
+  },
+  "civic-hall": {
+    placeId: "civic-hall",
+    name: "Civic Hall",
+    shortName: "CIVIC",
+    x: 0.42,
+    y: 0.64,
+    color: 0x9fe0ff,
+  },
+  archive: {
+    placeId: "archive",
+    name: "Archive",
+    shortName: "ARCHIVE",
+    x: 0.29,
+    y: 0.56,
+    color: 0xc8b4ff,
+  },
 };
 
 const ROLE_HOME: Record<Role, CityPlaceId> = {
@@ -214,7 +237,7 @@ export function projectCityScene(state: WorldState): CityScene {
   for (const resident of Object.values(state.residents)) {
     residents[resident.residentId] = {
       ...resident,
-      placeId: ROLE_HOME[resident.role],
+      placeId: state.world.presence[resident.residentId] ?? ROLE_HOME[resident.role],
       activity: resident.kind === "ai" ? "watching the district" : "newly arrived",
       sourceEventId: null,
     };
@@ -384,6 +407,77 @@ export function projectCityScene(state: WorldState): CityScene {
         };
         break;
       }
+      case "PlaceVisited": {
+        placeForResident(event.residentId, event.placeId, item);
+        const resident = residents[event.residentId];
+        if (resident) resident.activity = `present at ${places[event.placeId].name}`;
+        places[event.placeId].status = "hosting a committed resident";
+        places[event.placeId].intensity = Math.min(1, places[event.placeId].intensity + 0.22);
+        latestIntent = {
+          id: item.id,
+          kind: "move",
+          residentId: event.residentId,
+          placeId: event.placeId,
+          buildingId: null,
+          parcelId: null,
+          sourceEventType: event.eventType,
+        };
+        break;
+      }
+      case "RelationshipInvited":
+      case "RelationshipResponded":
+      case "RelationshipCancelled":
+      case "RelationshipRepaired":
+      case "CircleCreated":
+      case "CircleInvitationSent":
+      case "CircleInvitationResponded": {
+        const placeId: CityPlaceId = "signal-garden";
+        if (residentId) placeForResident(residentId, placeId, item);
+        places[placeId].status = "relationships are changing";
+        places[placeId].intensity = Math.min(1, places[placeId].intensity + 0.18);
+        phase = "changed";
+        break;
+      }
+      case "ProjectJoined":
+      case "ProjectTaskClaimed":
+      case "ProjectContributionSubmitted":
+      case "ProjectContributionReviewed": {
+        const projectId = "projectId" in event ? event.projectId : "east-relay";
+        const placeId = state.world.projects[projectId]?.placeId ?? "workshop";
+        if (residentId) placeForResident(residentId, placeId, item);
+        places[placeId].status = "project work is active";
+        places[placeId].intensity = Math.min(1, places[placeId].intensity + 0.2);
+        phase = "changed";
+        break;
+      }
+      case "MarketNeedCreated":
+      case "MarketProposalSubmitted":
+      case "MarketProposalResponded":
+        if (residentId) placeForResident(residentId, "market", item);
+        places.market.status = "needs and offers are moving";
+        places.market.intensity = Math.min(1, places.market.intensity + 0.2);
+        phase = "changed";
+        break;
+      case "CivicElectionOpened":
+      case "CivicCandidacyDeclared":
+      case "CivicVoteCast":
+      case "CivicVotingClosed":
+      case "CivicChallengeFiled":
+      case "CivicElectionFinalized":
+        if (residentId && residents[residentId]) placeForResident(residentId, "civic-hall", item);
+        places["civic-hall"].status = "civic process in progress";
+        places["civic-hall"].intensity = Math.min(1, places["civic-hall"].intensity + 0.2);
+        phase = "changed";
+        break;
+      case "BeaconContributionRecorded":
+        if (residentId) placeForResident(residentId, "beacon-square", item);
+        places["beacon-square"].status = event.contribution.summary;
+        places["beacon-square"].intensity = 1;
+        beaconSignal = Math.min(100, 38 + event.level * 6);
+        phase = "changed";
+        break;
+      case "ResidentPreferencesUpdated":
+        break;
     }
   }
 

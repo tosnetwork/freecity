@@ -132,6 +132,56 @@ describe("applyEventView", () => {
     expect(state.activity).toHaveLength(ACTIVITY_LIMIT);
     expect(state.activity[state.activity.length - 1]?.sequence).toBe(ACTIVITY_LIMIT + 49);
   });
+
+  it("rebuilds social, project and Beacon state only from committed events", () => {
+    let state = seeded();
+    state = applyEventView(
+      state,
+      view(2, 0, {
+        eventType: "RelationshipInvited",
+        residentId: "human-1",
+        relationship: {
+          relationshipId: "rel-1",
+          requesterId: "human-1",
+          addresseeId: "ai-1",
+          status: "pending",
+          closeness: 0,
+          repairCount: 0,
+          note: "Create together",
+          createdAt: "2026-09-01T08:00:00.000Z",
+          updatedAt: "2026-09-01T08:00:00.000Z",
+        },
+      }),
+    );
+    expect(state.world.relationships["rel-1"]?.status).toBe("pending");
+    state = applyEventView(
+      state,
+      view(3, 0, {
+        eventType: "ProjectJoined",
+        residentId: "human-1",
+        projectId: "east-relay",
+      }),
+    );
+    expect(state.world.projects["east-relay"]?.memberIds).toContain("human-1");
+    state = applyEventView(
+      state,
+      view(4, 0, {
+        eventType: "BeaconContributionRecorded",
+        residentId: "human-1",
+        contribution: {
+          beaconContributionId: "project:repair-map",
+          sourceId: "repair-map",
+          residentId: "human-1",
+          path: "project",
+          summary: "Mapped the relay",
+          createdAt: "2026-09-01T09:00:00.000Z",
+        },
+        level: 1,
+      }),
+    );
+    expect(state.world.beacon.totals.project).toBe(1);
+    expect(state.activity.at(-1)?.summary).toBe("Beacon: Mapped the relay");
+  });
 });
 
 describe("summarizeCommittedViews", () => {

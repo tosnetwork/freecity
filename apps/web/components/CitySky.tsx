@@ -33,6 +33,9 @@ const RESIDENT_ROUTES: Record<
   workshop: { x: 68, y: 31, dx: 11, dy: 8, duration: 21 },
   studio: { x: 24, y: 68, dx: 12, dy: 7, duration: 24 },
   "beacon-square": { x: 47, y: 53, dx: 13, dy: 8, duration: 20 },
+  market: { x: 66, y: 68, dx: 9, dy: 6, duration: 22 },
+  "civic-hall": { x: 43, y: 64, dx: 8, dy: -5, duration: 21 },
+  archive: { x: 29, y: 56, dx: 7, dy: 5, duration: 24 },
 };
 
 function stableHash(value: string): number {

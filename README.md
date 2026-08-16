@@ -4,7 +4,7 @@
 
 FreeCity is a persistent digital city and a shared social and economic environment for human and AI residents. It is designed as the first society-scale application built on [TOS Network](https://github.com/tosnetwork), using TOS Service for verifiable Agent identity, capabilities, work commitments, receipts, and settlement while FreeCity supplies the social world, public experience, communities, and civic life.
 
-This repository currently contains the product definition, implementable playable experience, authoritative district-runtime design, first-cohort operating plan, living-economy and civic-governance model, architecture, interaction principles, and visual direction for FreeCity.
+This repository contains the product definition, a working City World R2 vertical slice, the authoritative district runtime, first-cohort operating plan, living-economy and civic-governance model, architecture, interaction principles, and visual direction for FreeCity.
 
 ## Documentation
 
@@ -111,6 +111,18 @@ Use this implementation reference for:
 
 This document answers **What Exists, What Is Missing, and What Must Pass Before Dual-Currency Commerce Is Live**.
 
+### 8. [City World R2 Implementation](docs/CITY_WORLD_R2_IMPLEMENTATION.md)
+
+Use this implementation record for:
+
+- the eight playable surfaces over one animated District Zero city master;
+- relationships, Circles, projects, places, collaboration-only Market, bounded Civic play, and expanded Archive;
+- the deterministic commands, events, idempotency, replay, and version boundary now present in code;
+- resident privacy and AI-authority limits; and
+- the verified internal-slice status versus the production integrations that remain gated.
+
+This document answers **What the Current Playable Build Actually Implements**.
+
 ## Recommended Reading Order
 
 ```text
@@ -118,6 +130,7 @@ README
   -> Product Purpose and Use Cases
        -> Playable Experience V1
             -> District Simulation Runtime
+            -> City World R2 Implementation
             -> District Zero First Cohort Playbook
        -> Living Economy and Civic Governance
        -> Vision and Architecture
@@ -185,6 +198,7 @@ AI may generate content, component composition, and proposed actions. It does no
 | Canonical TOS Agent, Capability, Quote, escrow, Receipt, and settlement semantics | [TOS Service specification](https://github.com/tosnetwork/tos-service-spec) and its [FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md) |
 | Visual direction for the four primary interfaces | Concept images under [`docs/concepts`](docs/concepts) and their interpretation in the architecture document |
 | Phase 1 implementation plan, PR queue, schemas, and test matrix | [Implementation Plan R0](docs/IMPLEMENTATION_PLAN_R0.md) |
+| Implemented eight-surface city world, social/project/civic rules, version boundary, and verification status | [City World R2 Implementation](docs/CITY_WORLD_R2_IMPLEMENTATION.md) |
 | Contributor rules, architecture invariants, and Phase 1 prohibitions | [`CLAUDE.md`](CLAUDE.md) |
 | Future implementation details | To be added as focused decision records and implementation documentation |
 
@@ -210,4 +224,6 @@ When the product changes:
 
 ## Project Status
 
-FreeCity is currently in the product-definition and pre-implementation playable-specification stage. The District Simulation Runtime, District Zero experience, first cohort, TOS Service application profile, City Wallet, Supported Asset Registry, Gas Sponsor, Payment Orchestrator, broader payment relationships, candidacy bonds, elections, and civic institutions are design commitments, not evidence of deployed integrations. The audited foundation supports native TOS accounts, Jetton assets, and a narrow stablecoin software-work lifecycle, while the runtime implementation, stablecoin wallet product support, sponsored transfer, a production asset, FreeCity integration, and current-domain or external acceptance remain pending as detailed in [District Simulation Runtime](docs/FREECITY_DISTRICT_SIMULATION_RUNTIME.md) and [TOS Dual-Currency Infrastructure](docs/FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md). The next milestone is an internal vertical slice and ten-person compressed dry run that pass every gameplay, runtime, and cohort P0 gate. Only then should approximately fifty external residents enter the fourteen-day District Zero cohort. The first economic validation remains a narrow current-domain TOS testnet collaboration using an exact supported TOS-network stablecoin, with the stablecoin price, native TOS fee, and actual Gas payer separated and every city projection correctly labelled.
+FreeCity now contains a playable internal District Zero vertical slice and the [City World R2 implementation](docs/CITY_WORLD_R2_IMPLEMENTATION.md): eight connected surfaces, a live fact-driven city projection, persistent human and AI residents, consent-based relationships and Circles, reviewed project work, place presence, collaboration-only Market play, bounded founding-cohort Civic play, expanded Archive, deterministic replay, and browser/accessibility gates. This is implementation evidence for the local city-world slice, not production evidence for the full ecosystem.
+
+The TOS Service application profile, City Wallet, Supported Asset Registry, Gas Sponsor, Payment Orchestrator, production stablecoin settlement, candidacy bonds, external Agent execution, moderation operations, identity recovery, and the full fourteen-day content catalogue remain gated integrations. The next milestone is the ten-person compressed rehearsal defined in the cohort playbook. Only after its gameplay, runtime, safety, and operating gates pass should approximately fifty external residents enter the fourteen-day District Zero cohort. The first economic validation remains a narrow current-domain TOS testnet collaboration using an exact supported TOS-network stablecoin, with the stablecoin price, native TOS fee, and actual Gas payer separated and every city projection correctly labelled.

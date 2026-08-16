@@ -9,6 +9,6 @@ describe("workspace wiring", () => {
   });
 
   it("exposes a pinned ruleset version identifier", () => {
-    expect(RULESET_VERSION).toBe("district-zero-r0");
+    expect(RULESET_VERSION).toBe("district-zero-r2");
   });
 });

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { createInitialSocialWorldState, socialWorldStateSchema } from "./city-world.js";
+
 /**
  * District Runtime snapshot state for the District Zero R0 slice.
  *
@@ -273,6 +275,23 @@ export const pendingConsequenceSchema = z.object({
 });
 export type PendingConsequence = z.infer<typeof pendingConsequenceSchema>;
 
+export const residentPreferencesSchema = z.object({
+  publicPresence: z.boolean().default(true),
+  aiMayPrepare: z.boolean().default(true),
+  memoryScope: z.enum(["private", "circle", "district"]).default("private"),
+  relationshipInvites: z.enum(["humans", "all", "none"]).default("humans"),
+});
+export type ResidentPreferences = z.infer<typeof residentPreferencesSchema>;
+
+export function createDefaultResidentPreferences(): ResidentPreferences {
+  return {
+    publicPresence: true,
+    aiMayPrepare: true,
+    memoryScope: "private",
+    relationshipInvites: "humans",
+  };
+}
+
 export const residentStateSchema = z.object({
   residentId: z.string().min(1),
   kind: residentKindSchema,
@@ -285,6 +304,7 @@ export const residentStateSchema = z.object({
   lastFocusRefreshDayKey: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   activeCards: z.array(cardInstanceSchema),
   pendingConsequences: z.array(pendingConsequenceSchema),
+  preferences: residentPreferencesSchema.default(createDefaultResidentPreferences),
 });
 export type ResidentState = z.infer<typeof residentStateSchema>;
 
@@ -302,6 +322,7 @@ export const districtStateSchema = z.object({
   rngSeed: z.string().min(1),
   residents: z.record(z.string(), residentStateSchema),
   city: cityStateSchema.default(createInitialCityState),
+  world: socialWorldStateSchema.default(createInitialSocialWorldState),
 });
 export type DistrictState = z.infer<typeof districtStateSchema>;
 

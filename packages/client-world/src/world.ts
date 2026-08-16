@@ -1,10 +1,12 @@
 import {
   createInitialCityState,
+  createInitialSocialWorldState,
   type CityState,
   type DistrictEvent,
   type DistrictEventType,
   type ResidentKind,
   type Role,
+  type SocialWorldState,
 } from "@freecity/contracts";
 
 /**
@@ -44,6 +46,7 @@ export interface WorldState {
   cursor: { sequence: number; eventSeq: number };
   residents: Record<string, WorldResident>;
   city: CityState;
+  world: SocialWorldState;
   activity: ActivityItem[];
 }
 
@@ -54,6 +57,7 @@ export function createWorldState(): WorldState {
     cursor: { sequence: 0, eventSeq: -1 },
     residents: {},
     city: createInitialCityState(),
+    world: createInitialSocialWorldState(),
     activity: [],
   };
 }
@@ -98,6 +102,54 @@ export function summarizeEvent(state: WorldState, event: DistrictEvent): string 
       return `${nameOf(state, event.residentId)} upgraded ${event.building.name} to level ${event.building.level}`;
     case "DistrictExpanded":
       return `${nameOf(state, event.residentId)} opened ${event.parcelName} to the city`;
+    case "PlaceVisited":
+      return `${nameOf(state, event.residentId)} arrived at ${event.placeId}`;
+    case "RelationshipInvited":
+      return `${nameOf(state, event.residentId)} sent a relationship invitation`;
+    case "RelationshipResponded":
+      return `${nameOf(state, event.residentId)} ${event.response}ed a relationship invitation`;
+    case "RelationshipCancelled":
+      return `${nameOf(state, event.residentId)} cancelled a relationship invitation`;
+    case "RelationshipRepaired":
+      return `${nameOf(state, event.residentId)} repaired a relationship`;
+    case "CircleCreated":
+      return `${nameOf(state, event.residentId)} founded ${event.circle.name}`;
+    case "CircleInvitationSent":
+      return `${nameOf(state, event.residentId)} invited a resident to a Circle`;
+    case "CircleInvitationResponded":
+      return `${nameOf(state, event.residentId)} ${event.response}ed a Circle invitation`;
+    case "ProjectJoined":
+      return `${nameOf(state, event.residentId)} joined a city project`;
+    case "ProjectTaskClaimed":
+      return `${nameOf(state, event.residentId)} claimed “${event.task.title}”`;
+    case "ProjectContributionSubmitted":
+      return `${nameOf(state, event.residentId)} submitted a project contribution`;
+    case "ProjectContributionReviewed":
+      return `A project contribution was ${event.decision === "approve" ? "approved" : "returned for changes"}`;
+    case "MarketNeedCreated":
+      return `${nameOf(state, event.residentId)} posted “${event.need.title}”`;
+    case "MarketProposalSubmitted":
+      return `${nameOf(state, event.residentId)} proposed a collaboration`;
+    case "MarketProposalResponded":
+      return `${nameOf(state, event.residentId)} ${event.response}ed a market proposal`;
+    case "CivicElectionOpened":
+      return "The founding District Steward election opened";
+    case "CivicCandidacyDeclared":
+      return `${nameOf(state, event.residentId)} declared candidacy for District Steward`;
+    case "CivicVoteCast":
+      return `${nameOf(state, event.residentId)} cast one civic vote`;
+    case "CivicVotingClosed":
+      return "District Steward voting closed; the challenge window opened";
+    case "CivicChallengeFiled":
+      return `${nameOf(state, event.residentId)} filed an election challenge`;
+    case "CivicElectionFinalized":
+      return event.resultResidentId
+        ? `${nameOf(state, event.resultResidentId)} became District Steward`
+        : `The election finalized: ${event.resultStatus.replace("_", " ")}`;
+    case "BeaconContributionRecorded":
+      return `Beacon: ${event.contribution.summary}`;
+    case "ResidentPreferencesUpdated":
+      return `${nameOf(state, event.residentId)} updated resident authority and memory boundaries`;
   }
 }
 
@@ -113,6 +165,7 @@ export function applyEventView(state: WorldState, view: CommittedEventView): Wor
     cursor: { sequence: view.sequence, eventSeq: view.eventSeq },
     residents: { ...state.residents },
     city: state.city,
+    world: structuredClone(state.world),
     activity: state.activity,
   };
   const event = view.event;
@@ -142,6 +195,7 @@ export function applyEventView(state: WorldState, view: CommittedEventView): Wor
         focus: event.initialFocus,
         activeCardCount: 0,
       };
+      next.world.presence[event.residentId] = "arrival-hall";
       break;
     case "CardAssigned":
       adjustCards(event.residentId, 1);
@@ -161,6 +215,154 @@ export function applyEventView(state: WorldState, view: CommittedEventView): Wor
     case "ConsequenceScheduled":
     case "ConsequenceResolved":
     case "ArchiveEntryRecorded":
+      break;
+    case "PlaceVisited":
+      next.world.presence[event.residentId] = event.placeId;
+      break;
+    case "RelationshipInvited":
+      next.world.relationships[event.relationship.relationshipId] = event.relationship;
+      break;
+    case "RelationshipResponded": {
+      const item = next.world.relationships[event.relationshipId];
+      if (item) {
+        item.status = event.response === "accept" ? "active" : "declined";
+        item.closeness = event.closeness;
+        item.updatedAt = event.updatedAt;
+      }
+      break;
+    }
+    case "RelationshipCancelled": {
+      const item = next.world.relationships[event.relationshipId];
+      if (item) {
+        item.status = "cancelled";
+        item.updatedAt = event.updatedAt;
+      }
+      break;
+    }
+    case "RelationshipRepaired": {
+      const item = next.world.relationships[event.relationshipId];
+      if (item) {
+        item.closeness = event.closeness;
+        item.repairCount = event.repairCount;
+        item.updatedAt = event.updatedAt;
+      }
+      break;
+    }
+    case "CircleCreated":
+      next.world.circles[event.circle.circleId] = event.circle;
+      break;
+    case "CircleInvitationSent": {
+      const circle = next.world.circles[event.circleId];
+      if (circle && !circle.invitedResidentIds.includes(event.addresseeId)) {
+        circle.invitedResidentIds.push(event.addresseeId);
+      }
+      break;
+    }
+    case "CircleInvitationResponded": {
+      const circle = next.world.circles[event.circleId];
+      if (circle) {
+        circle.invitedResidentIds = circle.invitedResidentIds.filter(
+          (residentId) => residentId !== event.residentId,
+        );
+        if (event.response === "accept" && !circle.memberIds.includes(event.residentId)) {
+          circle.memberIds.push(event.residentId);
+        }
+      }
+      break;
+    }
+    case "ProjectJoined": {
+      const project = next.world.projects[event.projectId];
+      if (project && !project.memberIds.includes(event.residentId)) {
+        project.memberIds.push(event.residentId);
+        project.status = "active";
+      }
+      break;
+    }
+    case "ProjectTaskClaimed": {
+      const project = next.world.projects[event.projectId];
+      const index = project?.tasks.findIndex((task) => task.taskId === event.task.taskId) ?? -1;
+      if (project && index >= 0) project.tasks[index] = event.task;
+      break;
+    }
+    case "ProjectContributionSubmitted": {
+      const project = next.world.projects[event.projectId];
+      if (
+        project &&
+        !project.contributions.some(
+          (item) => item.contributionId === event.contribution.contributionId,
+        )
+      ) {
+        project.contributions.push(event.contribution);
+      }
+      break;
+    }
+    case "ProjectContributionReviewed": {
+      const contribution = next.world.projects[event.projectId]?.contributions.find(
+        (item) => item.contributionId === event.contributionId,
+      );
+      if (contribution) {
+        contribution.status = event.decision === "approve" ? "approved" : "changes_requested";
+        contribution.reviewedBy = event.reviewerId;
+        contribution.reviewNote = event.note;
+        contribution.updatedAt = event.updatedAt;
+        if (event.decision === "approve" && contribution.taskId) {
+          const task = next.world.projects[event.projectId]?.tasks.find(
+            (item) => item.taskId === contribution.taskId,
+          );
+          if (task && task.assigneeId === contribution.residentId) task.status = "completed";
+        }
+      }
+      break;
+    }
+    case "MarketNeedCreated":
+      next.world.market.needs[event.need.needId] = event.need;
+      break;
+    case "MarketProposalSubmitted":
+      next.world.market.proposals[event.proposal.proposalId] = event.proposal;
+      break;
+    case "MarketProposalResponded": {
+      const proposal = next.world.market.proposals[event.proposalId];
+      if (proposal) {
+        proposal.status = event.response === "accept" ? "accepted" : "declined";
+        const need = next.world.market.needs[proposal.needId];
+        if (need && event.response === "accept") need.status = "matched";
+      }
+      break;
+    }
+    case "CivicElectionOpened":
+      next.world.civic.election.phase = "open";
+      next.world.civic.election.opensAt = event.opensAt;
+      next.world.civic.election.closesAt = event.closesAt;
+      next.world.civic.election.challengeEndsAt = event.challengeEndsAt;
+      break;
+    case "CivicCandidacyDeclared":
+      next.world.civic.election.candidates[event.candidate.residentId] = event.candidate;
+      break;
+    case "CivicVoteCast":
+      next.world.civic.election.votes[event.residentId] = event.candidateResidentId;
+      break;
+    case "CivicVotingClosed":
+      next.world.civic.election.phase = "challenge";
+      next.world.civic.election.challengeEndsAt = event.challengeEndsAt;
+      break;
+    case "CivicChallengeFiled":
+      next.world.civic.election.challenges.push(event.challenge);
+      break;
+    case "CivicElectionFinalized":
+      next.world.civic.election.phase = "finalized";
+      next.world.civic.election.resultResidentId = event.resultResidentId;
+      next.world.civic.election.resultStatus = event.resultStatus;
+      next.world.civic.office.holderResidentId = event.resultResidentId;
+      break;
+    case "BeaconContributionRecorded":
+      if (!next.world.beacon.contributions[event.contribution.beaconContributionId]) {
+        next.world.beacon.contributions[event.contribution.beaconContributionId] =
+          event.contribution;
+        next.world.beacon.totals[event.contribution.path] += 1;
+      }
+      next.world.beacon.level = event.level;
+      break;
+    case "ResidentPreferencesUpdated":
       break;
     case "BuildingUpgraded":
       next.city = {

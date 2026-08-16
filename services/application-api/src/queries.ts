@@ -3,6 +3,9 @@ import {
   districtStateSchema,
   type DistrictEvent,
   type ResidentState,
+  type ResidentPreferences,
+  type SocialWorldState,
+  type CityState,
 } from "@freecity/contracts";
 import {
   applyEventView,
@@ -30,6 +33,61 @@ export interface TodayView {
   pendingConsequences: ResidentState["pendingConsequences"];
   /** Committed events involving this resident since the last Today view. */
   whileYouWereAway: CommittedEventView[];
+}
+
+export interface CityWorldView {
+  districtId: string;
+  seasonId: string;
+  stateVersion: number;
+  lastSequence: number;
+  stepTime: string;
+  residents: Array<{
+    residentId: string;
+    kind: "human" | "ai";
+    role: ResidentState["role"];
+    displayName: string;
+    sponsoredAiResidentId: string | null;
+  }>;
+  city: CityState;
+  world: SocialWorldState;
+  selfPreferences: ResidentPreferences;
+}
+
+/** Authenticated committed city state without other residents' Focus/cards. */
+export async function buildCityWorld(
+  pool: Pool,
+  config: SeasonConfig,
+  viewerResidentId: string,
+): Promise<CityWorldView> {
+  const runtime = await pool.query(
+    `SELECT state, last_sequence FROM district.district_runtime
+      WHERE district_id = $1 AND season_id = $2`,
+    [config.districtId, config.seasonId],
+  );
+  const row = runtime.rows[0];
+  if (!row) throw new Error("district not initialized");
+  const state = districtStateSchema.parse(row.state);
+  const viewer = state.residents[viewerResidentId];
+  if (!viewer) throw new Error(`resident ${viewerResidentId} not provisioned`);
+  return {
+    districtId: state.districtId,
+    seasonId: state.seasonId,
+    stateVersion: state.stateVersion,
+    lastSequence: Number(row.last_sequence),
+    stepTime: state.stepTime,
+    residents: Object.values(state.residents)
+      .map((resident) => ({
+        residentId: resident.residentId,
+        kind: resident.kind,
+        role: resident.role,
+        displayName: resident.displayName,
+        sponsoredAiResidentId: resident.sponsoredAiResidentId,
+      }))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName)),
+    city: state.city,
+    world: state.world,
+    selfPreferences: viewer.preferences,
+  };
 }
 
 /**
@@ -64,7 +122,9 @@ export async function buildPublicCitySnapshot(
 
   let world: WorldState = createWorldState();
   world.city = committed.city;
+  world.world = committed.world;
   for (const resident of Object.values(committed.residents)) {
+    if (!resident.preferences.publicPresence) continue;
     world.residents[resident.residentId] = {
       residentId: resident.residentId,
       kind: resident.kind,
@@ -90,12 +150,18 @@ export async function buildPublicCitySnapshot(
   // aggregates. Presence uses their activity only; the committed snapshot is
   // always the authoritative city state.
   world.city = committed.city;
+  world.world = committed.world;
+  for (const resident of Object.values(committed.residents)) {
+    if (!resident.preferences.publicPresence) delete world.residents[resident.residentId];
+  }
 
-  return projectPublicCitySnapshot(world, {
+  const snapshot = projectPublicCitySnapshot(world, {
     districtId: committed.districtId,
     seasonId: committed.seasonId,
     committedAt: committed.stepTime,
   });
+  snapshot.residentCount = Object.keys(committed.residents).length;
+  return snapshot;
 }
 
 function eventInvolvesResident(event: DistrictEvent, residentId: string): boolean {

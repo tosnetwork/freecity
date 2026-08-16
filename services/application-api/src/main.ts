@@ -22,7 +22,9 @@ const app = await buildServer({
   pool: createPool(databaseUrl),
   config: {
     districtId: process.env["FREECITY_DISTRICT_ID"] ?? "district-zero",
-    seasonId: process.env["FREECITY_SEASON_ID"] ?? "season-0",
+    // R2 starts a fresh replay partition: old R0 history remains immutable,
+    // while the expanded social/economic rules have an honest genesis.
+    seasonId: process.env["FREECITY_SEASON_ID"] ?? "season-r2",
   },
   authMode,
   webOrigin: process.env["FREECITY_WEB_ORIGIN"] ?? "http://localhost:3000",

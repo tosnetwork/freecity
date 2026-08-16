@@ -77,3 +77,19 @@ test("full slice is keyboard-operable end to end", async ({ page }) => {
   await expect(page.getByTestId("reaction")).toBeVisible();
   await expect(page.getByTestId("focus")).toHaveText("2");
 });
+
+test("resident, people, projects, market, civic and places pass axe", async ({ page }) => {
+  await enterDistrict(page, "A11y R2", "mediator");
+  for (const [path, heading] of [
+    ["/resident", "A11y R2"],
+    ["/people", "Meet the residents who make the city real."],
+    ["/projects", "Build with humans and AI, then leave evidence."],
+    ["/market", "Exchange begins with a real need."],
+    ["/civic", "Power must be legible before it is playable."],
+    ["/places/beacon-square", "Beacon Square"],
+  ]) {
+    await page.goto(path);
+    await page.getByRole("heading", { name: heading, exact: true }).waitFor();
+    await expectNoSeriousViolations(page, path);
+  }
+});

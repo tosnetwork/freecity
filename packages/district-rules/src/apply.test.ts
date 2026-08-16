@@ -6,6 +6,7 @@ import {
   type DistrictCommand,
   type DistrictState,
   createInitialCityState,
+  createInitialSocialWorldState,
 } from "@freecity/contracts";
 
 import { applyCommand, type ApplyResult } from "./apply.js";
@@ -19,10 +20,11 @@ function emptyState(): DistrictState {
     stateVersion: 0,
     sequence: 0,
     stepTime: T0,
-    rulesetVersion: "district-zero-r0",
+    rulesetVersion: "district-zero-r2",
     rngSeed: "test-seed",
     residents: {},
     city: createInitialCityState(),
+    world: createInitialSocialWorldState(),
   };
 }
 
