@@ -347,6 +347,40 @@ describe("snapshots and replay", () => {
   });
 });
 
+describe("chaos: concurrent workers", () => {
+  it("two workers racing one partition serialize on the row lock with no duplicates", async () => {
+    const { districtId, seasonId } = await freshDistrict();
+    await enqueueCommand(db.pool, envelope(districtId, seasonId, provision("human-1"), "k1"));
+    for (let i = 1; i <= 6; i += 1) {
+      await enqueueCommand(db.pool, envelope(districtId, seasonId, assign(`card-${i}`), `k-a${i}`));
+    }
+
+    // Both "workers" wake simultaneously; FOR UPDATE serializes them, and the
+    // second consumes only what the first left behind.
+    const [first, second] = await Promise.all([
+      processDistrict(db.pool, districtId, seasonId, { stepTime: T0, batchLimit: 4 }),
+      processDistrict(db.pool, districtId, seasonId, { stepTime: T0, batchLimit: 4 }),
+    ]);
+    const third = await processDistrict(db.pool, districtId, seasonId, { stepTime: T0 });
+    const totalProcessed = first.processed + second.processed + third.processed;
+    expect(totalProcessed).toBe(7); // every command exactly once across workers
+
+    const { state, lastSequence } = await currentState(districtId, seasonId);
+    expect(lastSequence).toBe(4); // 1 provision + 3 assigns applied
+    expect(state.residents["human-1"]?.activeCards).toHaveLength(3);
+
+    const sequences = await db.pool.query(
+      `SELECT district_sequence, COUNT(*) FROM district.district_command
+        WHERE district_id = $1 AND district_sequence IS NOT NULL
+        GROUP BY district_sequence HAVING COUNT(*) > 1`,
+      [districtId],
+    );
+    expect(sequences.rows).toHaveLength(0); // no sequence ever assigned twice
+
+    expect((await replayDistrict(db.pool, districtId, seasonId)).match).toBe(true);
+  });
+});
+
 describe("scheduler", () => {
   it("wakes an idle district for due effects and resolves them via a system command", async () => {
     const { districtId, seasonId } = await freshDistrict();

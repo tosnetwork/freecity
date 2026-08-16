@@ -10,6 +10,7 @@
     "dev:api": "pnpm --filter @freecity/application-api dev",
     "db:migrate": "node-pg-migrate -m migrations --migrations-schema public up",
     "replay": "pnpm --filter @freecity/district-runtime replay",
+    "gate:replay": "pnpm --filter @freecity/application-api replay-gate",
     "lint": "eslint .",
     "format": "prettier --check .",
     "typecheck": "pnpm -r --if-present typecheck",
@@ -17,6 +18,7 @@
     "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.49.1",
     "@types/node": "^22.10.5",
     "eslint": "^9.17.0",

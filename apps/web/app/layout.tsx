@@ -16,7 +16,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           Skip to content
         </a>
         <NavBar />
-        <main id="main">{children}</main>
+        {/* tabIndex makes the skip-link target programmatically focusable. */}
+        <main id="main" tabIndex={-1}>
+          {children}
+        </main>
       </body>
     </html>
   );

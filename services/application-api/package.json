@@ -7,11 +7,13 @@
   "types": "src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "dev": "tsx watch src/main.ts"
+    "dev": "tsx watch src/main.ts",
+    "replay-gate": "tsx scripts/replay-gate.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",
     "@freecity/contracts": "workspace:*",
+    "@freecity/district-rules": "workspace:^",
     "@freecity/district-runtime": "workspace:*",
     "fastify": "^5.2.0",
     "zod": "^3.24.1"

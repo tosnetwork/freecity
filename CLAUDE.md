@@ -142,9 +142,10 @@ pnpm install              # workspace install (pnpm via corepack, pinned in pack
 docker-compose up -d      # local PostgreSQL (host port 5433) + Redis (6379)
 pnpm db:migrate           # apply migrations (needs DATABASE_URL, see .env.example)
 pnpm test                 # Vitest unit + integration
-pnpm test:e2e             # Playwright end-to-end (starts the web dev server)
+pnpm test:e2e             # Playwright full-stack e2e (boots API + web dev servers)
+pnpm gate:replay          # replay-checksum release gate on a scratch database
 pnpm lint && pnpm format && pnpm typecheck
-pnpm replay -- --district <id> --season <id>   # replay verification (release gate)
+pnpm replay -- --district <id> --season <id>   # replay verification for a live database
 pnpm dev                  # web app
 pnpm dev:api              # application API on :3001 (AUTH_MODE=dev by default)
 ```

@@ -5,6 +5,7 @@ import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import { z, ZodError } from "zod";
 
 import {
+  isoTimestampSchema,
   roleSchema,
   type DistrictCommand,
   type DistrictCommandEnvelope,
@@ -42,6 +43,15 @@ export interface ServerOptions {
    * cookies, so the CORS surface stays narrow.
    */
   webOrigin?: string;
+  /**
+   * Registers the /api/dev/* test-control endpoints (clock override,
+   * kill-streams). OFF by default and independent of authMode: an ordinary
+   * dev deployment must not let signed-in users move the district clock or
+   * sever everyone's streams. Requires dev authMode AND testControlKey.
+   */
+  enableTestControls?: boolean;
+  /** Shared secret held only by the test process; sent as x-test-control-key. */
+  testControlKey?: string;
 }
 
 const emailSchema = z.object({ email: z.string().email() });
@@ -53,10 +63,19 @@ const chooseSchema = z.object({
 });
 const declineSchema = z.object({ reason: z.string().min(1).max(200).nullable().default(null) });
 const ackSchema = z.object({ sequence: z.number().int().min(0) });
+const devClockSchema = z.object({ now: isoTimestampSchema.nullable() });
 
 export async function buildServer(opts: ServerOptions): Promise<FastifyInstance> {
   const { pool, config } = opts;
-  const now = opts.now ?? (() => new Date().toISOString());
+  const baseNow = opts.now ?? (() => new Date().toISOString());
+  // Dev-only test clock (set via POST /api/dev/clock, registered exclusively
+  // in dev mode below) so e2e tests can drive delayed consequences. It only
+  // shifts the API-boundary wall clock; deterministic-step semantics are
+  // untouched — the override becomes the recorded explicit step time.
+  let devClockOverride: string | null = null;
+  const now = () => devClockOverride ?? baseNow();
+  /** Active SSE sockets, so the dev kill-streams hook can sever them. */
+  const activeStreams = new Set<import("node:net").Socket>();
   const app = Fastify({ logger: false });
 
   await app.register(cors, {
@@ -106,6 +125,44 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     if (!accountId) return null;
     const membership = await findMembership(pool, config, accountId);
     return membership ? { accountId, membership } : { accountId, membership: null };
+  }
+
+  app.get("/healthz", async (_request, reply) => reply.send({ ok: true }));
+
+  if (opts.enableTestControls === true && opts.authMode === "dev") {
+    const controlKey = opts.testControlKey;
+    if (!controlKey) {
+      throw new Error("enableTestControls requires a testControlKey");
+    }
+    const authorizeControl = async (
+      request: FastifyRequest,
+    ): Promise<{ code: number; error: string } | null> => {
+      const accountId = await authenticate(request);
+      if (!accountId) return { code: 401, error: "unauthorized" };
+      if (request.headers["x-test-control-key"] !== controlKey) {
+        return { code: 403, error: "forbidden" };
+      }
+      return null;
+    };
+
+    app.post("/api/dev/clock", async (request, reply) => {
+      const denied = await authorizeControl(request);
+      if (denied) return reply.code(denied.code).send({ error: denied.error });
+      const body = devClockSchema.parse(request.body);
+      devClockOverride = body.now;
+      return reply.send({ now: devClockOverride });
+    });
+
+    // Severs every active SSE connection — a deploy/restart stand-in that
+    // lets e2e tests exercise real mid-mount reconnection.
+    app.post("/api/dev/kill-streams", async (request, reply) => {
+      const denied = await authorizeControl(request);
+      if (denied) return reply.code(denied.code).send({ error: denied.error });
+      const killed = activeStreams.size;
+      for (const socket of activeStreams) socket.destroy();
+      activeStreams.clear();
+      return reply.send({ killed });
+    });
   }
 
   app.post("/api/auth/request-code", async (request, reply) => {
@@ -307,8 +364,10 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     reply.raw.flushHeaders();
 
     let open = true;
+    activeStreams.add(request.raw.socket);
     request.raw.on("close", () => {
       open = false;
+      activeStreams.delete(request.raw.socket);
     });
 
     const pollMs = opts.ssePollMs ?? 1000;
