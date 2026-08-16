@@ -144,7 +144,8 @@ pnpm db:migrate           # apply migrations (needs DATABASE_URL, see .env.examp
 pnpm test                 # Vitest unit + integration
 pnpm test:e2e             # Playwright end-to-end (starts the web dev server)
 pnpm lint && pnpm format && pnpm typecheck
-pnpm dev                  # web app (api + runtime worker join in PR3/PR4)
+pnpm replay -- --district <id> --season <id>   # replay verification (release gate)
+pnpm dev                  # web app (api joins in PR4)
 ```
 
 Local Postgres maps to host port **5433** (5432 is taken by a locally

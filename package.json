@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "pnpm --filter @freecity/web dev",
     "db:migrate": "node-pg-migrate -m migrations --migrations-schema public up",
+    "replay": "pnpm --filter @freecity/district-runtime replay",
     "lint": "eslint .",
     "format": "prettier --check .",
     "typecheck": "pnpm -r --if-present typecheck",
