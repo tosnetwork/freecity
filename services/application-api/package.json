@@ -10,6 +10,7 @@
     "dev": "tsx watch src/main.ts"
   },
   "dependencies": {
+    "@fastify/cors": "^11.3.0",
     "@freecity/contracts": "workspace:*",
     "@freecity/district-runtime": "workspace:*",
     "fastify": "^5.2.0",

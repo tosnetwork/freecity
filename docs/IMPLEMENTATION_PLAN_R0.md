@@ -242,5 +242,17 @@ demonstrably executable.
 10. **Telemetry** (PR4+): Playable §15.4 event list — implement the ~10 events
     the slice touches only; rest deferred.
 
+11. **WYWA marker semantics** — **resolved in PR5**: `GET /api/today` is
+    side-effect free; the marker advances only through the explicit,
+    monotonic `POST /api/today/ack`. Duplicate fetches (React strict mode,
+    refresh, retry) can never consume the list — found when the browser's
+    double-mounted Today page emptied its own WYWA.
+12. **SSE transport path** — **resolved in PR5**: REST goes through the
+    same-origin web proxy; the event stream connects directly to the API
+    origin with a narrow CORS grant (GET/POST, bearer header, configured
+    web origin), because the Next dev proxy buffers streaming responses for
+    browser fetches. The raw SSE response attaches its CORS header manually
+    since it bypasses fastify's reply pipeline.
+
 Anything not listed here that requires interpreting the specs gets added to
 this section in the same PR that resolves it.

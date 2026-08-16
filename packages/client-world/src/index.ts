@@ -1,7 +1,23 @@
 /**
- * @freecity/client-world — client-side reconciliation, semantic world state,
- * and the renderer adapter boundary. Implementation arrives with PR5; the
- * renderer (PixiJS or DOM) consumes this package and never becomes authority.
+ * @freecity/client-world — client reconciliation, semantic world state, and
+ * the renderer adapter boundary. Pure reduction over committed events; no
+ * client-side state commit.
  */
 
-export const CLIENT_WORLD_PACKAGE = "@freecity/client-world";
+export {
+  ACTIVITY_LIMIT,
+  applyEventView,
+  createWorldState,
+  summarizeCommittedViews,
+  summarizeEvent,
+} from "./world.js";
+export type {
+  ActivityItem,
+  CommittedEventView,
+  SeedResident,
+  WorldResident,
+  WorldState,
+} from "./world.js";
+export { parseSseBuffer, streamDistrictEvents } from "./sse.js";
+export type { SseFrame, StreamHandle, StreamOptions, StreamStatus } from "./sse.js";
+export type { RendererAdapter } from "./renderer.js";

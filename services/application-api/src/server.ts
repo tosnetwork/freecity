@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 
+import cors from "@fastify/cors";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import { z, ZodError } from "zod";
 
@@ -17,6 +18,7 @@ import {
 
 import { requestCode, resolveSession, verifyCode } from "./auth.js";
 import {
+  ackToday,
   buildArchive,
   buildToday,
   cursorAfterSequence,
@@ -34,6 +36,12 @@ export interface ServerOptions {
   ssePollMs?: number;
   /** Wall-clock source, injectable in tests. Read only at the API boundary. */
   now?: () => string;
+  /**
+   * Browser origin allowed to call the API directly (the SSE stream bypasses
+   * the web dev proxy, which buffers streaming responses). Bearer tokens, no
+   * cookies, so the CORS surface stays narrow.
+   */
+  webOrigin?: string;
 }
 
 const emailSchema = z.object({ email: z.string().email() });
@@ -44,11 +52,18 @@ const chooseSchema = z.object({
   expectedStateVersion: z.number().int().min(0).nullable().default(null),
 });
 const declineSchema = z.object({ reason: z.string().min(1).max(200).nullable().default(null) });
+const ackSchema = z.object({ sequence: z.number().int().min(0) });
 
 export async function buildServer(opts: ServerOptions): Promise<FastifyInstance> {
   const { pool, config } = opts;
   const now = opts.now ?? (() => new Date().toISOString());
   const app = Fastify({ logger: false });
+
+  await app.register(cors, {
+    origin: opts.webOrigin ?? "http://localhost:3000",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["authorization", "content-type", "idempotency-key", "last-event-id"],
+  });
 
   // Malformed input is the client's error, never a 500 — whether zod caught
   // it (semantic validation) or fastify did (broken JSON, wrong content
@@ -121,6 +136,13 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     return reply.send(membership);
   });
 
+  app.get("/api/membership", async (request, reply) => {
+    const auth = await requireMembership(request);
+    if (!auth) return reply.code(401).send({ error: "unauthorized" });
+    if (!auth.membership) return reply.code(409).send({ error: "not_a_resident" });
+    return reply.send(auth.membership);
+  });
+
   app.get("/api/today", async (request, reply) => {
     const auth = await requireMembership(request);
     if (!auth) return reply.code(401).send({ error: "unauthorized" });
@@ -129,6 +151,15 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     // exactly the committed events, never a prediction.
     await catchUpDistrict(pool, config.districtId, config.seasonId, now());
     return reply.send(await buildToday(pool, config, auth.membership.residentId));
+  });
+
+  app.post("/api/today/ack", async (request, reply) => {
+    const auth = await requireMembership(request);
+    if (!auth) return reply.code(401).send({ error: "unauthorized" });
+    if (!auth.membership) return reply.code(409).send({ error: "not_a_resident" });
+    const body = ackSchema.parse(request.body);
+    const saved = await ackToday(pool, config, auth.membership.residentId, body.sequence);
+    return reply.send({ acknowledged: saved });
   });
 
   app.get("/api/archive", async (request, reply) => {
@@ -266,7 +297,14 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
       "content-type": "text/event-stream",
       "cache-control": "no-cache",
       connection: "keep-alive",
+      // Prevent intermediaries (e.g. the Next dev proxy) from applying
+      // response compression, which buffers the stream indefinitely.
+      "content-encoding": "identity",
+      // Writing to the raw socket bypasses fastify's reply pipeline, so the
+      // CORS plugin's headers must be attached here by hand.
+      "access-control-allow-origin": opts.webOrigin ?? "http://localhost:3000",
     });
+    reply.raw.flushHeaders();
 
     let open = true;
     request.raw.on("close", () => {
