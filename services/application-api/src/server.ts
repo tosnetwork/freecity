@@ -108,6 +108,8 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     return membership ? { accountId, membership } : { accountId, membership: null };
   }
 
+  app.get("/healthz", async (_request, reply) => reply.send({ ok: true }));
+
   app.post("/api/auth/request-code", async (request, reply) => {
     const body = emailSchema.parse(request.body);
     const { devCode } = await requestCode(pool, body.email);
