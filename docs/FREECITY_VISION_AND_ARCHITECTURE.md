@@ -251,25 +251,25 @@ The following concept images illustrate how the shared FreeCity design language 
 
 The City View is the public entrance to FreeCity. It combines an inhabited civic environment with a small number of spatial district labels, real city status, and one clear entry action. The cinematic layer establishes atmosphere, while the primary message and call to action remain stable screen-space elements.
 
-![FreeCity City View concept](docs/concepts/freecity-city-view.png)
+![FreeCity City View concept](concepts/freecity-city-view.png)
 
 #### 4.3.2 Resident UI
 
 The Resident UI is the everyday social and productive interface. It prioritizes districts, residents, work, markets, and public activity over cinematic presentation. Human and AI identities use the same profile structure while remaining visibly distinguishable. The AI resident MIRA is represented through a non-humanoid digital identity rather than a generic robot portrait.
 
-![FreeCity Resident UI concept](docs/concepts/freecity-resident-ui.png)
+![FreeCity Resident UI concept](concepts/freecity-resident-ui.png)
 
 #### 4.3.3 City Engine
 
 The City Engine exposes the operating model behind an AI resident. Identity, memory, relationships, work, permissions, and event history appear as inspectable system objects connected through a coherent node graph. The interface is visually sophisticated, but every graph, timeline, status, and control must correspond to real system state.
 
-![FreeCity City Engine concept](docs/concepts/freecity-city-engine.png)
+![FreeCity City Engine concept](concepts/freecity-city-engine.png)
 
 #### 4.3.4 Governance Console
 
 The Governance Console is evidence-oriented and intentionally less cinematic. It makes proposal provenance, impact, participation, voting status, confirmation boundaries, and the audit trail visible in one place. Human and AI contributors are identified by role so that participation remains transparent without treating either group as secondary.
 
-![FreeCity Governance Console concept](docs/concepts/freecity-governance-console.png)
+![FreeCity Governance Console concept](concepts/freecity-governance-console.png)
 
 Together, these screens define a progression from atmosphere to agency:
 

@@ -8,7 +8,7 @@ This repository currently contains the product definition, implementable playabl
 
 ## Documentation
 
-### 1. [Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md)
+### 1. [Product Purpose and Use Cases](docs/FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md)
 
 Start here to understand:
 
@@ -22,7 +22,7 @@ Start here to understand:
 
 This document answers **Why, Who, and What**.
 
-### 2. [Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md)
+### 2. [Vision and Architecture](docs/FREECITY_VISION_AND_ARCHITECTURE.md)
 
 Continue here for:
 
@@ -37,7 +37,7 @@ Continue here for:
 
 This document answers **How, System Boundaries, and Technical Direction**.
 
-### 3. [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md)
+### 3. [Living Economy and Civic Governance](docs/FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md)
 
 Read this for:
 
@@ -52,7 +52,7 @@ Read this for:
 
 This document answers **Why Residents Pay, Why They Return, and How Economic and Civic Power Is Constrained**.
 
-### 4. [Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md)
+### 4. [Playable Experience V1](docs/FREECITY_PLAYABLE_EXPERIENCE_V1.md)
 
 Use this as the implementation source for:
 
@@ -67,7 +67,7 @@ Use this as the implementation source for:
 
 This document answers **What the Player Actually Does**.
 
-### 5. [District Simulation Runtime](FREECITY_DISTRICT_SIMULATION_RUNTIME.md)
+### 5. [District Simulation Runtime](docs/FREECITY_DISTRICT_SIMULATION_RUNTIME.md)
 
 Use this as the gameplay infrastructure source for:
 
@@ -82,7 +82,7 @@ Use this as the gameplay infrastructure source for:
 
 This document answers **How the City Keeps Moving Without Inventing Facts or Creating a Second Authority**.
 
-### 6. [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md)
+### 6. [District Zero First Cohort Playbook](docs/FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md)
 
 Use this before inviting the first players for:
 
@@ -97,7 +97,7 @@ Use this before inviting the first players for:
 
 This document answers **How to Run the First Real Player Cohort Safely and Learn from It**.
 
-### 7. [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)
+### 7. [TOS Dual-Currency Infrastructure](docs/FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)
 
 Use this implementation reference for:
 
@@ -175,15 +175,17 @@ AI may generate content, component composition, and proposed actions. It does no
 
 | Subject | Source of truth |
 | --- | --- |
-| Product purpose, audiences, use cases, value, and product validation | [Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md) |
-| Player fantasy, core loops, events, roles, progression, social play, interface, telemetry, and ten-out-of-ten design targets | [Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md) |
-| Authoritative district commands, deterministic gameplay, offline progression, snapshots, replay, synchronization, renderer and room boundaries, and runtime acceptance gates | [District Simulation Runtime](FREECITY_DISTRICT_SIMULATION_RUNTIME.md) |
-| First-player recruitment, readiness, staffing, fourteen-day operations, research, stop conditions, and decisions | [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md) |
-| Commercial positioning, recurring play, payment relationships, TOS asset policy, elections, civic offices, and institutional safeguards | [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md) |
-| Vision, product principles, surfaces, interaction design, and system architecture | [Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md) |
-| Audited TOS infrastructure baseline, dual-currency target, asset registry, wallet, sponsorship, payment orchestration, projection, phases, and readiness gates | [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md) |
+| Product purpose, audiences, use cases, value, and product validation | [Product Purpose and Use Cases](docs/FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md) |
+| Player fantasy, core loops, events, roles, progression, social play, interface, telemetry, and ten-out-of-ten design targets | [Playable Experience V1](docs/FREECITY_PLAYABLE_EXPERIENCE_V1.md) |
+| Authoritative district commands, deterministic gameplay, offline progression, snapshots, replay, synchronization, renderer and room boundaries, and runtime acceptance gates | [District Simulation Runtime](docs/FREECITY_DISTRICT_SIMULATION_RUNTIME.md) |
+| First-player recruitment, readiness, staffing, fourteen-day operations, research, stop conditions, and decisions | [District Zero First Cohort Playbook](docs/FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md) |
+| Commercial positioning, recurring play, payment relationships, TOS asset policy, elections, civic offices, and institutional safeguards | [Living Economy and Civic Governance](docs/FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md) |
+| Vision, product principles, surfaces, interaction design, and system architecture | [Vision and Architecture](docs/FREECITY_VISION_AND_ARCHITECTURE.md) |
+| Audited TOS infrastructure baseline, dual-currency target, asset registry, wallet, sponsorship, payment orchestration, projection, phases, and readiness gates | [TOS Dual-Currency Infrastructure](docs/FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md) |
 | Canonical TOS Agent, Capability, Quote, escrow, Receipt, and settlement semantics | [TOS Service specification](https://github.com/tosnetwork/tos-service-spec) and its [FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md) |
 | Visual direction for the four primary interfaces | Concept images under [`docs/concepts`](docs/concepts) and their interpretation in the architecture document |
+| Phase 1 implementation plan, PR queue, schemas, and test matrix | [Implementation Plan R0](docs/IMPLEMENTATION_PLAN_R0.md) |
+| Contributor rules, architecture invariants, and Phase 1 prohibitions | [`CLAUDE.md`](CLAUDE.md) |
 | Future implementation details | To be added as focused decision records and implementation documentation |
 
 ## Documentation Maintenance
@@ -208,4 +210,4 @@ When the product changes:
 
 ## Project Status
 
-FreeCity is currently in the product-definition and pre-implementation playable-specification stage. The District Simulation Runtime, District Zero experience, first cohort, TOS Service application profile, City Wallet, Supported Asset Registry, Gas Sponsor, Payment Orchestrator, broader payment relationships, candidacy bonds, elections, and civic institutions are design commitments, not evidence of deployed integrations. The audited foundation supports native TOS accounts, Jetton assets, and a narrow stablecoin software-work lifecycle, while the runtime implementation, stablecoin wallet product support, sponsored transfer, a production asset, FreeCity integration, and current-domain or external acceptance remain pending as detailed in [District Simulation Runtime](FREECITY_DISTRICT_SIMULATION_RUNTIME.md) and [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md). The next milestone is an internal vertical slice and ten-person compressed dry run that pass every gameplay, runtime, and cohort P0 gate. Only then should approximately fifty external residents enter the fourteen-day District Zero cohort. The first economic validation remains a narrow current-domain TOS testnet collaboration using an exact supported TOS-network stablecoin, with the stablecoin price, native TOS fee, and actual Gas payer separated and every city projection correctly labelled.
+FreeCity is currently in the product-definition and pre-implementation playable-specification stage. The District Simulation Runtime, District Zero experience, first cohort, TOS Service application profile, City Wallet, Supported Asset Registry, Gas Sponsor, Payment Orchestrator, broader payment relationships, candidacy bonds, elections, and civic institutions are design commitments, not evidence of deployed integrations. The audited foundation supports native TOS accounts, Jetton assets, and a narrow stablecoin software-work lifecycle, while the runtime implementation, stablecoin wallet product support, sponsored transfer, a production asset, FreeCity integration, and current-domain or external acceptance remain pending as detailed in [District Simulation Runtime](docs/FREECITY_DISTRICT_SIMULATION_RUNTIME.md) and [TOS Dual-Currency Infrastructure](docs/FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md). The next milestone is an internal vertical slice and ten-person compressed dry run that pass every gameplay, runtime, and cohort P0 gate. Only then should approximately fifty external residents enter the fourteen-day District Zero cohort. The first economic validation remains a narrow current-domain TOS testnet collaboration using an exact supported TOS-network stablecoin, with the stablecoin price, native TOS fee, and actual Gas payer separated and every city projection correctly labelled.
