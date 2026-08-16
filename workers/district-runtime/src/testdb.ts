@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import runMigrations from "node-pg-migrate";
+import { runner as runMigrations } from "node-pg-migrate";
 import pg from "pg";
 
 import { createPool, type Pool } from "./db.js";
