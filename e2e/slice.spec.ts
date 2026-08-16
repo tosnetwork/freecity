@@ -17,10 +17,10 @@ test("full slice: enter, choose, decline, district parity, archive", async ({ pa
   await expect(page.getByTestId("wywa")).not.toContainText("human-");
 
   // Keyboard-only choice on the 1-Focus option.
-  const share = page.getByRole("button", { name: /Share this version/ });
+  const share = page.getByRole("button", { name: /Open the whole memory/ });
   await share.focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByTestId("reaction")).toContainText("Studio Circle");
+  await expect(page.getByTestId("reaction")).toContainText("Nia");
   await expect(page.getByTestId("focus")).toHaveText("2");
   await expect(page.locator("article.card")).toHaveCount(2);
 
@@ -28,7 +28,7 @@ test("full slice: enter, choose, decline, district parity, archive", async ({ pa
   await page.getByRole("button", { name: "Decline" }).first().click();
   await expect(page.locator("article.card")).toHaveCount(1);
   await expect(page.getByTestId("focus")).toHaveText("2");
-  await expect(page.getByRole("heading", { name: "Coming up" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Before the next light" })).toBeVisible();
 
   // Delayed consequence: advance the dev clock past the 60-minute delay,
   // "return" to Today, and the WYWA must cite the committed
@@ -54,16 +54,16 @@ test("full slice: enter, choose, decline, district parity, archive", async ({ pa
     await setClock(new Date(Date.now() + 2 * 3_600_000).toISOString());
     await page.reload();
     await expect(page.getByTestId("wywa")).toContainText(
-      "The Studio Circle read the shared draft and sent back two responses.",
+      "Nia carried your memory into the Beacon song. Two residents answered with memories of their own.",
     );
-    await expect(page.getByRole("heading", { name: "Coming up" })).toBeHidden();
+    await expect(page.getByRole("heading", { name: "Before the next light" })).toBeHidden();
   } finally {
     await setClock(null);
   }
 
   // District: accessible DOM parity with the projection disabled.
   await page.getByRole("link", { name: "District" }).click();
-  await page.getByRole("checkbox", { name: /Disable visual projection/ }).check();
+  await page.getByRole("checkbox", { name: /accessible ledger only/i }).check();
   await expect(page.locator('[data-testid="residents"] tbody tr')).not.toHaveCount(0);
   await expect(page.getByTestId("activity").getByRole("button").first()).toBeVisible();
 
@@ -74,7 +74,7 @@ test("full slice: enter, choose, decline, district parity, archive", async ({ pa
 
   // Projection enabled: either the canvas mounts or the graceful-failure
   // note appears (headless CI GPUs vary) — and DOM parity holds either way.
-  await page.getByRole("checkbox", { name: /Disable visual projection/ }).uncheck();
+  await page.getByRole("checkbox", { name: /accessible ledger only/i }).uncheck();
   await expect(
     page.locator(".projection canvas").or(page.getByTestId("projection-failed")),
   ).toBeVisible({ timeout: 20_000 });
@@ -103,7 +103,7 @@ test("reduced motion preserves all information", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await enterDistrict(page, "Rei", "creator");
   await page.getByRole("link", { name: "District" }).click();
-  await page.getByRole("checkbox", { name: /Disable visual projection/ }).check();
+  await page.getByRole("checkbox", { name: /accessible ledger only/i }).check();
   await expect(page.locator('[data-testid="residents"] tbody tr')).not.toHaveCount(0);
   await expect(page.getByTestId("activity").getByRole("button").first()).toBeVisible();
 });

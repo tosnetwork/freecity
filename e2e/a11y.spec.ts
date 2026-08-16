@@ -44,7 +44,7 @@ test("enter, today, district, and archive pass axe", async ({ page }) => {
   await expectNoSeriousViolations(page, "today");
 
   await page.getByRole("link", { name: "District" }).click();
-  await page.getByRole("checkbox", { name: /Disable visual projection/ }).check();
+  await page.getByRole("checkbox", { name: /accessible ledger only/i }).check();
   await page.locator('[data-testid="residents"] tbody tr').first().waitFor();
   await expectNoSeriousViolations(page, "district (accessible view)");
 
@@ -66,7 +66,7 @@ test("full slice is keyboard-operable end to end", async ({ page }) => {
 
   // From main, Tab order continues into the page content; reach the first
   // card option by keyboard only and activate it.
-  const share = page.getByRole("button", { name: /Share this version/ });
+  const share = page.getByRole("button", { name: /Open the whole memory/ });
   let hops = 0;
   while (!(await share.evaluate((el) => el === document.activeElement))) {
     await page.keyboard.press("Tab");

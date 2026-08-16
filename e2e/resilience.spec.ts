@@ -82,7 +82,7 @@ test("SSE stream reconnects mid-mount via Last-Event-ID with no loss or duplicat
   }));
 
   await page.getByRole("link", { name: "District" }).click();
-  await page.getByRole("checkbox", { name: /Disable visual projection/ }).check();
+  await page.getByRole("checkbox", { name: /accessible ledger only/i }).check();
   await expect(page.getByTestId("stream-status")).toHaveText("open");
   const eventIds = () =>
     page.$$eval('[data-testid="activity"] li button', (els) =>

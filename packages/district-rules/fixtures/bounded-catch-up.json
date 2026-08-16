@@ -167,7 +167,7 @@
     }
   ],
   "expected": {
-    "finalChecksum": "7b97a6e3fab599e3831ce48074b535330aa391d4731ec3a8039d5185cfcbfd5d",
+    "finalChecksum": "b1597af1ca67133a4cf934c944b64b96b0ce7f6b9b60d88ae1cde9aa1893c15e",
     "outcomes": [
       {
         "sequence": 1,

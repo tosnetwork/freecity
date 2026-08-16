@@ -1,4 +1,4 @@
-import { computeChecksum, type DistrictState } from "@freecity/contracts";
+import { computeChecksum, createInitialCityState, type DistrictState } from "@freecity/contracts";
 import { RULESET_VERSION } from "@freecity/district-rules";
 
 import { withTransaction, type Pool } from "./db.js";
@@ -34,6 +34,7 @@ export async function initDistrict(pool: Pool, opts: InitDistrictOptions): Promi
       rulesetVersion: RULESET_VERSION,
       rngSeed: opts.rngSeed,
       residents: {},
+      city: createInitialCityState(),
     };
     await client.query(
       `INSERT INTO district.district_runtime

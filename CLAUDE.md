@@ -60,9 +60,9 @@ queue.
   committed facts; it may not create residents, choices, consequences,
   payments, votes, or history.
 
-## Phase 1 scope (the only thing being built now)
+## Delivered Phase 1 and active Living City R1 scope
 
-One vertical slice, end to end:
+The original Phase 1 vertical slice is complete:
 
 ```text
 enter District Zero
@@ -81,18 +81,32 @@ enter District Zero
 Infrastructure: PostgreSQL, Redis, TypeScript, Vitest, Playwright, Docker
 Compose. Nothing else.
 
-### Phase 1 prohibitions
+The active product increment is **Living City R1**. It extends the same
+authoritative command journal and replay model with:
+
+- canonical city parcels and modular building instances;
+- idempotent, replayable building upgrades with visible level states;
+- adjacent district expansion that reveals real land, buildings, and roads;
+- a PixiJS isometric projection with separate terrain, road, building,
+  resident, traffic, lighting, and weather layers;
+- deterministic resident/traffic routes and a complete accessible DOM city
+  ledger; and
+- direct in-world building and frontier interaction without making the
+  renderer authoritative.
+
+### Current prohibitions
 
 Do not implement, scaffold, stub, or "prepare for":
 
 - production wallets, real or testnet stablecoin flows, or any payment;
 - Mayor, Civic Court, Public Safety Chief, elections, or any governance;
-- 3D, Colyseus, Phaser, or WebAssembly;
+- 3D, Colyseus, Phaser, or WebAssembly unless a separately reviewed bounded
+  feature demonstrates a need;
 - an Agent marketplace, OpenFox/tos-ai integration, or live TOS resolution;
 - LLM-generated cards, summaries, or dialogue (all Phase 1 content is
   authored);
 - an open plugin, generative-UI, or third-party application system;
-- new architecture documents or expansions of the existing specifications.
+- a second city-state authority outside the ordered district runtime.
 
 If a task appears to require one of these, stop and ask instead of building.
 
@@ -148,6 +162,7 @@ pnpm lint && pnpm format && pnpm typecheck
 pnpm replay -- --district <id> --season <id>   # replay verification for a live database
 pnpm dev                  # web app
 pnpm dev:api              # application API on :3001 (AUTH_MODE=dev by default)
+pnpm --filter @freecity/application-api dev:watch # optional API hot reload
 ```
 
 Local Postgres maps to host port **5433** (5432 is taken by a locally

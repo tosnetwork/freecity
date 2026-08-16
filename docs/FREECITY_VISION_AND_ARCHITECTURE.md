@@ -587,6 +587,51 @@ The world projection should be partitionable by district, organization, or event
 
 Privacy is part of projection logic. Private messages, private project membership, hidden balances, memory contents, tool arguments, and non-public presence must never become map animation. Public visual activity requires either a public fact or explicit display consent.
 
+#### 6.10.1 Modular Living City Composition
+
+A mature City View must not bake terrain, roads, buildings, residents, and
+activity into one immutable district image. The logical world and the visual
+composition are separate:
+
+1. `DistrictState.city` owns parcels, unlocked adjacency, building instances,
+   footprints, levels, population, prosperity, and non-transferable civic
+   capacity.
+2. Ordered commands such as `building.upgrade` and `district.expand` are the
+   only gameplay writes. They emit committed events and remain replayable from
+   genesis or snapshots.
+3. The renderer composes terrain chunks, road topology, transparent building
+   sprites, residents, traffic, light, weather, effects, selection, and DOM UI
+   as independent layers.
+4. A building sprite is never the building fact. The building instance is the
+   fact; the sprite, crown, construction response, level marker, light, and
+   animation are replaceable projections.
+5. Residents and vehicles follow stable routes derived from unlocked land and
+   the committed road graph. Client interpolation and ambient crowd density
+   are cosmetic; meaningful destinations and city changes remain attributable
+   to committed state.
+6. Day, night, rain, and mist may advance continuously in the browser because
+   they do not grant resources or commit outcomes. Any weather that affects
+   gameplay must first become an explicit recorded district input.
+7. Locked adjacent parcels remain spatially visible as frontiers. Expansion is
+   an atomic server-validated command that reveals real land, its planned
+   building, and connecting roads; it is not a camera trick or an image swap.
+
+The city canvas should dominate the viewport. Text appears as a contextual
+building inspector, frontier action, event response, or optional city ledger
+rather than as a permanent equal-width panel beside the world. The complete
+ledger stays synchronized and keyboard accessible so disabling PixiJS,
+animation, or motion never removes a fact or action.
+
+This composition produces visible causality:
+
+```text
+resident decision or construction command
+  -> ordered district commit
+  -> durable building, land, or relationship change
+  -> resident and traffic routes respond
+  -> skyline and public history retain the consequence
+```
+
 ### 6.11 Generative UI Model
 
 FreeCity should use a **catalog-constrained generative UI** model for adaptive resident experiences:

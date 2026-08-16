@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { isoTimestampSchema, residentKindSchema, roleSchema } from "./state.js";
+import { cityBuildingSchema, isoTimestampSchema, residentKindSchema, roleSchema } from "./state.js";
 
 /**
  * District events emitted by the deterministic step. Event content is fully
@@ -91,10 +91,37 @@ export const focusRefreshedSchema = z.object({
 export const archiveEntryRecordedSchema = z.object({
   eventType: z.literal("ArchiveEntryRecorded"),
   residentId: z.string().min(1),
-  entryType: z.enum(["choice", "decline", "consequence", "card_expired"]),
+  entryType: z.enum([
+    "choice",
+    "decline",
+    "consequence",
+    "card_expired",
+    "building_upgrade",
+    "district_expansion",
+  ]),
   cardId: z.string().min(1).nullable(),
   consequenceId: z.string().min(1).nullable(),
   summary: z.string().min(1),
+});
+
+export const buildingUpgradedSchema = z.object({
+  eventType: z.literal("BuildingUpgraded"),
+  residentId: z.string().min(1),
+  building: cityBuildingSchema,
+  fromLevel: z.number().int().min(1),
+  capacitySpent: z.number().int().positive(),
+  prosperityGained: z.number().int().positive(),
+});
+
+export const districtExpandedSchema = z.object({
+  eventType: z.literal("DistrictExpanded"),
+  residentId: z.string().min(1),
+  parcelId: z.string().min(1),
+  parcelName: z.string().min(1),
+  revealedBuildingIds: z.array(z.string().min(1)).min(1),
+  capacitySpent: z.number().int().positive(),
+  populationGained: z.number().int().positive(),
+  prosperityGained: z.number().int().positive(),
 });
 
 export const districtEventSchema = z.discriminatedUnion("eventType", [
@@ -109,6 +136,8 @@ export const districtEventSchema = z.discriminatedUnion("eventType", [
   cardExpiredSchema,
   focusRefreshedSchema,
   archiveEntryRecordedSchema,
+  buildingUpgradedSchema,
+  districtExpandedSchema,
 ]);
 export type DistrictEvent = z.infer<typeof districtEventSchema>;
 export type DistrictEventType = DistrictEvent["eventType"];

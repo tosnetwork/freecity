@@ -1,4 +1,11 @@
-import type { DistrictEvent, DistrictEventType, ResidentKind, Role } from "@freecity/contracts";
+import {
+  createInitialCityState,
+  type CityState,
+  type DistrictEvent,
+  type DistrictEventType,
+  type ResidentKind,
+  type Role,
+} from "@freecity/contracts";
 
 /**
  * Client-side semantic world state, reduced purely from committed district
@@ -17,6 +24,7 @@ export interface WorldResident {
   kind: ResidentKind;
   role: Role;
   displayName: string;
+  sponsoredAiResidentId: string | null;
   focus: number;
   activeCardCount: number;
 }
@@ -35,13 +43,19 @@ export interface ActivityItem {
 export interface WorldState {
   cursor: { sequence: number; eventSeq: number };
   residents: Record<string, WorldResident>;
+  city: CityState;
   activity: ActivityItem[];
 }
 
 export const ACTIVITY_LIMIT = 200;
 
 export function createWorldState(): WorldState {
-  return { cursor: { sequence: 0, eventSeq: -1 }, residents: {}, activity: [] };
+  return {
+    cursor: { sequence: 0, eventSeq: -1 },
+    residents: {},
+    city: createInitialCityState(),
+    activity: [],
+  };
 }
 
 function isAfterCursor(state: WorldState, view: CommittedEventView): boolean {
@@ -80,6 +94,10 @@ export function summarizeEvent(state: WorldState, event: DistrictEvent): string 
       return `${nameOf(state, event.residentId)}'s Focus refreshed to ${event.focus}`;
     case "ArchiveEntryRecorded":
       return `Archive: ${event.summary}`;
+    case "BuildingUpgraded":
+      return `${nameOf(state, event.residentId)} upgraded ${event.building.name} to level ${event.building.level}`;
+    case "DistrictExpanded":
+      return `${nameOf(state, event.residentId)} opened ${event.parcelName} to the city`;
   }
 }
 
@@ -94,6 +112,7 @@ export function applyEventView(state: WorldState, view: CommittedEventView): Wor
   const next: WorldState = {
     cursor: { sequence: view.sequence, eventSeq: view.eventSeq },
     residents: { ...state.residents },
+    city: state.city,
     activity: state.activity,
   };
   const event = view.event;
@@ -119,6 +138,7 @@ export function applyEventView(state: WorldState, view: CommittedEventView): Wor
         kind: event.kind,
         role: event.role,
         displayName: event.displayName,
+        sponsoredAiResidentId: event.sponsoredAiResidentId,
         focus: event.initialFocus,
         activeCardCount: 0,
       };
@@ -142,6 +162,34 @@ export function applyEventView(state: WorldState, view: CommittedEventView): Wor
     case "ConsequenceResolved":
     case "ArchiveEntryRecorded":
       break;
+    case "BuildingUpgraded":
+      next.city = {
+        ...state.city,
+        civicCapacity: Math.max(0, state.city.civicCapacity - event.capacitySpent),
+        prosperity: state.city.prosperity + event.prosperityGained,
+        population: state.city.population + (event.building.type === "habitat" ? 4 : 0),
+        buildings: {
+          ...state.city.buildings,
+          [event.building.buildingId]: event.building,
+        },
+      };
+      break;
+    case "DistrictExpanded": {
+      const parcel = state.city.parcels[event.parcelId];
+      if (parcel) {
+        next.city = {
+          ...state.city,
+          civicCapacity: Math.max(0, state.city.civicCapacity - event.capacitySpent),
+          prosperity: state.city.prosperity + event.prosperityGained,
+          population: state.city.population + event.populationGained,
+          parcels: {
+            ...state.city.parcels,
+            [event.parcelId]: { ...parcel, unlocked: true },
+          },
+        };
+      }
+      break;
+    }
   }
 
   const item: ActivityItem = {
@@ -176,7 +224,12 @@ export function summarizeCommittedViews(
 ): ActivityItem[] {
   let state = createWorldState();
   for (const seed of seeds) {
-    state.residents[seed.residentId] = { ...seed, focus: 0, activeCardCount: 0 };
+    state.residents[seed.residentId] = {
+      ...seed,
+      sponsoredAiResidentId: null,
+      focus: 0,
+      activeCardCount: 0,
+    };
   }
   for (const view of views) {
     state = applyEventView(state, view);

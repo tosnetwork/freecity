@@ -23,6 +23,20 @@ export interface Membership {
   displayName: string;
 }
 
+/**
+ * Named civic residents are real committed district actors, not decorative
+ * crowd simulation. They are authored, operator-controlled Phase 1 personas
+ * and currently act only through reviewed story copy.
+ */
+const DISTRICT_GUIDES: {
+  residentId: string;
+  displayName: string;
+  role: Role;
+}[] = [
+  { residentId: "ai-district-nia", displayName: "Nia", role: "creator" },
+  { residentId: "ai-district-orin", displayName: "Orin", role: "builder" },
+];
+
 function systemEnvelope(
   config: SeasonConfig,
   command: DistrictCommand,
@@ -54,6 +68,42 @@ export async function ensureDistrict(pool: Pool, config: SeasonConfig, now: stri
     rngSeed: `${config.districtId}:${config.seasonId}`,
     initialStepTime: now,
   });
+
+  await withTransaction(pool, async (client) => {
+    for (const guide of DISTRICT_GUIDES) {
+      await client.query(
+        `INSERT INTO app.resident (resident_id, account_id, kind, role, display_name)
+         VALUES ($1, NULL, 'ai', $2, $3)
+         ON CONFLICT (resident_id) DO NOTHING`,
+        [guide.residentId, guide.role, guide.displayName],
+      );
+    }
+  });
+
+  for (const guide of DISTRICT_GUIDES) {
+    const key = `provision:${guide.residentId}`;
+    const enqueue = await enqueueCommand(
+      pool,
+      systemEnvelope(
+        config,
+        {
+          type: "season.provision_resident",
+          payload: {
+            residentId: guide.residentId,
+            kind: "ai",
+            role: guide.role,
+            displayName: guide.displayName,
+            sponsoredAiResidentId: null,
+          },
+        },
+        key,
+        now,
+        "operator:district-zero",
+      ),
+    );
+    if (enqueue.keyConflict) throw new Error(`district guide key conflict for ${key}`);
+  }
+  await processDistrict(pool, config.districtId, config.seasonId, { stepTime: now });
 }
 
 export async function findMembership(

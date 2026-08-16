@@ -19,9 +19,11 @@ export function NavBar() {
 
   return (
     <nav className="site-nav" aria-label="Main">
-      <strong>FreeCity</strong>
+      <Link href="/today" className="city-wordmark" aria-label="FreeCity home">
+        <span>F</span> FREECITY <small>D0</small>
+      </Link>
       <Link href="/today" aria-current={pathname === "/today" ? "page" : undefined}>
-        Today
+        Tonight
       </Link>
       <Link href="/district" aria-current={pathname === "/district" ? "page" : undefined}>
         District
@@ -31,6 +33,7 @@ export function NavBar() {
       </Link>
       <span className="spacer" />
       <button
+        className="nav-signout"
         type="button"
         onClick={() => {
           clearToken();

@@ -9,9 +9,11 @@ import {
   type DeclineCardPayload,
   type DistrictEvent,
   type DistrictState,
+  type ExpandDistrictPayload,
   type ProvisionResidentPayload,
   type ResidentState,
   type RunDueEffectsPayload,
+  type UpgradeBuildingPayload,
 } from "@freecity/contracts";
 
 import { addHours, addMinutes, dayKey, isDue } from "./time.js";
@@ -27,6 +29,13 @@ export const REJECTION_CODES = [
   "OPTION_NOT_FOUND",
   "INSUFFICIENT_FOCUS",
   "VERSION_CONFLICT",
+  "BUILDING_NOT_FOUND",
+  "BUILDING_MAX_LEVEL",
+  "BUILDING_LEVEL_CONFLICT",
+  "PARCEL_NOT_FOUND",
+  "PARCEL_ALREADY_UNLOCKED",
+  "PARCEL_NOT_ADJACENT",
+  "INSUFFICIENT_CIVIC_CAPACITY",
 ] as const;
 export type RejectionCode = (typeof REJECTION_CODES)[number];
 
@@ -85,6 +94,18 @@ export function applyCommand(
       events = result.events;
       break;
     }
+    case "building.upgrade": {
+      const result = upgradeBuilding(next, command.payload);
+      if (!result.ok) return result;
+      events = result.events;
+      break;
+    }
+    case "district.expand": {
+      const result = expandDistrict(next, command.payload);
+      if (!result.ok) return result;
+      events = result.events;
+      break;
+    }
     case "runtime.run_due_effects": {
       const result = runDueEffects(next, command.payload, stepTime);
       if (!result.ok) return result;
@@ -94,6 +115,117 @@ export function applyCommand(
   }
 
   return { ok: true, state: next, events };
+}
+
+function upgradeBuilding(state: DistrictState, payload: UpgradeBuildingPayload): StepOutcome {
+  if (!state.residents[payload.residentId]) {
+    return reject("RESIDENT_NOT_FOUND", `resident ${payload.residentId} is not provisioned`);
+  }
+  const building = state.city.buildings[payload.buildingId];
+  if (!building) {
+    return reject("BUILDING_NOT_FOUND", `building ${payload.buildingId} does not exist`);
+  }
+  const parcel = state.city.parcels[building.parcelId];
+  if (!parcel?.unlocked) {
+    return reject("BUILDING_NOT_FOUND", `building ${payload.buildingId} is not in unlocked land`);
+  }
+  if (building.level !== payload.expectedLevel) {
+    return reject(
+      "BUILDING_LEVEL_CONFLICT",
+      `expected level ${payload.expectedLevel}, current level is ${building.level}`,
+    );
+  }
+  if (building.level >= building.maxLevel) {
+    return reject("BUILDING_MAX_LEVEL", `${building.name} is already at maximum level`);
+  }
+  const capacitySpent = building.level * 2 + 1;
+  if (state.city.civicCapacity < capacitySpent) {
+    return reject(
+      "INSUFFICIENT_CIVIC_CAPACITY",
+      `upgrade needs ${capacitySpent} capacity, city has ${state.city.civicCapacity}`,
+    );
+  }
+  const fromLevel = building.level;
+  building.level += 1;
+  state.city.civicCapacity -= capacitySpent;
+  const prosperityGained = building.level * 3;
+  state.city.prosperity += prosperityGained;
+  if (building.type === "habitat") state.city.population += 4;
+
+  return {
+    ok: true,
+    events: [
+      {
+        eventType: "BuildingUpgraded",
+        residentId: payload.residentId,
+        building: structuredClone(building),
+        fromLevel,
+        capacitySpent,
+        prosperityGained,
+      },
+      {
+        eventType: "ArchiveEntryRecorded",
+        residentId: payload.residentId,
+        entryType: "building_upgrade",
+        cardId: null,
+        consequenceId: null,
+        summary: `Upgraded ${building.name} to level ${building.level}`,
+      },
+    ],
+  };
+}
+
+function expandDistrict(state: DistrictState, payload: ExpandDistrictPayload): StepOutcome {
+  if (!state.residents[payload.residentId]) {
+    return reject("RESIDENT_NOT_FOUND", `resident ${payload.residentId} is not provisioned`);
+  }
+  const parcel = state.city.parcels[payload.parcelId];
+  if (!parcel) return reject("PARCEL_NOT_FOUND", `parcel ${payload.parcelId} does not exist`);
+  if (parcel.unlocked) {
+    return reject("PARCEL_ALREADY_UNLOCKED", `${parcel.name} is already part of the district`);
+  }
+  if (parcel.requiresParcelId && !state.city.parcels[parcel.requiresParcelId]?.unlocked) {
+    return reject("PARCEL_NOT_ADJACENT", `${parcel.name} is not adjacent to unlocked city land`);
+  }
+  if (state.city.civicCapacity < parcel.expansionCost) {
+    return reject(
+      "INSUFFICIENT_CIVIC_CAPACITY",
+      `expansion needs ${parcel.expansionCost} capacity, city has ${state.city.civicCapacity}`,
+    );
+  }
+  parcel.unlocked = true;
+  state.city.civicCapacity -= parcel.expansionCost;
+  const populationGained = 6;
+  state.city.population += populationGained;
+  state.city.prosperity += 4;
+  const revealedBuildingIds = Object.values(state.city.buildings)
+    .filter((building) => building.parcelId === parcel.parcelId)
+    .map((building) => building.buildingId)
+    .sort();
+
+  return {
+    ok: true,
+    events: [
+      {
+        eventType: "DistrictExpanded",
+        residentId: payload.residentId,
+        parcelId: parcel.parcelId,
+        parcelName: parcel.name,
+        revealedBuildingIds,
+        capacitySpent: parcel.expansionCost,
+        populationGained,
+        prosperityGained: 4,
+      },
+      {
+        eventType: "ArchiveEntryRecorded",
+        residentId: payload.residentId,
+        entryType: "district_expansion",
+        cardId: null,
+        consequenceId: null,
+        summary: `Expanded District Zero into ${parcel.name}`,
+      },
+    ],
+  };
 }
 
 type StepOutcome = { ok: true; events: DistrictEvent[] } | Extract<ApplyResult, { ok: false }>;

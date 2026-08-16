@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -17,6 +18,8 @@ import {
   type CommandResponse,
   type TodayResponse,
 } from "../../lib/api";
+import { CitySky } from "../../components/CitySky";
+import { outcomeFor, storyForCard, storyForCardId, type ChoiceOutcomeStory } from "../../lib/story";
 
 const FAMILY_LABEL: Record<string, string> = {
   relationship: "Relationship",
@@ -29,12 +32,42 @@ const FAMILY_LABEL: Record<string, string> = {
 
 type PendingAction = { cardId: string; kind: "choose" | "decline"; optionId?: string };
 
+function ReturnCue({ dueAt, cardId }: { dueAt: string; cardId: string }) {
+  const [remaining, setRemaining] = useState("");
+  useEffect(() => {
+    const update = () => {
+      const milliseconds = Math.max(0, new Date(dueAt).getTime() - Date.now());
+      const minutes = Math.floor(milliseconds / 60_000);
+      const seconds = Math.floor((milliseconds % 60_000) / 1000);
+      setRemaining(milliseconds === 0 ? "resolving now" : `${minutes}m ${seconds}s`);
+    };
+    update();
+    const timer = window.setInterval(update, 1000);
+    return () => window.clearInterval(timer);
+  }, [dueAt]);
+
+  const story = storyForCardId(cardId);
+  return (
+    <li className={`return-cue tone-${story.tone}`}>
+      <span className="return-pulse" aria-hidden="true" />
+      <div>
+        <span className="eyebrow">A CONSEQUENCE IS TRAVELLING</span>
+        <strong>
+          {story.place} will answer in {remaining || "…"}
+        </strong>
+        <p>Mira will meet you there. The result will enter the city’s permanent history.</p>
+      </div>
+    </li>
+  );
+}
+
 export default function TodayPage() {
   const router = useRouter();
   const [today, setToday] = useState<TodayResponse | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [reaction, setReaction] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [worldChange, setWorldChange] = useState<ChoiceOutcomeStory | null>(null);
   const [loading, setLoading] = useState(true);
 
   // One load at a time: strict-mode double effects and rapid refreshes must
@@ -88,6 +121,7 @@ export default function TodayPage() {
     setPending({ cardId: card.cardId, kind, ...(optionId ? { optionId } : {}) });
     setReaction(null);
     setNotice(null);
+    setWorldChange(null);
     try {
       const response =
         kind === "choose" && optionId
@@ -100,6 +134,7 @@ export default function TodayPage() {
           // ImmediateReactionRecorded event carries — shown only now, after
           // the authoritative result confirmed the choice.
           setReaction(option?.reactionText ?? "Your choice is committed.");
+          setWorldChange(outcomeFor(card.cardId, optionId));
         } else {
           setNotice("Declined. Declining is a valid action; nothing was lost.");
         }
@@ -137,85 +172,232 @@ export default function TodayPage() {
   );
 
   return (
-    <>
-      <h1>Today</h1>
-      <p className="muted">
-        {membership ? `${membership.displayName} · ${membership.role} · ` : ""}
-        Focus: <strong data-testid="focus">{today.focus}</strong> of 3
-      </p>
+    <div className="today-shell">
+      <section className="city-dashboard-hero" aria-labelledby="today-heading">
+        <CitySky compact />
+        <div className="city-dashboard-copy">
+          <span className="eyebrow">DISTRICT ZERO · A LIVING DAY</span>
+          <h1 id="today-heading">The city is already moving.</h1>
+          <p>
+            Boats cross the bay, workshops are open and the Signal Garden is listening. Three
+            decisions can change where this city goes next.
+          </p>
+          <div className="hero-status-row" aria-label="Current district status">
+            <span>
+              <i className="live-dot" /> Beacon unstable
+            </span>
+            <span>
+              {membership?.displayName ?? "Resident"} · {membership?.role ?? "new arrival"}
+            </span>
+            <span className="focus-pill">
+              Focus <strong data-testid="focus">{today.focus}</strong>/3
+            </span>
+          </div>
+        </div>
+      </section>
 
-      <section aria-labelledby="wywa-heading">
-        <h2 id="wywa-heading">While you were away</h2>
+      <section className="mira-briefing" aria-labelledby="mira-heading">
+        <div className="resident-portrait mira-portrait" aria-hidden="true">
+          <span className="portrait-core">M</span>
+          <i />
+        </div>
+        <div className="mira-dialogue">
+          <span className="speaker-tag">MIRA · YOUR AI RESIDENT</span>
+          <h2 id="mira-heading">“You made it. I need to show you what’s at stake.”</h2>
+          <p>
+            Nia is holding the Beacon’s last song in the Signal Garden. Orin is keeping the east
+            relay alive by hand. I can move, prepare and remember—but I won’t make your choices for
+            you.
+          </p>
+          <div className="resident-intros">
+            <div>
+              <span className="resident-orb nia">N</span>
+              <strong>Nia</strong>
+              <small>Creator AI · Signal Garden</small>
+            </div>
+            <div>
+              <span className="resident-orb orin">O</span>
+              <strong>Orin</strong>
+              <small>Builder AI · Night Workshop</small>
+            </div>
+            <div>
+              <span className="place-orb">⌁</span>
+              <strong>Beacon Square</strong>
+              <small>The city’s shared memory</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="signal-log" aria-labelledby="wywa-heading">
+        <div className="section-heading-row">
+          <div>
+            <span className="eyebrow">COMMITTED SIGNALS</span>
+            <h2 id="wywa-heading">What changed while you were away</h2>
+          </div>
+          <Link href="/archive" className="text-link">
+            Open city memory →
+          </Link>
+        </div>
         {today.whileYouWereAway.length === 0 ? (
-          <p className="muted">Nothing new since your last visit. The district is calm.</p>
+          <p className="empty-signal">
+            No new committed signals. Your pending choices are still moving.
+          </p>
         ) : (
-          <ul data-testid="wywa">
+          <ul className="signal-list" data-testid="wywa">
             {wywaItems.map((item) => (
-              <li key={item.id}>{item.summary}</li>
+              <li key={item.id}>
+                <span className="signal-index">{item.sequence.toString().padStart(2, "0")}</span>
+                <span>{item.summary}</span>
+                <small>committed</small>
+              </li>
             ))}
           </ul>
         )}
       </section>
 
-      <div aria-live="polite">
+      <div className="reaction-stage" aria-live="polite">
         {reaction !== null && (
-          <p className="reaction" data-testid="reaction">
-            {reaction}
-          </p>
+          <div className="world-change" data-testid="reaction">
+            <span className="world-change-mark" aria-hidden="true">
+              ✦
+            </span>
+            <div>
+              <span className="eyebrow">THE WORLD ANSWERED</span>
+              <p className="reaction">{reaction}</p>
+              {worldChange && (
+                <dl>
+                  <div>
+                    <dt>Relationship</dt>
+                    <dd>{worldChange.relationship}</dd>
+                  </div>
+                  <div>
+                    <dt>Place</dt>
+                    <dd>{worldChange.worldChange}</dd>
+                  </div>
+                  <div>
+                    <dt>Movement</dt>
+                    <dd>{worldChange.movement}</dd>
+                  </div>
+                </dl>
+              )}
+              <Link href="/district" className="primary-link">
+                Watch it happen in District Zero →
+              </Link>
+            </div>
+          </div>
         )}
-        {notice !== null && <p className="muted">{notice}</p>}
+        {notice !== null && <p className="notice-panel">{notice}</p>}
       </div>
 
-      <section aria-labelledby="cards-heading">
-        <h2 id="cards-heading">Your cards</h2>
-        {today.activeCards.length === 0 ? (
-          <p className="muted">
-            No cards waiting. Consequences you are following will appear above when they resolve.
+      <section className="decision-section" aria-labelledby="cards-heading">
+        <div className="section-heading-row">
+          <div>
+            <span className="eyebrow">THREE THREADS · ONE CITY</span>
+            <h2 id="cards-heading">Choose what survives the night</h2>
+          </div>
+          <p className="section-aside">
+            Focus cannot be bought.
+            <br />
+            Declining is always free.
           </p>
+        </div>
+        {today.activeCards.length === 0 ? (
+          <div className="all-decided">
+            <span>✦</span>
+            <h3>Your decisions are in motion.</h3>
+            <p>Walk the district now, then return when Mira calls you back.</p>
+            <Link href="/district" className="primary-link">
+              Enter the live city →
+            </Link>
+          </div>
         ) : (
-          today.activeCards.map((card) => {
-            const isPending = pending?.cardId === card.cardId;
-            return (
-              <article className="card" key={card.cardId} aria-busy={isPending}>
-                <span className="family">{FAMILY_LABEL[card.eventFamily] ?? card.eventFamily}</span>
-                <h3>{card.templateId.replace(/^tpl-/, "").replaceAll("-", " ")}</h3>
-                <p className="muted">Expires {new Date(card.expiresAt).toLocaleString()}</p>
-                <div className="options">
-                  {card.options.map((option) => (
+          <div className="story-deck">
+            {today.activeCards.map((card) => {
+              const isPending = pending?.cardId === card.cardId;
+              const story = storyForCard(card);
+              return (
+                <article
+                  className={`card story-card tone-${story.tone}`}
+                  id={`decision-${story.tone}`}
+                  key={card.cardId}
+                  aria-busy={isPending}
+                >
+                  <div className="story-card-topline">
+                    <span className="family">{story.chapter}</span>
+                    <span className="card-place">{story.place}</span>
+                  </div>
+                  <div className="story-symbol" aria-hidden="true">
+                    <i />
+                    <i />
+                    <span />
+                  </div>
+                  <h3>{story.title}</h3>
+                  <p className="story-body">{story.body}</p>
+                  <p className="story-question">{story.question}</p>
+                  <dl className="story-meta">
+                    <div>
+                      <dt>With</dt>
+                      <dd>{story.resident}</dd>
+                    </div>
+                    <div>
+                      <dt>Changes</dt>
+                      <dd>{story.stakes}</dd>
+                    </div>
+                  </dl>
+                  <div className="options">
+                    {card.options.map((option) => (
+                      <button
+                        key={option.optionId}
+                        className="choice-button"
+                        disabled={pending !== null}
+                        onClick={() => act(card, "choose", option.optionId)}
+                      >
+                        <span>
+                          {isPending && pending?.optionId === option.optionId
+                            ? "Committing to the city…"
+                            : option.label}
+                          {option.focusCost > 0 && <b>{option.focusCost} Focus</b>}
+                        </span>
+                        <small>{story.optionNotes[option.optionId]}</small>
+                      </button>
+                    ))}
                     <button
-                      key={option.optionId}
-                      className="primary"
+                      className="decline-button"
                       disabled={pending !== null}
-                      onClick={() => act(card, "choose", option.optionId)}
+                      onClick={() => act(card, "decline")}
                     >
-                      {isPending && pending?.optionId === option.optionId
-                        ? "Committing…"
-                        : `${option.label}${option.focusCost > 0 ? ` (${option.focusCost} Focus)` : ""}`}
+                      {isPending && pending?.kind === "decline"
+                        ? "Holding the boundary…"
+                        : "Not mine to decide · Decline"}
                     </button>
-                  ))}
-                  <button disabled={pending !== null} onClick={() => act(card, "decline")}>
-                    {isPending && pending?.kind === "decline" ? "Declining…" : "Decline"}
-                  </button>
-                </div>
-              </article>
-            );
-          })
+                  </div>
+                  <footer>
+                    {FAMILY_LABEL[card.eventFamily] ?? card.eventFamily} signal · expires{" "}
+                    {new Date(card.expiresAt).toLocaleDateString()}
+                  </footer>
+                </article>
+              );
+            })}
+          </div>
         )}
       </section>
 
       {today.pendingConsequences.length > 0 && (
-        <section aria-labelledby="pending-heading">
-          <h2 id="pending-heading">Coming up</h2>
-          <ul>
+        <section className="return-section" aria-labelledby="pending-heading">
+          <span className="eyebrow">THE REASON TO COME BACK</span>
+          <h2 id="pending-heading">Before the next light</h2>
+          <ul className="return-list">
             {today.pendingConsequences.map((consequence) => (
-              <li key={consequence.consequenceId} className="muted">
-                A consequence of your choice resolves at{" "}
-                {new Date(consequence.dueAt).toLocaleString()}.
-              </li>
+              <ReturnCue
+                key={consequence.consequenceId}
+                dueAt={consequence.dueAt}
+                cardId={consequence.cardId}
+              />
             ))}
           </ul>
         </section>
       )}
-    </>
+    </div>
   );
 }

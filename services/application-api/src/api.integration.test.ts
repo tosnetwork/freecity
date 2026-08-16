@@ -785,3 +785,51 @@ describe("dev clock (test-only)", () => {
     }
   });
 });
+
+describe("living city command gateway", () => {
+  it("commits idempotent building upgrades and a real adjacent expansion", async () => {
+    const first = await app.inject({
+      method: "POST",
+      url: "/api/city/buildings/beacon-square/upgrade",
+      headers: authHeaders(),
+      payload: { expectedLevel: 1 },
+    });
+    expect(first.statusCode).toBe(200);
+    expect(first.json().status).toBe("applied");
+
+    const duplicate = await app.inject({
+      method: "POST",
+      url: "/api/city/buildings/beacon-square/upgrade",
+      headers: authHeaders(),
+      payload: { expectedLevel: 1 },
+    });
+    expect(duplicate.statusCode).toBe(200);
+    expect(duplicate.json().duplicate).toBe(true);
+    expect(duplicate.json().commandId).toBe(first.json().commandId);
+
+    const second = await app.inject({
+      method: "POST",
+      url: "/api/city/buildings/beacon-square/upgrade",
+      headers: authHeaders(),
+      payload: { expectedLevel: 2 },
+    });
+    expect(second.statusCode).toBe(200);
+
+    const expanded = await app.inject({
+      method: "POST",
+      url: "/api/city/parcels/east-harbor/expand",
+      headers: authHeaders(),
+      payload: {},
+    });
+    expect(expanded.statusCode).toBe(200);
+
+    const runtime = await db.pool.query(
+      `SELECT state FROM district.district_runtime WHERE district_id = $1 AND season_id = $2`,
+      [CONFIG.districtId, CONFIG.seasonId],
+    );
+    const city = runtime.rows[0]?.state.city;
+    expect(city.buildings["beacon-square"].level).toBe(3);
+    expect(city.parcels["east-harbor"].unlocked).toBe(true);
+    expect(city.civicCapacity).toBe(15);
+  });
+});

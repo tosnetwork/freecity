@@ -127,6 +127,23 @@ try {
       payload: { reason: null },
     });
     expectApplied(decline, `decline Gate${index}`);
+
+    if (index === 0) {
+      const upgrade = await app.inject({
+        method: "POST",
+        url: "/api/city/buildings/beacon-square/upgrade",
+        headers,
+        payload: { expectedLevel: 1 },
+      });
+      expectApplied(upgrade, "upgrade Beacon Tower");
+      const expand = await app.inject({
+        method: "POST",
+        url: "/api/city/parcels/east-harbor/expand",
+        headers,
+        payload: {},
+      });
+      expectApplied(expand, "expand East Harbor");
+    }
   }
   const middle = await createSnapshot(db.pool, CONFIG.districtId, CONFIG.seasonId, "gate-middle");
 
@@ -145,9 +162,10 @@ try {
   await app.close();
 
   // Journal census: the scenario commits an exactly known shape.
-  // 2×(enter: 2 provisions + 3 assigns) + 1×(GateC enter) = 15 provisioning
-  // commands; 2 chooses; 2 declines; 2 system run_due_effects (12:00 and
-  // next-day catch-ups) → 21 applied commands.
+  // 2 district-guide provisions + 2×(enter: 2 provisions + 3 assigns) +
+  // 1×(GateC enter) = 17 provisioning commands; 2 chooses; 2 declines; 2
+  // system run_due_effects (12:00 and next-day catch-ups) + one building
+  // upgrade + one district expansion → 25 applied.
   const commandCensus = await db.pool.query(
     `SELECT status, COUNT(*)::int AS count FROM district.district_command GROUP BY status`,
   );
@@ -155,8 +173,8 @@ try {
     commandCensus.rows.map((r) => [r.status as string, r.count as number]),
   );
   check(
-    commandCounts["applied"] === 21 && (commandCounts["rejected"] ?? 0) === 0,
-    `command census mismatch: ${JSON.stringify(commandCounts)} (expected 21 applied, 0 rejected)`,
+    commandCounts["applied"] === 25 && (commandCounts["rejected"] ?? 0) === 0,
+    `command census mismatch: ${JSON.stringify(commandCounts)} (expected 25 applied, 0 rejected)`,
   );
 
   const eventCensus = await db.pool.query(
@@ -166,7 +184,7 @@ try {
     eventCensus.rows.map((r) => [r.event_type as string, r.count as number]),
   );
   const expectedEvents: Record<string, number> = {
-    ResidentProvisioned: 6, // 3 humans + 3 AI residents
+    ResidentProvisioned: 8, // 3 humans + 3 Mira companions + Nia + Orin
     CardAssigned: 9, // 3 per human
     FocusSpent: 1, // only Gate0's opt-share costs Focus
     ChoiceCommitted: 2,
@@ -175,8 +193,10 @@ try {
     ConsequenceResolved: 2, // Gate0 at 12:00, Gate1 next day
     CardDeclined: 2,
     CardExpired: 1, // Gate0's 24h opportunity card on day 2
-    FocusRefreshed: 4, // day-2 rollover for every day-1 resident: 2 humans + their 2 AI residents
-    ArchiveEntryRecorded: 7, // 2 choices + 2 declines + 2 consequences + 1 expiry
+    FocusRefreshed: 6, // day-2 rollover: 2 humans + 2 Miras + Nia + Orin
+    BuildingUpgraded: 1,
+    DistrictExpanded: 1,
+    ArchiveEntryRecorded: 9, // story records + building upgrade + district expansion
   };
   // Exact BOTH-WAY census equality: an extra event type is as fatal as a
   // missing one.
@@ -253,7 +273,7 @@ try {
   });
   console.log(JSON.stringify({ commandCounts, eventCounts, fromGenesis, fromMiddle }, null, 2));
   check(fromGenesis.match, "genesis replay diverged");
-  check(fromGenesis.appliedCommands === 21, "genesis replay applied-command count mismatch");
+  check(fromGenesis.appliedCommands === 25, "genesis replay applied-command count mismatch");
   check(fromMiddle.match, "mid-snapshot replay diverged");
   check(
     fromGenesis.replayChecksum === fromMiddle.replayChecksum,

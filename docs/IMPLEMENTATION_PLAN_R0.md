@@ -195,15 +195,39 @@ refresh mid-choice, reconnect, double-click submit), a11y automated checks.
 suite green in CI; ten-person dry-run checklist items for this slice
 demonstrably executable.
 
+### Living City R1 — Modular city-builder increment
+
+The post-Phase-1 increment keeps the same journal, deterministic step,
+snapshot, replay, SSE, and accessible-projection boundaries while making the
+district itself playable. `DistrictState.city` now owns canonical parcels,
+buildings, levels, population, prosperity, and non-transferable civic
+capacity. `building.upgrade` and `district.expand` are actor-attributed,
+idempotent commands; `BuildingUpgraded` and `DistrictExpanded` are committed
+events and Archive facts.
+
+The web projection composes independent terrain, roads, transparent building
+sprites, residents, vehicles, lighting, and weather in PixiJS. Residents and
+traffic follow the committed road topology, while interpolation and ambient
+weather remain presentation-only. Locked adjacent parcels remain visible as
+frontiers and reveal their planned building and connecting road only after an
+expansion commits. Critical selection, upgrading, expansion, resident state,
+and history remain available in the synchronized DOM city ledger.
+
+**Acceptance:** upgrades and expansions survive refresh, exact retries apply
+once, stale levels and insufficient capacity reject explicitly, genesis and
+mid-snapshot replay checksums match, the replay gate re-derives the complete
+city event stream, reduced-motion and PixiJS-disabled paths retain all facts,
+and Playwright completes the city upgrade-and-expansion journey.
+
 ## 6. Test matrix
 
 | Layer | Tool | Must cover |
 |---|---|---|
-| district-rules | Vitest unit + fixtures | every rule, every rejection, checksum reproducibility |
+| district-rules | Vitest unit + fixtures | every rule, every rejection, city upgrade/expansion, checksum reproducibility |
 | runtime worker | Vitest integration (real PG+Redis via compose) | ordering, idempotency, conflict, crash before/after commit, snapshot restore, scheduled effects, bounded catch-up, outbox republish |
 | replay | CLI in CI | every release fixture, divergence fails the build |
 | application-api | Vitest integration | auth boundary, command path exclusivity, Today/Archive/WYWA correctness, SSE resume |
-| web | Playwright + axe | full slice, keyboard-only, reduced motion, PixiJS off, duplicate submit, refresh/reconnect |
+| web | Playwright + axe | full slice, city upgrade/expansion persistence, keyboard-only, reduced motion, PixiJS off, duplicate submit, refresh/reconnect |
 
 ## 7. Open decisions and spec ambiguities (resolve before/during PR noted)
 

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { CitySky } from "../../components/CitySky";
 import { requestCode, setToken, verifyCode } from "../../lib/api";
 
 export default function LoginPage() {
@@ -45,62 +46,69 @@ export default function LoginPage() {
   }
 
   return (
-    <>
-      <h1>Sign in</h1>
-      {phase === "email" ? (
-        <form onSubmit={submitEmail}>
-          <p>
-            <label>
-              Email address{" "}
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </label>{" "}
-            <button className="primary" type="submit" disabled={busy}>
-              {busy ? "Sending…" : "Send code"}
+    <div className="login-page">
+      <section className="login-world" aria-label="District Zero at night">
+        <CitySky />
+        <div>
+          <span className="eyebrow">CITY GATE · IDENTITY CHECK</span>
+          <h1>Come back as yourself.</h1>
+          <p>One identity. One persistent Mira. Every choice preserved in the city’s history.</p>
+        </div>
+      </section>
+      <section className="login-panel" aria-labelledby="login-heading">
+        <span className="city-monogram">F</span>
+        <span className="eyebrow">FREECITY RESIDENT ACCESS</span>
+        <h2 id="login-heading">{phase === "email" ? "Find your doorway" : "The gate heard you"}</h2>
+        {phase === "email" ? (
+          <form className="login-form" onSubmit={submitEmail}>
+            <label htmlFor="email">Email address</label>
+            <input
+              id="email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <button aria-label="Send code" className="gate-button" type="submit" disabled={busy}>
+              {busy ? "Opening a channel…" : "Send access signal"} <span>→</span>
             </button>
-          </p>
-        </form>
-      ) : (
-        <form onSubmit={submitCode}>
-          <p>
-            A six-digit code was issued for <strong>{email}</strong>.
-          </p>
-          {devCode !== null && (
-            <p className="muted">
-              Development mode: your code is <strong data-testid="dev-code">{devCode}</strong>.
+            <p className="login-footnote">No wallet. No download. The first night is free.</p>
+          </form>
+        ) : (
+          <form className="login-form" onSubmit={submitCode}>
+            <p>
+              A six-digit signal was issued for <strong>{email}</strong>.
             </p>
-          )}
-          <p>
-            <label>
-              Code{" "}
-              <input
-                inputMode="numeric"
-                pattern="\d{6}"
-                required
-                autoComplete="one-time-code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-              />
-            </label>{" "}
-            <button className="primary" type="submit" disabled={busy}>
-              {busy ? "Verifying…" : "Sign in"}
-            </button>{" "}
-            <button type="button" onClick={() => setPhase("email")}>
+            {devCode !== null && (
+              <p className="dev-code-panel">
+                DEV GATE CODE <strong data-testid="dev-code">{devCode}</strong>
+              </p>
+            )}
+            <label htmlFor="code">Code</label>
+            <input
+              id="code"
+              inputMode="numeric"
+              pattern="\d{6}"
+              required
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+            <button aria-label="Sign in" className="gate-button" type="submit" disabled={busy}>
+              {busy ? "Verifying…" : "Cross the threshold"} <span>→</span>
+            </button>
+            <button className="text-button" type="button" onClick={() => setPhase("email")}>
               Use a different email
             </button>
+          </form>
+        )}
+        {error !== null && (
+          <p role="alert" className="status-warn">
+            {error}
           </p>
-        </form>
-      )}
-      {error !== null && (
-        <p role="alert" className="status-warn">
-          {error}
-        </p>
-      )}
-    </>
+        )}
+      </section>
+    </div>
   );
 }

@@ -57,6 +57,19 @@ export const runDueEffectsPayloadSchema = z.object({
 });
 export type RunDueEffectsPayload = z.infer<typeof runDueEffectsPayloadSchema>;
 
+export const upgradeBuildingPayloadSchema = z.object({
+  residentId: z.string().min(1),
+  buildingId: z.string().min(1),
+  expectedLevel: z.number().int().min(1),
+});
+export type UpgradeBuildingPayload = z.infer<typeof upgradeBuildingPayloadSchema>;
+
+export const expandDistrictPayloadSchema = z.object({
+  residentId: z.string().min(1),
+  parcelId: z.string().min(1),
+});
+export type ExpandDistrictPayload = z.infer<typeof expandDistrictPayloadSchema>;
+
 export const districtCommandSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("season.provision_resident"),
@@ -65,6 +78,8 @@ export const districtCommandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("card.assign"), payload: assignCardPayloadSchema }),
   z.object({ type: z.literal("card.commit_choice"), payload: commitChoicePayloadSchema }),
   z.object({ type: z.literal("card.decline"), payload: declineCardPayloadSchema }),
+  z.object({ type: z.literal("building.upgrade"), payload: upgradeBuildingPayloadSchema }),
+  z.object({ type: z.literal("district.expand"), payload: expandDistrictPayloadSchema }),
   z.object({ type: z.literal("runtime.run_due_effects"), payload: runDueEffectsPayloadSchema }),
 ]);
 export type DistrictCommand = z.infer<typeof districtCommandSchema>;

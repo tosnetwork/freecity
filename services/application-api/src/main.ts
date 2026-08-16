@@ -20,7 +20,10 @@ if (enableTestControls && !testControlKey) {
 
 const app = await buildServer({
   pool: createPool(databaseUrl),
-  config: { districtId: "district-zero", seasonId: "season-0" },
+  config: {
+    districtId: process.env["FREECITY_DISTRICT_ID"] ?? "district-zero",
+    seasonId: process.env["FREECITY_SEASON_ID"] ?? "season-0",
+  },
   authMode,
   webOrigin: process.env["FREECITY_WEB_ORIGIN"] ?? "http://localhost:3000",
   enableTestControls,

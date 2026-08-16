@@ -186,3 +186,16 @@ export function chooseOption(cardId: string, optionId: string): Promise<CommandR
 export function declineCard(cardId: string): Promise<CommandResponse> {
   return commandRequest(`/api/cards/${encodeURIComponent(cardId)}/decline`, { reason: null });
 }
+
+export function upgradeBuilding(
+  buildingId: string,
+  expectedLevel: number,
+): Promise<CommandResponse> {
+  return commandRequest(`/api/city/buildings/${encodeURIComponent(buildingId)}/upgrade`, {
+    expectedLevel,
+  });
+}
+
+export function expandDistrict(parcelId: string): Promise<CommandResponse> {
+  return commandRequest(`/api/city/parcels/${encodeURIComponent(parcelId)}/expand`, {});
+}

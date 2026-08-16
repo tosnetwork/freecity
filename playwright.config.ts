@@ -4,6 +4,7 @@ import { TEST_CONTROL_KEY } from "./e2e/helpers";
 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgres://freecity:freecity@localhost:5433/freecity";
+const E2E_RUN_ID = `${Date.now()}-${process.pid}`;
 
 export default defineConfig({
   testDir: "e2e",
@@ -25,6 +26,8 @@ export default defineConfig({
         AUTH_MODE: "dev",
         FREECITY_TEST_CONTROLS: "1",
         FREECITY_TEST_CONTROL_KEY: TEST_CONTROL_KEY,
+        FREECITY_DISTRICT_ID: `district-e2e-${E2E_RUN_ID}`,
+        FREECITY_SEASON_ID: "season-e2e",
       },
     },
     {

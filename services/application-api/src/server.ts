@@ -63,6 +63,7 @@ const chooseSchema = z.object({
 });
 const declineSchema = z.object({ reason: z.string().min(1).max(200).nullable().default(null) });
 const ackSchema = z.object({ sequence: z.number().int().min(0) });
+const upgradeBuildingSchema = z.object({ expectedLevel: z.number().int().min(1) });
 const devClockSchema = z.object({ now: isoTimestampSchema.nullable() });
 
 export async function buildServer(opts: ServerOptions): Promise<FastifyInstance> {
@@ -324,6 +325,40 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
       residentId,
       auth.accountId,
       `decline:${cardId}`,
+    );
+  });
+
+  app.post("/api/city/buildings/:buildingId/upgrade", async (request, reply) => {
+    const auth = await requireMembership(request);
+    if (!auth?.membership) return reply.code(401).send({ error: "unauthorized" });
+    const { buildingId } = request.params as { buildingId: string };
+    const body = upgradeBuildingSchema.parse(request.body ?? {});
+    const residentId = auth.membership.residentId;
+    return submitCardCommand(
+      request,
+      reply,
+      {
+        type: "building.upgrade",
+        payload: { residentId, buildingId, expectedLevel: body.expectedLevel },
+      },
+      residentId,
+      auth.accountId,
+      `upgrade:${buildingId}:${body.expectedLevel}`,
+    );
+  });
+
+  app.post("/api/city/parcels/:parcelId/expand", async (request, reply) => {
+    const auth = await requireMembership(request);
+    if (!auth?.membership) return reply.code(401).send({ error: "unauthorized" });
+    const { parcelId } = request.params as { parcelId: string };
+    const residentId = auth.membership.residentId;
+    return submitCardCommand(
+      request,
+      reply,
+      { type: "district.expand", payload: { residentId, parcelId } },
+      residentId,
+      auth.accountId,
+      `expand:${parcelId}`,
     );
   });
 

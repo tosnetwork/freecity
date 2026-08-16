@@ -182,6 +182,44 @@ describe("summarizeCommittedViews", () => {
   });
 });
 
+describe("living city event projection", () => {
+  it("rebuilds upgrades and expansions only from committed events", () => {
+    let state = seeded();
+    const beacon = { ...state.city.buildings["beacon-square"]!, level: 2 };
+    state = applyEventView(
+      state,
+      view(2, 0, {
+        eventType: "BuildingUpgraded",
+        residentId: "human-1",
+        building: beacon,
+        fromLevel: 1,
+        capacitySpent: 3,
+        prosperityGained: 6,
+      }),
+    );
+    expect(state.city.buildings["beacon-square"]?.level).toBe(2);
+    expect(state.city.civicCapacity).toBe(27);
+    expect(state.activity.at(-1)?.summary).toContain("Beacon Tower");
+
+    state = applyEventView(
+      state,
+      view(3, 0, {
+        eventType: "DistrictExpanded",
+        residentId: "human-1",
+        parcelId: "east-harbor",
+        parcelName: "East Harbor",
+        revealedBuildingIds: ["transit"],
+        capacitySpent: 7,
+        populationGained: 6,
+        prosperityGained: 4,
+      }),
+    );
+    expect(state.city.parcels["east-harbor"]?.unlocked).toBe(true);
+    expect(state.city.population).toBe(30);
+    expect(state.activity.at(-1)?.summary).toContain("East Harbor");
+  });
+});
+
 describe("summarizeEvent", () => {
   it("resolves display names and produces accessible text", () => {
     const state = seeded();

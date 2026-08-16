@@ -5,6 +5,7 @@ import {
   type AppliedCommandInput,
   type DistrictCommand,
   type DistrictState,
+  createInitialCityState,
 } from "@freecity/contracts";
 
 import { applyCommand, type ApplyResult } from "./apply.js";
@@ -21,6 +22,7 @@ function emptyState(): DistrictState {
     rulesetVersion: "district-zero-r0",
     rngSeed: "test-seed",
     residents: {},
+    city: createInitialCityState(),
   };
 }
 
@@ -359,6 +361,110 @@ describe("runtime.run_due_effects", () => {
     if (!rest.ok) return;
     expect(rest.events.filter((e) => e.eventType === "CardExpired")).toHaveLength(1);
     expect(rest.state.residents["human-1"]?.activeCards).toHaveLength(0);
+  });
+});
+
+describe("living city construction", () => {
+  it("upgrades a visible building through the deterministic command path", () => {
+    const state = provisionedState();
+    const result = applyCommand(
+      state,
+      input(
+        {
+          type: "building.upgrade",
+          payload: { residentId: "human-1", buildingId: "beacon-square", expectedLevel: 1 },
+        },
+        2,
+      ),
+      T0,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.state.city.buildings["beacon-square"]?.level).toBe(2);
+    expect(result.state.city.civicCapacity).toBe(27);
+    expect(result.state.city.prosperity).toBe(24);
+    expect(result.events.map((event) => event.eventType)).toEqual([
+      "BuildingUpgraded",
+      "ArchiveEntryRecorded",
+    ]);
+    expect(state.city.buildings["beacon-square"]?.level).toBe(1);
+  });
+
+  it("rejects stale building levels and maximum-level upgrades", () => {
+    const state = provisionedState();
+    expectRejection(
+      applyCommand(
+        state,
+        input(
+          {
+            type: "building.upgrade",
+            payload: { residentId: "human-1", buildingId: "beacon-square", expectedLevel: 2 },
+          },
+          2,
+        ),
+        T0,
+      ),
+      "BUILDING_LEVEL_CONFLICT",
+    );
+    const maxed = structuredClone(state);
+    maxed.city.buildings["beacon-square"]!.level = 3;
+    expectRejection(
+      applyCommand(
+        maxed,
+        input(
+          {
+            type: "building.upgrade",
+            payload: { residentId: "human-1", buildingId: "beacon-square", expectedLevel: 3 },
+          },
+          2,
+        ),
+        T0,
+      ),
+      "BUILDING_MAX_LEVEL",
+    );
+  });
+
+  it("opens adjacent land and reveals its planned building", () => {
+    const state = provisionedState();
+    const result = applyCommand(
+      state,
+      input(
+        {
+          type: "district.expand",
+          payload: { residentId: "human-1", parcelId: "east-harbor" },
+        },
+        2,
+      ),
+      T0,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.state.city.parcels["east-harbor"]?.unlocked).toBe(true);
+    expect(result.state.city.population).toBe(30);
+    expect(result.state.city.civicCapacity).toBe(23);
+    expect(result.events[0]).toMatchObject({
+      eventType: "DistrictExpanded",
+      revealedBuildingIds: ["transit"],
+    });
+  });
+
+  it("preserves scarcity and refuses construction the city cannot support", () => {
+    const state = provisionedState();
+    state.city.civicCapacity = 0;
+    expectRejection(
+      applyCommand(
+        state,
+        input(
+          {
+            type: "district.expand",
+            payload: { residentId: "human-1", parcelId: "north-gardens" },
+          },
+          2,
+        ),
+        T0,
+      ),
+      "INSUFFICIENT_CIVIC_CAPACITY",
+    );
   });
 });
 
