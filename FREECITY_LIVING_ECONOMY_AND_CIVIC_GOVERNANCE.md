@@ -1,9 +1,9 @@
 # FreeCity Living Economy and Civic Governance
 
-**Document version:** 1.1<br>
+**Document version:** 1.2<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Commercial positioning, recurring play, economic relationships, TOS asset policy, civic offices, elections, and institutional safeguards<br>
-**Companion documents:** [FreeCity Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), and [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md)<br>
+**Companion documents:** [FreeCity Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md), and [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)<br>
 **Normative protocol reference:** [TOS Service FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md)
 
 ## Executive Summary
@@ -218,7 +218,7 @@ FreeCity should support economic relationships that have a clear human purpose, 
 | **Grant or bounty** | Reward a public contribution or district objective | Treasury or patron pool to contributor | Exact stablecoin amount; TOS only when the program explicitly uses TOS | Published criteria, award authority, evidence, conflict disclosure |
 | **Space or event access** | Pay for hosted capacity, a private venue, or a programmed experience | Resident or organization to operator | Stablecoin or supported native TOS payment | No speculative ownership claim, clear duration, capacity, refund and moderation terms |
 | **Candidacy bond** | Demonstrate commitment and deter frivolous or abusive campaigns | Candidate locks native TOS; not revenue to an officeholder | Native TOS only | Fixed or capped amount, term, refund, narrow slashing rule, appeal, contract audit |
-| **Network fee** | Pay for TOS execution, storage, registry, or contract operations | Transaction signer to TOS Network | Native TOS | Wallet confirmation and separation from the commercial price |
+| **Network fee** | Pay for TOS execution, storage, registry, or contract operations | Transaction signer or approved Sponsor to TOS Network | Native TOS | Actual Gas payer, amount, sponsorship policy, and separation from the commercial price |
 
 The word **payment** includes purchases, compensation, subscriptions, tips, grants, fees, rent-like access charges, revenue sharing, and any transferable deposit. A loyalty point with no transferability, redemption, market claim, or cash equivalent is not payment, but it must not be marketed as money or an investment.
 
@@ -233,22 +233,28 @@ The following rules apply to every FreeCity monetary flow:
 5. An external fiat provider may help a resident acquire or redeem a TOS Network asset, but the external payment is an on-ramp or off-ramp event, not the FreeCity settlement record.
 6. An external-chain token, bridged claim, exchange balance, gateway ledger, database credit, or informal IOU cannot settle a FreeCity payment.
 7. FreeCity must not issue a city token to manufacture demand or bypass TOS asset policy.
-8. The city must remain useful without owning TOS beyond the fees or bonds required for an explicitly chosen on-chain action.
+8. The city must remain useful without owning TOS. After sponsored stablecoin transfer is accepted, an ordinary stablecoin payer must not be forced to acquire TOS merely for Gas; a resident needs personal TOS only for an explicitly chosen TOS-denominated action or bond.
 9. Asset substitution after acceptance is forbidden. A new asset requires a new acceptance or contract action under the applicable protocol.
 10. Exchange-rate estimates are informational observations with source and freshness; they are never the canonical amount.
+11. A stablecoin is supported only through an active, versioned registry entry that binds the exact network, Master, code hashes, decimals, issuer, and operational status. A ticker, logo, gateway entry, or wallet discovery result is insufficient.
+12. Commercial consent and Gas sponsorship are separate authorities. A Sponsor may fund native TOS execution cost but cannot accept a purchase for the payer.
 
 ### 4.3 Current Capability Versus Product Target
 
 | Flow | Current protocol status | Product rule |
 | --- | --- | --- |
-| Machine-checkable service purchase | Current design scope: exact supported TOS-network stablecoin through Accepted Quote and escrow | May be implemented and validated first |
+| Native TOS account and transfer | Implemented chain and official-wallet foundation | Reuse; preserve owner-controlled signing and finalized provenance |
+| Jetton stablecoin ownership and transfer | Protocol and SDK foundation exists; official mobile V1 stablecoin surfaces and FreeCity integration are pending | Treat chain capability and resident-ready product support as different evidence |
+| Supported stablecoin identity | TOS Service validates exact identity for its lifecycle; no general production Supported Asset Registry exists, and current evidence uses test-only `tUSDT` | Publish an authenticated registry and approve a production issuer before production commerce |
+| Machine-checkable service purchase | Contract and protocol implementation exists for one exact stablecoin through Accepted Quote and escrow; current-domain, external, and FreeCity acceptance remain pending | May be implemented and validated first on testnet with accurate evidence labels |
 | TOS execution and storage fee | Native TOS | Always separate from service price |
+| Sponsored stablecoin Gas | Design exists but is not an accepted production capability | Required before ordinary stablecoin commerce can avoid a two-token user burden; disclose Sponsor and actual TOS cost |
 | Native-TOS commercial service price | Strategy permits future voluntary pricing, but current V1 settlement is stablecoin-only | Do not present as live until a normative asset route and resolver support it |
 | Tip, subscription, creator checkout, team split | Product target; not automatically covered by the current fixed-price service escrow | Requires reviewed contracts, Receipts, cancellation or allocation rules, and acceptance evidence |
 | TOS candidacy bond or governance stake | Product target | Requires a dedicated audited governance contract and cannot reuse the service escrow by analogy |
 | External fiat or external-chain payment | Outside the FreeCity settlement model | May only be an explicitly labelled on-ramp or off-ramp to a supported TOS Network asset |
 
-This separation prevents a design document or polished interface from becoming false evidence of protocol readiness.
+This separation prevents a design document, low-level wallet capability, compiled contract, passing repository test, test token, or polished interface from becoming false evidence of product or production readiness. The complete audited baseline and implementation gates are maintained in [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md).
 
 ### 4.4 Commercial State Machine
 
@@ -519,6 +525,8 @@ The exact implementation depends on normative TOS specifications and audited con
 
 FreeCity must not overload the current service escrow with governance behavior that its specification does not define.
 
+The cross-cutting City Wallet, Supported Asset Registry, sponsored-transfer intent, Payment Orchestrator, and resolver-first TOS Projection are application infrastructure rather than new monetary authority. Their required boundaries and acceptance gates are defined in [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md).
+
 ### 8.3 Privacy and Public Accountability
 
 Public accountability does not require exposing every wallet balance, private contribution, ballot choice, message, or Agent memory. The system should disclose what is necessary to verify authority and conflicts while minimizing surveillance.
@@ -563,6 +571,8 @@ Ordinary resident holdings should not become a public wealth leaderboard by defa
 - one dense builder and creator district with approximately fifty humans and fifty sponsored AI residents;
 - one persistent AI resident relationship, three-card daily briefing, meaningful choice, and visible consequence per activated human;
 - one machine-checkable Capability and stablecoin-priced work contract;
+- one signed testnet Supported Asset Registry entry, optional owner-wallet link, and exact TOS and stablecoin history with finality provenance;
+- a disclosed bounded operator Gas policy until sponsored transfer is accepted;
 - finalized Quote, escrow, execution, Receipt, release or refund;
 - a truthful "while you were away" consequence;
 - no elected economic authority; and
@@ -639,6 +649,8 @@ The ten-out-of-ten target thresholds, first-cohort segmentation, willingness-to-
 15. **Value precedes wallet setup.** Free onboarding, the first meaningful choice, basic relationships, Circles, Beacon contribution, and critical civic access do not require a wallet.
 16. **Play resources are not shadow money.** Focus and other non-transferable progression records cannot be purchased, transferred, redeemed, marketed as investments, or substituted for TOS Network payment.
 17. **Target scores are not player evidence.** Ten-out-of-ten design targets remain unvalidated until an implemented cohort meets the published gates.
+18. **Ordinary stablecoin commerce must not become a two-token onboarding requirement.** After sponsored transfer is accepted, the Sponsor may pay native TOS Gas while the resident authorizes and pays only the stablecoin commercial amount.
+19. **A wallet is not proof of a payment product.** Stablecoin display, signing, recovery, exact-asset validation, sponsorship, idempotency, finality, reconciliation, and support must pass their gates before the flow is described as live.
 
 ---
 
@@ -647,6 +659,9 @@ The ten-out-of-ten target thresholds, first-cohort segmentation, willingness-to-
 Before production, FreeCity must decide and validate:
 
 - the first supported TOS-network stablecoin contract, issuer, decimals, status, and display policy;
+- the accountable owner, update, anchoring, pause, retirement, and incident rules for the Supported Asset Registry;
+- the sponsored-transfer release gate, Sponsor funding model, per-resident limits, abuse controls, and recovery policy;
+- the City Wallet's signed account binding, mobile surface, device recovery, export, and Agent session-key model;
 - the normative path for native-TOS commercial payments beyond network fees;
 - contracts and cancellation rules for tips, subscriptions, revenue shares, grants, and creator checkout;
 - custody, recovery, sanctions, taxation, consumer protection, and operating jurisdictions;
@@ -669,6 +684,8 @@ Before production, FreeCity must decide and validate:
 FreeCity becomes commercially compelling when a resident does not merely watch a city or invoke an Agent, but makes concrete choices and develops a persistent stake in another resident, a relationship, a project, an institution, and an unfinished future. District Zero turns that thesis into a playable and measurable season. Payment follows demonstrated attachment and utility: residents fund continuity, capability, expression, creation, coordination, and accepted outcomes.
 
 TOS Network gives those economic relationships a common asset and finality boundary. Stablecoins make work, subscriptions, grants, and budgets understandable; native TOS pays for network use and can later provide bounded economic commitment for eligible purchases and candidacy. Neither asset should buy trust or unconstrained power.
+
+The infrastructure review confirms that this division is technically coherent but not yet a complete product. Native TOS accounts, Jetton foundations, and a narrow stablecoin service lifecycle exist; production stablecoin approval, stablecoin wallet surfaces, sponsored Gas, FreeCity payment orchestration, generalized economic contracts, and governance contracts remain gated. Implementation must follow [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md) rather than infer readiness from the ability of an address to hold both assets.
 
 The strongest civic design is therefore not token rule. It is **TOS-backed commitment plus resident authorization plus institutional restraint**. A candidate may lock TOS to prove commitment, but residents grant the mandate, public rules bound the office, independent institutions review its actions, and finalized TOS state makes the economic record inspectable.
 

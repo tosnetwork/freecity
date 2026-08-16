@@ -1,9 +1,9 @@
 # FreeCity Vision and Architecture
 
-**Document version:** 1.7<br>
+**Document version:** 1.8<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Vision, interaction principles, system architecture, technical direction, and implementation boundaries<br>
-**Companion documents:** [FreeCity Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), and [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md)
+**Companion documents:** [FreeCity Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md), and [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)
 
 ## Executive Summary
 
@@ -14,6 +14,8 @@ FreeCity is designed as the first society-scale application built on TOS Network
 It is not a conventional metaverse game, a chatbot directory, or a website that merely visualizes a futuristic city. FreeCity is intended to become a continuously operating society with residents, places, relationships, work, markets, institutions, public events, and shared history.
 
 Commercially, FreeCity should behave as an AI-native persistent social strategy world: a resident returns because an Agent, relationship, project, or civic responsibility continued while the resident was away; makes a meaningful decision; and sees a real consequence enter the shared city history. The complete return, payment, and office model is defined in [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md).
+
+The implementation must preserve a strict dual-currency boundary: an exact supported TOS-network stablecoin prices ordinary commerce, while native TOS pays network costs and later supports bounded commitments such as candidacy bonds. The audited baseline, missing infrastructure, target interfaces, and acceptance gates are maintained in [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md).
 
 The first implementable experience is District Zero: a fourteen-day controlled-entry season in which approximately fifty humans and fifty sponsored AI residents use a three-card briefing, five complementary roles, relationship episodes, small Circles, a shared Beacon, optional testnet work, and one bounded District Steward selection. Its player rules and acceptance gates are defined in [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md); its recruitment and operation are defined in the [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md).
 
@@ -744,7 +746,7 @@ Canonicality must be visible in both data design and interface language:
 | **FreeCity-local civic fact** | Human profile, follow relationship, community membership, place, private project note, local moderation decision | Commit through the responsible FreeCity service and label the application domain |
 | **Derived or operational observation** | Presence, availability, latency, discovery score, recommendation, generated summary, partially indexed metric | Never present as consensus; show source, freshness, and coverage where material |
 
-The normative cross-project mapping is defined by the [TOS Service FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md). TOS Service control documents remain authoritative if this document conflicts with protocol behavior.
+The normative cross-project mapping is defined by the [TOS Service FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md). The audited product-readiness baseline and the required City Wallet, Supported Asset Registry, Gas Sponsor, Payment Orchestrator, and TOS Projection are defined in [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md). TOS Service control documents remain authoritative if this document conflicts with protocol behavior.
 
 ---
 
@@ -896,6 +898,9 @@ FreeCity `Work`, `Transaction`, and `Event` objects are application views that m
 
 - PostgreSQL as the authoritative relational store only for FreeCity-local social, civic, and application data;
 - a TOS resolver/indexer projection for finalized Agent, Capability, Accepted Quote, escrow, Receipt, and settlement state, with block/finality provenance;
+- a versioned and authenticated Supported Asset Registry containing exact network, Master, code-hash, decimals, issuer, status, and policy metadata rather than ticker-based routing;
+- a non-custodial Payment Orchestrator for intent lifecycle, idempotency, route selection, authorization, sponsorship coordination, reconciliation, and support correlation without becoming settlement authority;
+- a rebuildable TOS wallet and payment projection for native TOS and supported Jetton balances, transfers, contract outcomes, finality, freshness, and resolver provenance;
 - pgvector for semantic memory retrieval;
 - Redis for presence, caching, rate limits, queues, and ephemeral state;
 - object storage with a global CDN for resident media and video;
@@ -945,12 +950,17 @@ FreeCity should support free and social participation without requiring a wallet
 
 - native TOS for network fees and, only after the required contracts and acceptance evidence exist, eligible TOS-denominated purchases, voluntary services, and civic bonds;
 - exact supported TOS-network stablecoins for commercial prices, subscriptions, grants, budgets, creator purchases, and other value-stable relationships under the applicable reviewed contract;
-- external wallets and owner-controlled signing clients;
+- a Passkey-first City Wallet that links an owner-controlled TOS wallet through a signed challenge and keeps Human, Agent, controller, sponsor, and organization authority distinct;
+- a Supported Asset Registry that fails closed on an unknown, paused, wrong-network, or code-hash-mismatched stablecoin;
+- a Payment Orchestrator that stores application intent and idempotency state but never stores a canonical balance or marks broadcast as settlement;
+- an approved Sponsor or Relayer that may attach bounded native TOS Gas without acquiring the payer's commercial authority;
 - Quote Proposal and finalized Accepted Quote separation;
 - escrow and milestone-based work;
 - signed Receipts and independently resolvable transaction history.
 
-The current `tos_service_v1` service lifecycle supports one exact TOS-network stablecoin price while native TOS pays network execution and storage fees. It does not automatically support native-TOS service prices, subscriptions, tips, creator checkout, pooled revenue shares, grants, treasury programs, or candidacy bonds. Those flows require appropriate normative contracts, cancellation or allocation rules, resolvers, security review, and current-domain evidence before their interfaces may claim live support.
+The current `tos_service_v1` service lifecycle supports one exact TOS-network stablecoin price while native TOS pays network execution and storage fees. The audited funding path still attaches buyer-side TOS, sponsored stablecoin transfer is not yet an accepted production capability, the official mobile V1 wallets do not yet expose stablecoin product surfaces, and the currently evidenced stablecoin is test-only. It does not automatically support native-TOS service prices, subscriptions, tips, creator checkout, pooled revenue shares, grants, treasury programs, or candidacy bonds. Those flows require the infrastructure and evidence gates in [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md), plus appropriate normative contracts, cancellation or allocation rules, resolvers, security review, and current-domain evidence before their interfaces may claim live support.
+
+Once sponsored transfer is accepted, an ordinary stablecoin payer must not be required to acquire TOS merely to pay Gas. The interface still discloses the actual native TOS network cost and the Sponsor that paid it. A controlled testnet may use disclosed operator-funded Gas before that gate; it is not the production design.
 
 Fiat and custodial providers may serve only as explicitly labelled on-ramps or off-ramps for acquiring or redeeming a supported TOS Network asset. External-chain tokens, bridged claims, exchange balances, gateway ledgers, internal credits, and FreeCity database balances cannot settle a FreeCity payment. Stablecoin commercial price and native TOS network fees must remain visually and arithmetically separate.
 
@@ -958,14 +968,17 @@ Fiat and custodial providers may serve only as explicitly labelled on-ramps or o
 
 The first integration should be narrow and resolver-first:
 
-1. resolve finalized Agent control and Capability state through `tos_service_v1`;
-2. index those facts into read-optimized FreeCity projections with provenance and finality;
-3. collect or display a Quote Proposal as temporary non-authoritative output;
-4. submit and resolve the Accepted Quote and escrow binding through TOS;
-5. dispatch bounded execution to OpenFox or `tos-ai` only after policy and funding checks;
-6. attach artifact digests and a signed Receipt to the FreeCity project history;
-7. reconcile finalized release, refund, or dispute outcomes;
-8. emit a city event whose canonical references can be independently resolved.
+1. publish and resolve the exact testnet Supported Asset Registry entry and the approved resolver, index, finality, and Gas-payer profile;
+2. bind an optional owner-controlled wallet to a FreeCity Human, Agent, sponsor, or organization through the applicable signed authority path;
+3. resolve finalized native TOS, supported stablecoin, Agent control, and Capability state;
+4. index those facts into read-optimized, disposable FreeCity projections with provenance, freshness, and finality;
+5. collect or display a Quote Proposal as temporary non-authoritative output;
+6. create an idempotent application `PaymentIntent`, obtain the reviewed signature, and submit or resolve ambiguity before retry;
+7. submit and resolve the Accepted Quote and escrow binding through TOS;
+8. dispatch bounded execution to OpenFox or `tos-ai` only after policy and funding checks;
+9. attach artifact digests and a signed Receipt to the FreeCity project history;
+10. reconcile finalized release, refund, or dispute outcomes; and
+11. emit a city event whose canonical references can be independently resolved.
 
 Every other payment primitive follows the same resolver-first principle but may require a different TOS contract. FreeCity must not overload Accepted Quote escrow with subscription, election, court, treasury, or candidacy semantics that the normative protocol does not define.
 
@@ -1108,6 +1121,9 @@ The first version should prove that FreeCity is a living society, not that it ca
 - jobs, tasks, and service listings;
 - human-agent and agent-agent collaboration;
 - reputation and work history;
+- a signed testnet Supported Asset Registry and a City Wallet that links owner-controlled wallets without blocking free play;
+- separate native TOS and exact stablecoin balances, history, pending state, finality, provenance, and Gas-payer disclosure;
+- an idempotent Payment Orchestrator and rebuildable TOS Projection that never become custody or settlement authority;
 - the current-domain TOS lifecycle from Capability and Quote Proposal through Accepted Quote, escrow, signed Receipt, and finalized release or refund;
 - OpenFox or `tos-ai` execution after finalized policy and funding checks;
 - dispute and independent resolution paths;
@@ -1198,9 +1214,12 @@ Identity, TOS settlement, permissions, governance, courts, public safety, and pr
 | Verified live city state over WebSocket or SSE | High | Reconnection, ordering, fan-out, and false activity | **Proceed early.** This is more important than 3D rendering. |
 | AI Town-inspired Live City Projection | High | Visual spoofing, privacy leakage, event storms, and scene-state drift | **Proceed as a non-authoritative projection.** Use typed `VisualIntent`, client interpolation, district partitioning, and an accessible synchronized view. |
 | Finalized TOS state projected into FreeCity | High | Stale indexes, finality ambiguity, and accidental second authority | **Proceed resolver-first.** Preserve canonical IDs, block provenance, exact asset codes, and independent resolution. |
+| Supported Asset Registry | High | Fake assets, stale policy, issuer incidents, and ticker-based routing | **Implement before payment.** Bind exact network, Master, code hashes, decimals, issuer, status, version, and effective time; fail closed. |
+| Stablecoin-ready City Wallet | Medium-high | Recovery, phishing, wrong network, mobile product gaps, and authority confusion | **Build progressively.** Start read-only and testnet; link owner-controlled wallets and keep Human, Agent, sponsor, and controller identities separate. |
+| Sponsored stablecoin transfer | Medium | Relayer abuse, replay, sponsor depletion, unavailable production gate, and hidden fee semantics | **Treat as required for ordinary commerce.** A stablecoin-only resident should not need to acquire TOS; disclose the Sponsor and actual TOS cost. |
 | OpenFox / `tos-ai` work execution | Medium-high | Runtime integration, approval policy, and incomplete current-domain evidence | **Integrate behind the TOS economic bridge.** Treat readiness as pending until roadmap acceptance is evidenced. |
-| End-to-end TOS commerce in FreeCity | Medium | Current-domain deployment, external acceptance, disputes, and recurring-use evidence remain incomplete | **Prototype on testnet.** Do not claim production readiness or substitute a FreeCity ledger. |
-| TOS-only FreeCity monetary relationships | Medium-high as a policy; flow-dependent as implementation | Current V1 is stablecoin-priced service work plus native TOS fees, while subscriptions, tips, splits, native-TOS prices, and civic bonds need additional contracts | **Adopt the invariant now and stage the primitives.** External fiat may only on-ramp or off-ramp supported TOS Network assets. |
+| End-to-end TOS commerce in FreeCity | Medium | Production stablecoin, wallet UI, sponsorship, current-domain deployment, external acceptance, disputes, and recurring-use evidence remain incomplete | **Prototype one software-work flow on testnet.** Build the Payment Orchestrator and projection, but do not claim production readiness or substitute a FreeCity ledger. |
+| TOS Network-only FreeCity monetary settlement | Medium-high as a policy; flow-dependent as implementation | Current V1 is stablecoin-priced service work plus native TOS fees, while subscriptions, tips, splits, native-TOS prices, and civic bonds need additional contracts | **Adopt the invariant now and stage the primitives.** External fiat may only on-ramp or off-ramp supported TOS Network assets. |
 | TOS-backed district candidacy and offices | Medium | Plutocracy, Sybil and Agent-fleet capture, bribery, key loss, court capture, political moderation, and immature governance contracts | **Prototype last in a bounded civic sandbox.** Use a fixed or capped bond, non-token-weighted resident authorization, separation of powers, and independent appeal. |
 | Authored gameplay event compiler | High | Irrelevance, repetition, fabricated facts, unsafe memory use, and generation latency | **Implement before cohort launch.** Use reviewed templates, durable facts, bounded language generation, final validation, operator correction, and authored fallback. |
 | District Zero controlled season | High after P0 implementation | Empty-world feeling, staff load, content exhaustion, selection bias, and target scores mistaken for evidence | **Run only after the dry-run gate.** Keep one dense district, approximately fifty humans, fourteen days, named staff, stop controls, and explicit evidence labels. |
@@ -1238,6 +1257,9 @@ The live and generative architecture is consistent with FreeCity only if the fol
 19. **Play does not create a shadow authority.** Focus, cards, progression, Beacon state, and season rewards cannot create money, verified reputation, identity, votes, office, or protocol facts.
 20. **The first five minutes are value-first.** A resident can enter, meet an AI resident, choose, and see a consequence without a wallet, protocol knowledge, open prompt, or governance action.
 21. **Targets remain unproven until observed.** A ten-out-of-ten design response is never labelled prototype, cohort, or production evidence without the corresponding test.
+22. **Asset identity is exact.** A ticker, logo, gateway catalog entry, or user-provided address cannot make a stablecoin supported; the active registry entry and exact contract identity must match.
+23. **Ordinary commerce is not a two-token burden.** After sponsored transfer is accepted, a stablecoin payer does not acquire TOS merely for Gas; commercial consent and Gas sponsorship remain separate authorities.
+24. **Broadcast is not settlement.** A payment animation or local status cannot become final until the applicable independent resolver confirms the authoritative state.
 
 ### 15.3 Review Conclusion
 
@@ -1251,13 +1273,15 @@ The recommended implementation sequence is therefore:
 4. establish a stable first-party component catalog and authored Resident UI;
 5. implement the District Zero Today surface, roles, Focus, relationship episodes, Circles, progression, Beacon, event compiler, operator console, safety, accessibility, and evidence-labelled telemetry;
 6. complete a ten-person compressed dry run and fix every P0 failure before inviting external residents;
-7. connect OpenFox or `tos-ai` through the TOS Service economic bridge and, when the cohort TOS gate permits it, prove one current-domain testnet work lifecycle whose states are visibly projected;
-8. run the staffed fourteen-day District Zero cohort and report target, implementation, insider, independent, safety, accessibility, economic, and qualitative evidence separately;
-9. let Agents compose low-risk views through typed schemas and AG-UI streaming;
-10. extend generation into work and market contexts only after validation, fallback, and audit metrics are acceptable;
-11. validate the living-economy return loop and add only reviewed TOS-backed payment primitives, keeping current stablecoin service settlement and native TOS fees distinct;
-12. pilot a narrowly bounded district election only after identity, ballot, candidacy-bond, treasury, separation-of-powers, security, and appeal requirements are evidenced; and
-13. open independent gateway, A2A, MCP, Agent Packet, A2UI, and sandboxed application interoperability after the first-party civic grammar is proven.
+7. publish the signed testnet Supported Asset Registry and implement the read-only City Wallet, owner-wallet binding, stablecoin and TOS history, finality labels, and rebuildable TOS Projection;
+8. connect OpenFox or `tos-ai` through the TOS Service economic bridge and, when the cohort TOS gate permits it, prove one idempotent current-domain testnet work lifecycle whose states are visibly projected;
+9. run the staffed fourteen-day District Zero cohort and report target, implementation, insider, independent, safety, accessibility, economic, and qualitative evidence separately;
+10. complete sponsored stablecoin transfer, the Payment Orchestrator, stablecoin wallet surfaces, recovery, and independent acceptance before describing ordinary dual-currency commerce as live;
+11. let Agents compose low-risk views through typed schemas and AG-UI streaming;
+12. extend generation into work and market contexts only after validation, fallback, and audit metrics are acceptable;
+13. validate the living-economy return loop and add only reviewed TOS-backed payment primitives, keeping current stablecoin service settlement and native TOS fees distinct;
+14. pilot a narrowly bounded district election only after identity, ballot, candidacy-bond, treasury, separation-of-powers, security, and appeal requirements are evidenced; and
+15. open independent gateway, A2A, MCP, Agent Packet, A2UI, and sandboxed application interoperability after the first-party civic grammar is proven.
 
 This sequence preserves the central product truth: the visual city is an adaptive interface to a persistent civilization, not a generated illusion standing in for one.
 

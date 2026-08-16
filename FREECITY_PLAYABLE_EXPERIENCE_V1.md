@@ -1,10 +1,10 @@
 # FreeCity Playable Experience V1
 
-**Document version:** 1.0<br>
+**Document version:** 1.1<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Implementable player experience, core game loops, content grammar, progression, social play, economy, civic play, interface, telemetry, and acceptance criteria<br>
 **Launch scenario:** District Zero, a fourteen-day controlled-entry season<br>
-**Companion documents:** [Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), and [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md)<br>
+**Companion documents:** [Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md), and [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)<br>
 **Normative protocol reference:** [TOS Service FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md)
 
 ## Status and Evidence Rule
@@ -638,6 +638,8 @@ experience value
 
 Wallet setup is progressive and interruptible. Cancelling wallet setup returns the resident safely to free play.
 
+For an enabled stablecoin action, the payment surface also identifies the actual native TOS Gas payer. During the controlled testnet proof this may be a disclosed bounded operator policy. After sponsored stablecoin transfer is accepted, an ordinary stablecoin payer must not be required to acquire TOS merely to pay Gas. Commercial consent and Gas sponsorship remain separate signatures and authorities. The audited readiness requirements live in [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md).
+
 ### 12.2 V1 Economic Moments
 
 | Moment | Cohort behavior | Authority |
@@ -655,7 +657,7 @@ Every fixed payment surface names:
 
 - payer and recipient;
 - network and canonical asset identifier;
-- commercial amount and separate native TOS fee;
+- commercial amount, separate native TOS fee, actual Gas payer, and sponsorship status;
 - purpose, terms, deadline, and cancellation or refund path;
 - authoritative current state;
 - initiating human or Agent;
@@ -895,7 +897,9 @@ V1 requires:
 - at least seventy-two reviewed templates across six event families, plus final validation and authored fallback;
 - telemetry, reporting, block, suspension, moderation, appeal, and support;
 - mobile, keyboard, reduced-motion, and screen-reader critical-path verification; and
-- explicit non-production labels for unavailable TOS features.
+- explicit non-production labels for unavailable TOS features;
+- when any testnet economic flow is enabled, a signed exact-asset registry entry, wallet-binding rule, Gas-payer policy, idempotency rule, finality resolver, and support path; and
+- no requirement to acquire TOS merely to enter, play, or inspect a stablecoin-priced opportunity.
 
 ### P1: Required During the Fourteen-Day Season
 
@@ -903,7 +907,7 @@ V1 requires:
 - progression records and Archive;
 - artifact gallery and closing exhibition;
 - district constraint and competing plan;
-- optional current-domain TOS testnet work lifecycle after its readiness check;
+- optional current-domain TOS testnet work lifecycle after its readiness check, using a `PaymentIntent`, disclosed operator-funded Gas until sponsorship is accepted, and independently resolvable history;
 - District Steward eligibility, campaign, ballot, challenge, and bounded term rehearsal;
 - live-operations console, content override, and safe card cancellation; and
 - cohort metrics dashboard and daily qualitative sampling.
@@ -911,6 +915,7 @@ V1 requires:
 ### P2: After the First Cohort
 
 - managed Agent residence payment;
+- stablecoin-ready City Wallet, Supported Asset Registry, sponsored transfer, Payment Orchestrator, and rebuildable TOS Projection after their infrastructure gates pass;
 - stablecoin patronage, subscription, creator checkout, team split, and treasury primitives after review;
 - production native-TOS commercial payments beyond fees after normative support;
 - audited native-TOS candidacy-bond contract;
@@ -931,6 +936,7 @@ The first external invitation must not be sent until all P0 items and the follow
 - [ ] no critical path depends on generative output;
 - [ ] reconnect and retry tests create no duplicate Focus, invitation, payment, or ballot action;
 - [ ] all payment-like screens are either disabled and labelled or backed by the applicable TOS path;
+- [ ] every enabled payment resolves an active exact-asset registry entry, identifies the Gas payer, prevents duplicate submission, and distinguishes broadcast from finality;
 - [ ] accessibility review passes for onboarding, briefing, choice, consequence, report, and support;
 - [ ] moderators can remove a card, suspend an Agent, protect a resident, and publish a correction;
 - [ ] event templates have been adversarially tested for prompt injection and memory misuse;

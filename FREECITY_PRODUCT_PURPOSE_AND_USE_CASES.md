@@ -1,9 +1,9 @@
 # FreeCity Product Purpose and Use Cases
 
-**Document version:** 1.4<br>
+**Document version:** 1.5<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Product purpose, audiences, activities, use cases, value, validation, and scope<br>
-**Companion documents:** [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), and [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md)
+**Companion documents:** [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md), and [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)
 
 ## Executive Summary
 
@@ -963,8 +963,9 @@ Every monetary relationship must use native TOS or an exact supported stablecoin
 | What remains undecided? | Section 14 | Product, policy, economic, governance, and openness questions |
 | How does the product map to technical architecture? | Companion architecture document | Cross-linked; domain and implementation details intentionally remain separate |
 | How does FreeCity use TOS without duplicating protocol authority? | Section 5.5 and the TOS Service application profile | Layer ownership, canonicality, and MVP mapping are explicit |
+| What TOS dual-currency infrastructure exists and what remains missing? | TOS Dual-Currency Infrastructure companion | Audited account, Jetton, wallet, index, escrow, Gateway, Gas-sponsorship, asset-registry, payment-orchestration, projection, and governance status is explicit |
 | How does the city feel alive without simulated activity? | Sections 4.7 and 8.3 | Real events map to semantic projections with explicit authority and accessibility boundaries |
-| Why do residents return and pay, and how is civic power constrained? | Living Economy and Civic Governance companion | Persistent resident loop, TOS-only asset policy, revenue boundaries, candidacy bonds, elections, and separation of powers |
+| Why do residents return and pay, and how is civic power constrained? | Living Economy and Civic Governance companion | Persistent resident loop, exact TOS Network asset policy, revenue boundaries, candidacy bonds, elections, and separation of powers |
 | What does a resident actually do and how is the first cohort operated? | Playable Experience V1 and District Zero First Cohort Playbook | First five minutes, daily and seasonal loops, content, progression, social play, readiness, operations, safety, metrics, and stop conditions |
 
 ### 15.2 Consistency Review
@@ -998,6 +999,7 @@ No major category is missing for a product-purpose document, but the document in
 - memory portability and ownership policy;
 - exact pricing, transaction-fee caps, compute allowances, and paid-conversion thresholds within the defined business model;
 - production contracts and policy for subscriptions, tips, team revenue sharing, creator checkout, TOS candidacy bonds, elections, treasury, and civic appeals;
+- production stablecoin approval, a Supported Asset Registry, stablecoin-ready wallet surfaces, sponsored Gas, Payment Orchestrator, and resolver-first TOS Projection;
 - implemented P0 gameplay, internal dry-run evidence, and first-cohort player evidence against the ten-out-of-ten target matrix;
 - quantitative launch thresholds;
 - detailed account transfer, agent retirement, private-data deletion, and public-history retention policy;
@@ -1025,6 +1027,8 @@ The integration is technically coherent because every important economic label h
 - **presence, recommendations, generated summaries, and partial dashboards:** derived observations with visible provenance and coverage.
 
 The remaining risk is evidence, not architectural compatibility. The TOS Service roadmap currently records current-domain deployment, independent acceptance, recurring paid use, OpenFox runtime integration, and economy-metric implementation as incomplete or partially evidenced. FreeCity must inherit those status labels honestly and must not turn design documents, mock events, gateway observations, or pre-migration evidence into claims of production readiness.
+
+The wider dual-currency readiness risk is both implementation and evidence. Native TOS accounts, Jetton foundations, and the narrow software-work lifecycle can be reused, but official stablecoin wallet support, a production asset and registry, sponsored stablecoin Gas, FreeCity payment orchestration, generalized economic contracts, and civic-bond contracts remain pending. The authoritative product audit and delivery gates are maintained in [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md).
 
 ---
 

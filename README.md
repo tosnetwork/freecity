@@ -82,6 +82,20 @@ Use this before inviting the first players for:
 
 This document answers **How to Run the First Real Player Cohort Safely and Learn from It**.
 
+### 6. [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)
+
+Use this implementation reference for:
+
+- the audited TOS account, native TOS, Jetton, wallet, index, TOS Service, and Gateway baseline;
+- the exact separation between stablecoin commerce and native-TOS network or commitment roles;
+- current capability, integration-pending, and production-dependency status;
+- the Supported Asset Registry, City Wallet, Gas Sponsor, Payment Orchestrator, and TOS Projection architecture;
+- purpose-built payment and candidacy-bond requirements;
+- implementation phases, acceptance gates, invariants, and definition of done; and
+- the repository revisions and evidence rules behind the infrastructure assessment.
+
+This document answers **What Exists, What Is Missing, and What Must Pass Before Dual-Currency Commerce Is Live**.
+
 ## Recommended Reading Order
 
 ```text
@@ -91,11 +105,12 @@ README
             -> District Zero First Cohort Playbook
        -> Living Economy and Civic Governance
        -> Vision and Architecture
+            -> TOS Dual-Currency Infrastructure
             -> TOS Service FreeCity Application Profile
             -> Interface concept images
 ```
 
-The product document defines the need and intended behavior. The playable specification defines concrete player actions and acceptance gates. The cohort playbook defines when and how the first residents may be invited. The living-economy document defines recurring motivation, monetary relationships, TOS asset policy, and bounded civic power. The architecture document describes how those behaviors can be implemented safely and coherently. If the documents appear to conflict, first preserve the product invariants—real activity, persistent identity, explicit agency, TOS-only monetary settlement, shared civic facts, bounded authority, and honest evidence labels—then revise the technical design.
+The product document defines the need and intended behavior. The playable specification defines concrete player actions and acceptance gates. The cohort playbook defines when and how the first residents may be invited. The living-economy document defines recurring motivation, monetary relationships, TOS asset policy, and bounded civic power. The architecture document describes how those behaviors can be implemented safely and coherently. The dual-currency infrastructure document records the audited implementation baseline and the required path from chain capability to resident-ready payments. If the documents appear to conflict, first preserve the product invariants—real activity, persistent identity, explicit agency, TOS Network-only monetary settlement, shared civic facts, bounded authority, and honest evidence labels—then revise the technical design.
 
 The normative TOS authority and settlement rules live in the [TOS Service specification](https://github.com/tosnetwork/tos-service-spec). Its [FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md) maps this product into the TOS stack without creating a second identity, capability, escrow, receipt, or settlement system.
 
@@ -127,9 +142,10 @@ The preferred north-star metric is **weekly completed trusted collaboration loop
 
 ## Current Architecture Thesis
 
-FreeCity separates six concerns while preserving TOS Network as the authority for protocol-level economic facts:
+FreeCity separates seven concerns while preserving TOS Network as the authority for protocol-level economic facts:
 
 - **finalized TOS state** for TOS Agent control, Capability versions and revocation, Accepted Quotes, escrow, Receipts, and settlement;
+- **exact supported-asset and dual-currency infrastructure** for stablecoin commerce, native-TOS fees and commitments, bounded Gas sponsorship, wallet signing, payment orchestration, and resolver-first projection without a FreeCity balance;
 - **FreeCity-local civic state** for human accounts, relationships, communities, organizations, permissions, spaces, and city history;
 - **provenance-labelled live city events** for presence, work, organizations, transactions, proposals, and public activity;
 - **non-authoritative Live City Projection** that maps real events into residents, places, routes, activity, and reviewed visual state machines;
@@ -147,6 +163,7 @@ AI may generate content, component composition, and proposed actions. It does no
 | First-player recruitment, readiness, staffing, fourteen-day operations, research, stop conditions, and decisions | [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md) |
 | Commercial positioning, recurring play, payment relationships, TOS asset policy, elections, civic offices, and institutional safeguards | [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md) |
 | Vision, product principles, surfaces, interaction design, and system architecture | [Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md) |
+| Audited TOS infrastructure baseline, dual-currency target, asset registry, wallet, sponsorship, payment orchestration, projection, phases, and readiness gates | [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md) |
 | Canonical TOS Agent, Capability, Quote, escrow, Receipt, and settlement semantics | [TOS Service specification](https://github.com/tosnetwork/tos-service-spec) and its [FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md) |
 | Visual direction for the four primary interfaces | Concept images under [`docs/concepts`](docs/concepts) and their interpretation in the architecture document |
 | Future implementation details | To be added as focused decision records and implementation documentation |
@@ -159,6 +176,8 @@ When the product changes:
 - distinguish verified decisions from assumptions and open questions;
 - keep public city facts separate from generated presentation;
 - require every in-product monetary relationship to settle in native TOS or an exact supported stablecoin issued on TOS Network;
+- keep the dual-currency infrastructure audit tied to explicit repository revisions, and never promote code presence, a test token, or passing unit tests into production evidence;
+- require exact supported-asset identity and an approved Gas payer; after sponsored transfer is accepted, do not force an ordinary stablecoin payer to acquire TOS;
 - distinguish TOS-backed candidacy commitment from resident authorization and never let token balance directly purchase public authority;
 - distinguish ten-out-of-ten design targets from prototype, cohort, and production evidence;
 - do not invite external players until the playable build passes the P0 and cohort go/no-go gates;
@@ -169,4 +188,4 @@ When the product changes:
 
 ## Project Status
 
-FreeCity is currently in the product-definition and pre-implementation playable-specification stage. The District Zero experience, first cohort, TOS Service application profile, broader native-TOS payment relationships, candidacy bonds, elections, and civic institutions are design commitments, not evidence of deployed integrations. The next milestone is an internal build and ten-person compressed dry run that passes every P0 gate. Only then should approximately fifty external residents enter the fourteen-day District Zero cohort. The first economic validation remains a narrow current-domain TOS testnet collaboration using an exact supported TOS-network stablecoin, with stablecoin price and native TOS fees separated and every city projection correctly labelled.
+FreeCity is currently in the product-definition and pre-implementation playable-specification stage. The District Zero experience, first cohort, TOS Service application profile, City Wallet, Supported Asset Registry, Gas Sponsor, Payment Orchestrator, broader payment relationships, candidacy bonds, elections, and civic institutions are design commitments, not evidence of deployed integrations. The audited foundation supports native TOS accounts, Jetton assets, and a narrow stablecoin software-work lifecycle, while stablecoin wallet product support, sponsored transfer, a production asset, FreeCity integration, and current-domain or external acceptance remain pending as detailed in [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md). The next milestone is an internal build and ten-person compressed dry run that passes every P0 gate. Only then should approximately fifty external residents enter the fourteen-day District Zero cohort. The first economic validation remains a narrow current-domain TOS testnet collaboration using an exact supported TOS-network stablecoin, with the stablecoin price, native TOS fee, and actual Gas payer separated and every city projection correctly labelled.

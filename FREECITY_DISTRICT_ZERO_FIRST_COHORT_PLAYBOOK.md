@@ -1,11 +1,11 @@
 # FreeCity District Zero First Cohort Playbook
 
-**Document version:** 1.0<br>
+**Document version:** 1.1<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Recruitment, readiness, staffing, schedule, live operations, research, safety, TOS economic validation, metrics, stop conditions, and post-cohort decisions<br>
 **Cohort format:** Approximately fifty adult human residents and fifty sponsored AI residents over fourteen days<br>
 **Playable specification:** [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md)<br>
-**Companion documents:** [Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), and [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md)
+**Companion documents:** [Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), and [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md)
 
 ## Operational Status
 
@@ -219,11 +219,15 @@ Do not request wallet seed phrases, unnecessary identity documents, financial ho
 ### 4.3 TOS Gate
 
 - [ ] the exact TOS network, current protocol domain, stablecoin asset, contract identities, and resolver endpoints are recorded;
+- [ ] the exact stablecoin appears in the signed testnet Supported Asset Registry with network, Master, code hashes, decimals, status, and effective version;
 - [ ] current TOS Service readiness status is checked against its authoritative roadmap;
 - [ ] no real or testnet payment screen implies production support;
-- [ ] native TOS fees and stablecoin service price are separate;
+- [ ] native TOS fees, stablecoin service price, actual Gas payer, and sponsorship status are separate;
 - [ ] wallet or signer connection never blocks free play;
+- [ ] wallet linking uses a signed binding and does not merge Human, Agent, controller, sponsor, or organization authority;
+- [ ] the testnet operator or Sponsor has a bounded Gas policy, and no participant must acquire TOS merely to complete the optional stablecoin proof;
 - [ ] Quote Proposal, Accepted Quote, funding, execution, Receipt, release, refund, and error states are distinct;
+- [ ] every submission has an idempotency key, and broadcast is never displayed as final settlement;
 - [ ] ambiguous submission is resolved before retry;
 - [ ] support can independently verify the complete path; and
 - [ ] unavailable payment primitives remain disabled rather than simulated.
@@ -568,6 +572,7 @@ finalized Agent and Capability discovery
   -> Quote Proposal
   -> human review
   -> finalized Accepted Quote
+  -> disclosed operator or Sponsor Gas authorization
   -> exact testnet stablecoin escrow funding
   -> bounded OpenFox or tos-ai execution
   -> artifact and signed Receipt
@@ -576,6 +581,8 @@ finalized Agent and Capability discovery
 ```
 
 Native TOS pays network fees and remains separate from the stablecoin price. Do not add tips, subscriptions, creator purchases, team splits, treasuries, or candidacy bonds to this service escrow by analogy.
+
+The cohort configuration, wallet binding, asset registry, Gas policy, payment intent, resolver, recovery, and evidence labels must satisfy the applicable testnet gates in [TOS Dual-Currency Infrastructure](FREECITY_TOS_DUAL_CURRENCY_INFRASTRUCTURE.md). This first proof does not establish a production stablecoin, production sponsorship, general checkout, or resident willingness to pay.
 
 ### 11.3 Willingness-to-Pay Evidence
 
@@ -849,6 +856,7 @@ The Cohort Director records **GO**, **CONDITIONAL GO**, or **NO-GO** for each ca
 - [ ] Agent scope and suspension;
 - [ ] TOS feature accuracy;
 - [ ] payment disablement or readiness;
+- [ ] exact-asset registry, Gas-payer, idempotency, resolver, and recovery readiness for any enabled payment;
 - [ ] reporting, moderation, and appeal;
 - [ ] security and incident response;
 - [ ] accessibility and asynchronous parity;
