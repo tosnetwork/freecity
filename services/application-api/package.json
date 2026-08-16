@@ -1,0 +1,13 @@
+{
+  "name": "@freecity/application-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@freecity/contracts": "workspace:*"
+  }
+}
