@@ -64,12 +64,16 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
         })),
       });
     }
+    const thrown = error as { statusCode?: unknown; message?: unknown };
     const statusCode =
-      typeof error.statusCode === "number" && error.statusCode >= 400 && error.statusCode < 500
-        ? error.statusCode
+      typeof thrown.statusCode === "number" && thrown.statusCode >= 400 && thrown.statusCode < 500
+        ? thrown.statusCode
         : 500;
     if (statusCode < 500) {
-      return reply.code(statusCode).send({ error: "invalid_request", message: error.message });
+      return reply.code(statusCode).send({
+        error: "invalid_request",
+        message: typeof thrown.message === "string" ? thrown.message : "invalid request",
+      });
     }
     return reply.code(500).send({ error: "internal_error" });
   });
