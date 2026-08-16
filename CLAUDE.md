@@ -138,14 +138,17 @@ and never redeclare wire shapes.
 Established in PR1 and kept current here:
 
 ```bash
-pnpm install            # workspace install
-docker compose up -d    # local PostgreSQL + Redis
-pnpm db:migrate         # apply migrations
-pnpm test               # Vitest unit + integration
-pnpm test:e2e           # Playwright end-to-end
-pnpm lint && pnpm typecheck
-pnpm dev                # web + api + runtime worker
+pnpm install              # workspace install (pnpm via corepack, pinned in package.json)
+docker-compose up -d      # local PostgreSQL (host port 5433) + Redis (6379)
+pnpm db:migrate           # apply migrations (needs DATABASE_URL, see .env.example)
+pnpm test                 # Vitest unit + integration
+pnpm test:e2e             # Playwright end-to-end (starts the web dev server)
+pnpm lint && pnpm format && pnpm typecheck
+pnpm dev                  # web app (api + runtime worker join in PR3/PR4)
 ```
+
+Local Postgres maps to host port **5433** (5432 is taken by a locally
+installed Postgres on the dev machine); CI uses service containers on 5432.
 
 If a command here does not match reality, fix the command or this file in the
 same PR — never leave them diverged.

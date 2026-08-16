@@ -1,0 +1,14 @@
+{
+  "name": "@freecity/district-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@freecity/contracts": "workspace:*",
+    "@freecity/district-rules": "workspace:*"
+  }
+}
