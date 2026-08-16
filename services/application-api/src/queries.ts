@@ -4,6 +4,13 @@ import {
   type DistrictEvent,
   type ResidentState,
 } from "@freecity/contracts";
+import {
+  applyEventView,
+  createWorldState,
+  projectPublicCitySnapshot,
+  type PublicCitySnapshot,
+  type WorldState,
+} from "@freecity/client-world/projection";
 import type { Pool } from "@freecity/district-runtime";
 
 import type { SeasonConfig } from "./season.js";
@@ -23,6 +30,72 @@ export interface TodayView {
   pendingConsequences: ResidentState["pendingConsequences"];
   /** Committed events involving this resident since the last Today view. */
   whileYouWereAway: CommittedEventView[];
+}
+
+/**
+ * Rebuilds the public city-presence layer from the committed runtime snapshot
+ * plus recent committed events. The runtime snapshot supplies the complete
+ * resident roster; recent events supply public activity and destinations.
+ * No synthetic crowd members and no private card/focus fields cross this
+ * boundary.
+ */
+export async function buildPublicCitySnapshot(
+  pool: Pool,
+  config: SeasonConfig,
+): Promise<PublicCitySnapshot> {
+  const runtime = await pool.query(
+    `SELECT state
+       FROM district.district_runtime
+      WHERE district_id = $1 AND season_id = $2`,
+    [config.districtId, config.seasonId],
+  );
+  const row = runtime.rows[0];
+  if (!row) throw new Error("district not initialized");
+  const committed = districtStateSchema.parse(row.state);
+
+  const recent = await pool.query(
+    `SELECT district_sequence, event_seq, payload
+       FROM district.district_event
+      WHERE district_id = $1 AND season_id = $2
+      ORDER BY district_sequence DESC, event_seq DESC
+      LIMIT 200`,
+    [config.districtId, config.seasonId],
+  );
+
+  let world: WorldState = createWorldState();
+  world.city = committed.city;
+  for (const resident of Object.values(committed.residents)) {
+    world.residents[resident.residentId] = {
+      residentId: resident.residentId,
+      kind: resident.kind,
+      role: resident.role,
+      displayName: resident.displayName,
+      sponsoredAiResidentId: resident.sponsoredAiResidentId,
+      focus: resident.focus,
+      activeCardCount: resident.activeCards.length,
+    };
+  }
+
+  // The query is newest-first for a bounded read; reducers require canonical
+  // chronological order. Seeded runtime identities ensure residents remain
+  // visible even when their provisioning event is older than this window.
+  for (const eventRow of [...recent.rows].reverse()) {
+    world = applyEventView(world, {
+      sequence: Number(eventRow.district_sequence),
+      eventSeq: Number(eventRow.event_seq),
+      event: districtEventSchema.parse(eventRow.payload),
+    });
+  }
+  // Applying recent city events to a seeded snapshot can double-count city
+  // aggregates. Presence uses their activity only; the committed snapshot is
+  // always the authoritative city state.
+  world.city = committed.city;
+
+  return projectPublicCitySnapshot(world, {
+    districtId: committed.districtId,
+    seasonId: committed.seasonId,
+    committedAt: committed.stepTime,
+  });
 }
 
 function eventInvolvesResident(event: DistrictEvent, residentId: string): boolean {

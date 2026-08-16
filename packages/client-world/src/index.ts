@@ -18,12 +18,15 @@ export type {
   WorldResident,
   WorldState,
 } from "./world.js";
-export { projectCityScene } from "./city.js";
+export { projectCityScene, projectPublicCitySnapshot, selectResidentsForViewport } from "./city.js";
 export type {
   CityPlace,
   CityPlaceId,
   CityResidentProjection,
   CityScene,
+  PublicCitySnapshot,
+  PublicResidentPresence,
+  ViewportResidentLimits,
   VisualIntent,
 } from "./city.js";
 export { parseSseBuffer, streamDistrictEvents } from "./sse.js";

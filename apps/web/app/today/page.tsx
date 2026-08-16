@@ -173,8 +173,8 @@ export default function TodayPage() {
 
   return (
     <div className="today-shell">
+      <CitySky compact />
       <section className="city-dashboard-hero" aria-labelledby="today-heading">
-        <CitySky compact />
         <div className="city-dashboard-copy">
           <span className="eyebrow">DISTRICT ZERO · A LIVING DAY</span>
           <h1 id="today-heading">The city is already moving.</h1>

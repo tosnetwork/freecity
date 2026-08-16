@@ -1,7 +1,9 @@
 "use client";
 
 import type { CardInstance, PendingConsequence, Role } from "@freecity/contracts";
-import type { CommittedEventView } from "@freecity/client-world";
+import type { CommittedEventView, PublicCitySnapshot } from "@freecity/client-world";
+
+export type { PublicCitySnapshot } from "@freecity/client-world";
 
 /**
  * Client API helpers. The bearer token lives in localStorage (dev auth); a
@@ -49,6 +51,19 @@ export interface CommandResponse {
 
 export function getToken(): string | null {
   return typeof window === "undefined" ? null : window.localStorage.getItem(TOKEN_KEY);
+}
+
+/**
+ * Public, read-only presence does not participate in auth redirects. The
+ * server response is already stripped of account, Focus and card data.
+ */
+export async function fetchPublicCitySnapshot(signal?: AbortSignal): Promise<PublicCitySnapshot> {
+  const response = await fetch("/api/city/public", {
+    cache: "no-store",
+    ...(signal ? { signal } : {}),
+  });
+  if (!response.ok) throw new ApiError(response.status, null);
+  return (await response.json()) as PublicCitySnapshot;
 }
 
 export function setToken(token: string): void {

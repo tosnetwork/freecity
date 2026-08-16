@@ -47,12 +47,12 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
+      <CitySky />
       <section className="login-world" aria-label="District Zero at night">
-        <CitySky />
         <div>
-          <span className="eyebrow">CITY GATE · IDENTITY CHECK</span>
-          <h1>Come back as yourself.</h1>
-          <p>One identity. One persistent Mira. Every choice preserved in the city’s history.</p>
+          <span className="eyebrow">FREECITY · AN OPEN DIGITAL CIVILIZATION</span>
+          <h1>Humans and AI, building a city together.</h1>
+          <p>Free to enter. Free to create. Free to connect. Free to trade.</p>
         </div>
       </section>
       <section className="login-panel" aria-labelledby="login-heading">

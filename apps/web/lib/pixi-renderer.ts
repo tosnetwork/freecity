@@ -1,6 +1,12 @@
 "use client";
 
-import { type RendererAdapter, type WorldState } from "@freecity/client-world";
+import {
+  projectCityScene,
+  selectResidentsForViewport,
+  type CityPlaceId,
+  type RendererAdapter,
+  type WorldState,
+} from "@freecity/client-world";
 import type { Application, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 
 type PixiModule = typeof import("pixi.js");
@@ -65,6 +71,46 @@ const ROAD_LOOP: [number, number][] = [
   [5, 8],
   [4, 7],
 ];
+
+/**
+ * Spatial routines are selected by each resident's committed public
+ * destination. They are presentation paths over canonical roads, not new
+ * gameplay authority; no path exists without a real resident identity.
+ */
+const RESIDENT_PATHS: Record<CityPlaceId, [number, number][]> = {
+  "arrival-hall": [
+    [3, 6],
+    [4, 7],
+    [5, 8],
+    [6, 8],
+  ],
+  "signal-garden": [
+    [5, 6],
+    [5, 5],
+    [5, 4],
+    [4, 4],
+  ],
+  workshop: [
+    [6, 5],
+    [7, 4],
+    [8, 3],
+    [9, 4],
+    [10, 5],
+  ],
+  studio: [
+    [6, 7],
+    [7, 8],
+    [6, 8],
+    [5, 8],
+  ],
+  "beacon-square": [
+    [5, 6],
+    [6, 6],
+    [6, 5],
+    [7, 5],
+    [7, 6],
+  ],
+};
 
 function iso(gridX: number, gridY: number): { x: number; y: number } {
   return {
@@ -255,18 +301,28 @@ export function createPixiRenderer(): LivingCityRenderer {
     beaconPulse = null;
 
     const terrain = new pixi.Graphics();
-    terrain.rect(0, 0, BASE_WIDTH, BASE_HEIGHT).fill({ color: 0x1f7780 });
+    // The authored city illustration is the persistent world master. Runtime
+    // terrain is deliberately translucent so committed parcels, roads and
+    // buildings read as a live simulation layer instead of replacing the city.
+    terrain.rect(0, 0, BASE_WIDTH, BASE_HEIGHT).fill({ color: 0x1f7780, alpha: 0.16 });
     for (let x = 0; x < 16; x += 1) {
       for (let y = 0; y < 11; y += 1) {
         const point = iso(x, y);
         const parcel = parcelAt(state, x, y);
         if (!parcel) {
-          diamond(terrain, point.x, point.y, (x + y) % 2 ? 0x247b82 : 0x2b858a, 0x70b6ae);
+          diamond(terrain, point.x, point.y, (x + y) % 2 ? 0x247b82 : 0x2b858a, 0x70b6ae, 0.2);
         } else if (!parcel.unlocked) {
-          diamond(terrain, point.x, point.y, 0x527c69, 0xc7d6ad, 0.52);
+          diamond(terrain, point.x, point.y, 0x527c69, 0xc7d6ad, 0.3);
         } else {
           const palette = [0x789b4d, 0x82a552, 0x719447, 0x8aaa58];
-          diamond(terrain, point.x, point.y, palette[(x * 3 + y * 5) % 4] ?? 0x789b4d, 0xd8c884);
+          diamond(
+            terrain,
+            point.x,
+            point.y,
+            palette[(x * 3 + y * 5) % 4] ?? 0x789b4d,
+            0xd8c884,
+            0.58,
+          );
         }
       }
     }
@@ -397,29 +453,32 @@ export function createPixiRenderer(): LivingCityRenderer {
       sceneRoot.addChild(root);
     }
 
-    const route = ROAD_LOOP.map(([x, y]) => iso(x, y));
-    const residentEntries = Object.values(state.residents);
-    const peopleCount = Math.max(14, Math.min(28, 12 + Math.floor(state.city.population / 4)));
-    for (let index = 0; index < peopleCount; index += 1) {
-      const resident = residentEntries[index % Math.max(1, residentEntries.length)];
-      const seed = resident ? hash(`${resident.residentId}:${index}`) : hash(`citizen:${index}`);
+    const residentEntries = selectResidentsForViewport(
+      Object.values(projectCityScene(state).residents),
+      { human: 28, ai: 18, total: 48 },
+    );
+    app.canvas.setAttribute("data-projected-residents", String(residentEntries.length));
+    app.canvas.setAttribute("data-total-residents", String(Object.keys(state.residents).length));
+    for (const [index, resident] of residentEntries.entries()) {
+      const seed = hash(resident.residentId);
       const palette = [0xd87343, 0xe1b949, 0x4f8faf, 0x8c66a9];
-      const color = resident?.kind === "ai" ? 0x43bcb1 : (palette[seed % 4] ?? 0xd87343);
-      const root = makePerson(pixi, color, index < residentEntries.length);
+      const color = resident.kind === "ai" ? 0x43bcb1 : (palette[seed % 4] ?? 0xd87343);
+      const root = makePerson(pixi, color, true);
       root.zIndex = 300;
       sceneRoot.addChild(root);
-      if (resident && index < residentEntries.length && index < 4) {
+      if (index < 8) {
         addLabel(pixi, root, resident.displayName, 0, 18, 9);
       }
       actors.push({
         root,
-        route,
+        route: RESIDENT_PATHS[resident.placeId].map(([x, y]) => iso(x, y)),
         progress: (seed % 1000) / 1000,
         speed: 0.012 + (seed % 8) / 1000,
         vehicle: false,
       });
     }
 
+    const vehicleRoute = ROAD_LOOP.map(([x, y]) => iso(x, y));
     const vehicleCount = state.city.parcels["east-harbor"]?.unlocked ? 7 : 4;
     for (let index = 0; index < vehicleCount; index += 1) {
       const transit = index === 0 && state.city.parcels["east-harbor"]?.unlocked;
@@ -429,7 +488,7 @@ export function createPixiRenderer(): LivingCityRenderer {
       sceneRoot.addChild(root);
       actors.push({
         root,
-        route,
+        route: vehicleRoute,
         progress: (index + 0.35) / vehicleCount,
         speed: transit ? 0.022 : 0.017 + index * 0.001,
         vehicle: true,
@@ -500,7 +559,7 @@ export function createPixiRenderer(): LivingCityRenderer {
       if (destroyed) return;
       const application = new pixi.Application();
       await application.init({
-        background: "#1f7780",
+        backgroundAlpha: 0,
         resizeTo: container,
         antialias: true,
         resolution: Math.min(window.devicePixelRatio || 1, 2),

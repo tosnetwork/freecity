@@ -90,6 +90,9 @@ importers:
       '@fastify/cors':
         specifier: ^11.3.0
         version: 11.3.0
+      '@freecity/client-world':
+        specifier: workspace:*
+        version: link:../../packages/client-world
       '@freecity/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts

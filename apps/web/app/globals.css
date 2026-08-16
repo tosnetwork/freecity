@@ -2501,8 +2501,8 @@ ul.activity button small {
   aspect-ratio: 1440 / 820;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 12%, rgba(255, 235, 168, 0.58), transparent 30rem),
-    linear-gradient(#7db6ad 0 14%, #277c83 42% 100%);
+    linear-gradient(0deg, rgba(18, 60, 51, 0.24), rgba(255, 234, 169, 0.08)),
+    url("/art/district-zero-clean.webp") center 43% / cover;
   isolation: isolate;
 }
 
@@ -2545,7 +2545,7 @@ ul.activity button small {
   color: #fff9e9;
   background:
     linear-gradient(rgba(31, 112, 114, 0.66), rgba(30, 91, 77, 0.86)),
-    url("/art/district-zero-day.webp") center / cover;
+    url("/art/district-zero-clean.webp") center / cover;
   text-align: center;
 }
 
@@ -3820,6 +3820,11 @@ select {
   backdrop-filter: blur(10px);
 }
 
+.building-inspector,
+.city-now-card {
+  bottom: 4.5rem;
+}
+
 .place-story-chapter {
   color: #f4cf6c;
   font-family: var(--mono);
@@ -4076,7 +4081,7 @@ ul.activity button[aria-current="true"] {
   .login-panel {
     background:
       linear-gradient(rgba(255, 250, 236, 0.92), rgba(255, 250, 236, 0.98)),
-      url("/art/district-zero-day.webp") center / cover;
+      url("/art/district-zero-clean.webp") center / cover;
   }
 
   .district-header {
@@ -4127,5 +4132,1014 @@ ul.activity button[aria-current="true"] {
 
   .story-card {
     min-height: auto;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* One-city interface: the world is the page, controls are transparent HUDs.  */
+/* -------------------------------------------------------------------------- */
+
+.login-page,
+.entry-page,
+.today-shell,
+.archive-page {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  filter: none;
+}
+
+.login-page > .city-sky,
+.entry-page > .city-sky,
+.today-shell > .city-sky,
+.archive-page > .city-sky {
+  position: fixed;
+  top: 4.5rem;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -3;
+}
+
+.login-page > .city-sky {
+  top: 0;
+}
+
+.login-page > .city-sky img,
+.entry-page > .city-sky img,
+.today-shell > .city-sky img,
+.archive-page > .city-sky img {
+  object-position: center 43%;
+  filter: saturate(1.08) contrast(1.04) brightness(0.96);
+}
+
+.login-page::before,
+.entry-page::before,
+.today-shell::before,
+.archive-page::before {
+  position: fixed;
+  top: 4.5rem;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -2;
+  pointer-events: none;
+  content: "";
+  background:
+    linear-gradient(
+      90deg,
+      rgba(15, 49, 42, 0.72),
+      transparent 34%,
+      transparent 68%,
+      rgba(13, 44, 38, 0.4)
+    ),
+    linear-gradient(0deg, rgba(12, 43, 37, 0.5), transparent 45%, rgba(255, 229, 158, 0.08));
+}
+
+.login-page::before {
+  top: 0;
+}
+
+.login-page > *:not(.city-sky),
+.entry-page > *:not(.city-sky),
+.today-shell > *:not(.city-sky),
+.archive-page > *:not(.city-sky) {
+  position: relative;
+  z-index: 1;
+}
+
+/* The gate is no longer a split screen. It is a doorway floating in the city. */
+
+.login-page {
+  width: 100vw;
+  min-height: 100vh;
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 31rem);
+  gap: clamp(2rem, 8vw, 9rem);
+  align-items: end;
+  margin: -2rem calc(50% - 50vw) -7rem;
+  padding: clamp(2rem, 5vw, 5rem);
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.login-page::after {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background: linear-gradient(90deg, rgba(13, 49, 41, 0.62), transparent 58%);
+}
+
+.login-world {
+  min-height: 0;
+  align-items: flex-end;
+  overflow: visible;
+}
+
+.login-world::after {
+  display: none;
+}
+
+.login-world > div:last-child {
+  width: min(43rem, 100%);
+  padding: 0 0 clamp(0.5rem, 4vh, 3rem);
+}
+
+.login-world h1 {
+  margin: 0.55rem 0 0.85rem;
+  color: #fff9e8;
+  font-size: clamp(3.2rem, 7vw, 6.8rem);
+  text-shadow: 0 0.25rem 2.2rem rgba(10, 41, 35, 0.7);
+}
+
+.login-world p {
+  color: rgba(255, 250, 232, 0.88);
+  text-shadow: 0 1px 4px rgba(10, 41, 35, 0.9);
+}
+
+.login-panel {
+  align-self: center;
+  justify-content: flex-start;
+  width: 100%;
+  max-height: calc(100vh - 4rem);
+  padding: clamp(1.5rem, 4vw, 2.6rem);
+  overflow: auto;
+  color: #fff9e8;
+  background: linear-gradient(145deg, rgba(25, 67, 56, 0.76), rgba(15, 52, 45, 0.64));
+  border: 1px solid rgba(255, 231, 166, 0.5);
+  border-radius: 0.8rem;
+  box-shadow: 0 1.4rem 4rem rgba(10, 39, 33, 0.36);
+  backdrop-filter: blur(16px) saturate(1.15);
+}
+
+.login-panel::before {
+  display: block;
+  width: 4rem;
+  height: 3px;
+  margin-bottom: 1.25rem;
+  content: "";
+  background: #f2cd68;
+  box-shadow: 0 0 1rem rgba(242, 205, 104, 0.6);
+}
+
+.login-panel > .city-monogram {
+  margin-bottom: 1.2rem;
+}
+
+.login-panel h2,
+.login-panel strong {
+  color: #fff9e8;
+}
+
+.login-panel .eyebrow,
+.login-form > label {
+  color: #f5d67a;
+}
+
+.login-panel input,
+.entry-page input {
+  color: #193f35;
+  background: rgba(255, 251, 237, 0.9);
+  border-color: rgba(255, 232, 167, 0.64);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.login-footnote,
+.login-form > p,
+.login-panel .text-button {
+  color: rgba(255, 249, 229, 0.72);
+}
+
+.dev-code-panel {
+  color: #c3f2df;
+  background: rgba(8, 43, 38, 0.48);
+  border-color: rgba(114, 218, 182, 0.48);
+}
+
+/* Arrival Hall occupies the lower edge of the same city, like a game HUD. */
+
+.entry-page {
+  width: min(100%, 92rem);
+  min-height: calc(100vh - 8.5rem);
+  padding-bottom: 2rem;
+}
+
+.entry-page::before {
+  background:
+    linear-gradient(0deg, rgba(12, 44, 37, 0.8), transparent 58%),
+    linear-gradient(90deg, rgba(14, 49, 42, 0.64), transparent 55%);
+}
+
+.entry-header {
+  min-height: 14rem;
+  align-items: flex-end;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.entry-header::after {
+  display: none;
+}
+
+.entry-header > div:last-child {
+  padding: 1rem 0 1.5rem;
+}
+
+.entry-header h1 {
+  max-width: 60rem;
+  margin: 0.45rem 0 0.65rem;
+  color: #fff9e8;
+  font-size: clamp(2.8rem, 6vw, 5.8rem);
+  text-shadow: 0 0.25rem 2rem rgba(10, 40, 34, 0.7);
+}
+
+.entry-header p {
+  color: rgba(255, 250, 232, 0.84);
+  text-shadow: 0 1px 4px rgba(10, 40, 34, 0.9);
+}
+
+.entry-form {
+  margin-top: 0;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  color: #fff9e8;
+  background: linear-gradient(145deg, rgba(24, 65, 55, 0.76), rgba(15, 50, 43, 0.66));
+  border: 1px solid rgba(255, 231, 165, 0.48);
+  border-radius: 0.8rem;
+  box-shadow: 0 1.2rem 3.5rem rgba(9, 37, 31, 0.3);
+  backdrop-filter: blur(14px) saturate(1.14);
+}
+
+.role-fieldset legend,
+.identity-panel label,
+.mira-waiting strong {
+  color: #fff9e8;
+}
+
+.role-grid {
+  gap: 0.6rem;
+  border: 0;
+}
+
+.role-card {
+  min-height: 11.5rem;
+  padding: 1rem;
+  color: #fff9e8;
+  background: rgba(8, 42, 36, 0.56);
+  border: 1px solid rgba(255, 238, 188, 0.2);
+  border-radius: 0.55rem;
+  backdrop-filter: blur(8px);
+}
+
+.role-card:hover,
+.role-card.selected {
+  background: rgba(255, 239, 190, 0.9);
+  border-color: #f4d273;
+  color: #1b4136;
+}
+
+.role-card.selected::after {
+  border-color: #f2cd68;
+  border-radius: 0.55rem;
+  box-shadow: inset 0 0 1.6rem rgba(242, 205, 104, 0.2);
+}
+
+.role-card > span:not(.role-symbol),
+.role-card small,
+.name-field small,
+.mira-waiting small {
+  color: rgba(255, 249, 230, 0.7);
+}
+
+.role-card:hover > span:not(.role-symbol),
+.role-card.selected > span:not(.role-symbol),
+.role-card:hover small,
+.role-card.selected small {
+  color: #526a60;
+}
+
+.identity-panel {
+  border-top-color: rgba(255, 235, 179, 0.26);
+}
+
+/* Today is a mission layer over the city, not a stack of separate web pages. */
+
+.today-shell {
+  width: min(100%, 92rem);
+  padding-bottom: 3rem;
+}
+
+.today-shell::before {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(14, 50, 42, 0.68),
+      transparent 44%,
+      transparent 72%,
+      rgba(14, 50, 42, 0.36)
+    ),
+    linear-gradient(0deg, rgba(10, 42, 35, 0.62), transparent 56%);
+}
+
+.city-dashboard-hero {
+  min-height: 28rem;
+  align-items: flex-end;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.city-dashboard-hero::after {
+  display: none;
+}
+
+.city-dashboard-copy {
+  width: min(54rem, 100%);
+  padding: 3rem 0 2rem;
+}
+
+.city-dashboard-copy h1 {
+  margin: 0.45rem 0 0.8rem;
+  color: #fff9e8;
+  font-size: clamp(3rem, 6vw, 6rem);
+  text-shadow: 0 0.3rem 2.3rem rgba(9, 39, 33, 0.75);
+}
+
+.city-dashboard-copy > p {
+  color: rgba(255, 250, 232, 0.88);
+  text-shadow: 0 1px 4px rgba(9, 39, 33, 0.92);
+}
+
+.today-shell .eyebrow,
+.today-shell .speaker-tag {
+  color: #f4d273;
+}
+
+.hero-status-row > span {
+  color: #fff9e9;
+  background: rgba(18, 60, 50, 0.78);
+  border-color: rgba(255, 232, 164, 0.42);
+  box-shadow: 0 0.4rem 1.2rem rgba(9, 38, 32, 0.18);
+}
+
+.mira-briefing,
+.signal-log,
+.decision-section,
+.return-section,
+.today-shell .world-change,
+.today-shell .notice-panel,
+.today-shell .all-decided {
+  color: #fff9e9;
+  background: linear-gradient(145deg, rgba(24, 65, 55, 0.76), rgba(14, 50, 43, 0.66));
+  border: 1px solid rgba(255, 231, 164, 0.42);
+  border-radius: 0.8rem;
+  box-shadow: 0 1rem 3rem rgba(9, 37, 31, 0.25);
+  backdrop-filter: blur(15px) saturate(1.12);
+}
+
+.mira-briefing {
+  width: min(57rem, 78%);
+  margin: 0 0 0 auto;
+}
+
+.mira-dialogue h2,
+.section-heading-row h2,
+.return-section h2,
+.today-shell .reaction,
+.today-shell .all-decided h3 {
+  color: #fff9e9;
+}
+
+.mira-dialogue > p,
+.today-shell .section-aside,
+.today-shell .empty-signal,
+.return-cue p,
+.today-shell .notice-panel {
+  color: rgba(255, 249, 229, 0.76);
+}
+
+.resident-portrait {
+  background: rgba(8, 43, 37, 0.56);
+  border-color: rgba(110, 222, 193, 0.52);
+}
+
+.portrait-core {
+  color: #8be0c4;
+}
+
+.resident-intros > div {
+  background: rgba(7, 39, 34, 0.46);
+  border-color: rgba(255, 235, 176, 0.18);
+}
+
+.signal-log,
+.decision-section,
+.return-section {
+  margin-top: 1rem;
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+.signal-list,
+.return-list {
+  border-top-color: rgba(255, 235, 176, 0.22);
+}
+
+.signal-list li,
+.return-cue {
+  border-bottom-color: rgba(255, 235, 176, 0.18);
+}
+
+.signal-list li:hover {
+  background: rgba(255, 244, 204, 0.08);
+}
+
+.signal-list small {
+  color: #8be0c4;
+}
+
+.today-shell .text-link,
+.today-shell .primary-link {
+  color: #f4d273;
+}
+
+.today-shell .story-deck {
+  gap: 0.8rem;
+  border: 0;
+}
+
+.today-shell .story-card {
+  min-height: 42rem;
+  color: #193c33;
+  background: rgba(255, 250, 234, 0.88);
+  border: 1px solid rgba(255, 238, 188, 0.6);
+  box-shadow: 0 0.9rem 2.4rem rgba(8, 36, 30, 0.22);
+  backdrop-filter: blur(12px) saturate(1.05);
+}
+
+.today-shell .story-body,
+.today-shell .story-card footer,
+.today-shell .choice-button small,
+.today-shell .decline-button {
+  color: #526a60;
+}
+
+.today-shell .story-question,
+.today-shell .choice-button > span,
+.today-shell .story-card h3,
+.today-shell .story-meta dd {
+  color: #193c33;
+}
+
+.today-shell .choice-button {
+  color: #193c33;
+  background: rgba(255, 253, 244, 0.72);
+  border-color: rgba(48, 77, 62, 0.2);
+}
+
+.today-shell .world-change dl div {
+  background: rgba(7, 41, 35, 0.48);
+  border-color: rgba(255, 235, 176, 0.2);
+}
+
+.today-shell .world-change dd {
+  color: rgba(255, 249, 229, 0.78);
+}
+
+/* Archive is a translucent civic record hovering over the same streets. */
+
+.archive-page {
+  width: min(100%, 78rem);
+  min-height: calc(100vh - 8.5rem);
+  padding-bottom: 3rem;
+}
+
+.archive-page::before {
+  background:
+    linear-gradient(90deg, rgba(13, 47, 40, 0.76), rgba(13, 47, 40, 0.3) 62%, transparent),
+    linear-gradient(0deg, rgba(10, 42, 35, 0.58), transparent 52%);
+}
+
+.archive-header {
+  margin-bottom: 1rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  color: #fff9e9;
+  background: linear-gradient(145deg, rgba(24, 65, 55, 0.74), rgba(14, 50, 43, 0.62));
+  border: 1px solid rgba(255, 231, 164, 0.4);
+  border-radius: 0.8rem;
+  box-shadow: 0 1rem 3rem rgba(9, 37, 31, 0.24);
+  backdrop-filter: blur(15px) saturate(1.12);
+}
+
+.archive-header h1 {
+  color: #fff9e9;
+  text-shadow: 0 0.2rem 1.5rem rgba(9, 38, 32, 0.6);
+}
+
+.archive-header p {
+  color: rgba(255, 249, 230, 0.76);
+}
+
+.archive-page .eyebrow,
+.archive-seal {
+  color: #f4d273;
+}
+
+.archive-seal {
+  border-color: rgba(255, 225, 141, 0.58);
+  box-shadow: inset 0 0 2rem rgba(242, 205, 104, 0.12);
+}
+
+.archive-timeline {
+  margin-top: 1rem;
+}
+
+.archive-timeline::before {
+  background: linear-gradient(#f2cd68, rgba(255, 239, 190, 0.36), transparent);
+}
+
+.archive-entry article {
+  color: #193c33;
+  background: rgba(255, 250, 234, 0.86);
+  border-color: rgba(255, 237, 185, 0.62);
+  box-shadow: 0 0.7rem 2rem rgba(8, 35, 29, 0.18);
+  backdrop-filter: blur(12px) saturate(1.06);
+}
+
+.archive-entry p,
+.archive-entry h2,
+.empty-archive h2 {
+  color: #193c33;
+}
+
+.archive-page .empty-archive {
+  max-width: 42rem;
+  margin-left: auto;
+  padding: 3rem 2rem;
+  color: #fff9e9;
+  background: rgba(20, 61, 51, 0.68);
+  border-color: rgba(255, 231, 164, 0.42);
+  box-shadow: 0 0.9rem 2.8rem rgba(8, 35, 29, 0.22);
+  backdrop-filter: blur(14px) saturate(1.12);
+}
+
+.archive-page .empty-archive h2,
+.archive-page .empty-archive p {
+  color: #fff9e9;
+}
+
+/* The live city keeps the picture dominant; secondary records become docks. */
+
+.living-city-heading {
+  position: absolute;
+  top: 7.4rem;
+  left: 1rem;
+  z-index: 31;
+  display: block;
+  width: min(30rem, calc(100% - 2rem));
+  margin: 0;
+  padding: 0.85rem 1rem;
+  color: #fff9e9;
+  background: rgba(20, 61, 51, 0.72);
+  border: 1px solid rgba(255, 231, 164, 0.42);
+  border-radius: 0.75rem;
+  box-shadow: 0 0.7rem 2rem rgba(12, 45, 37, 0.22);
+  backdrop-filter: blur(12px) saturate(1.1);
+}
+
+.living-city-heading h1 {
+  margin-top: 0.18rem;
+  color: #fff9e9;
+  font-size: clamp(1.65rem, 3vw, 2.45rem);
+  text-shadow: 0 0.15rem 1rem rgba(9, 38, 32, 0.5);
+}
+
+.living-city-heading .eyebrow {
+  color: #f4d273;
+}
+
+.living-city-heading .district-action-link {
+  width: 100%;
+  margin-top: 0.55rem;
+  padding: 0.48rem 0;
+  color: #f4d273;
+  background: transparent;
+  box-shadow: none;
+}
+
+.living-city-page {
+  position: relative;
+}
+
+.living-city-shell {
+  position: relative;
+}
+
+.city-command-bar {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  left: 1rem;
+  z-index: 30;
+  min-height: 5.25rem;
+  background: linear-gradient(100deg, rgba(24, 64, 52, 0.82), rgba(35, 81, 63, 0.74));
+  border: 1px solid rgba(255, 227, 154, 0.4);
+  border-radius: 0.65rem;
+  backdrop-filter: blur(13px) saturate(1.12);
+}
+
+.living-city-viewport {
+  min-height: min(78vh, 58rem);
+}
+
+.city-map-footer {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 20;
+  background: rgba(25, 67, 56, 0.76);
+  border: 1px solid rgba(255, 231, 162, 0.36);
+  border-radius: 0.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.city-ledger {
+  color: #fff9e9;
+  background: rgba(22, 62, 52, 0.82);
+  border-color: rgba(255, 231, 164, 0.4);
+  box-shadow: 0 0.9rem 2.8rem rgba(17, 49, 41, 0.17);
+  backdrop-filter: blur(13px);
+}
+
+.city-ledger > summary small {
+  color: rgba(255, 249, 229, 0.68);
+}
+
+.city-ledger-grid {
+  background: rgba(255, 235, 176, 0.22);
+  border-top-color: rgba(255, 235, 176, 0.22);
+}
+
+.city-ledger-grid > section {
+  color: #193c33;
+  background: rgba(255, 250, 234, 0.84);
+}
+
+@media (max-width: 72rem) {
+  .login-page {
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 27rem);
+    gap: 2rem;
+  }
+
+  .entry-page,
+  .today-shell,
+  .archive-page {
+    width: 100%;
+  }
+
+  .mira-briefing {
+    width: 88%;
+  }
+
+  .living-city-heading {
+    top: 9.8rem;
+  }
+}
+
+@media (max-width: 60rem) {
+  .living-city-heading {
+    top: 7.1rem;
+    width: min(22rem, calc(100% - 2rem));
+    padding: 0.55rem 0.7rem;
+  }
+
+  .living-city-heading h1 {
+    margin: 0.08rem 0 0;
+    font-size: 1.28rem;
+  }
+
+  .living-city-heading .eyebrow {
+    font-size: 0.48rem;
+  }
+
+  .living-city-heading .district-action-link {
+    margin-top: 0.25rem;
+    padding: 0.2rem 0;
+    font-size: 0.52rem;
+  }
+
+  .city-command-bar {
+    grid-template-columns: minmax(9rem, 1fr) auto;
+    min-height: 5.4rem;
+    gap: 0.4rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .city-command-title .eyebrow {
+    font-size: 0.48rem;
+  }
+
+  .city-command-title h2 {
+    font-size: 0.72rem;
+  }
+
+  .city-vitals {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .city-vitals div {
+    padding: 0.3rem 0.45rem;
+  }
+
+  .city-vitals dd {
+    font-size: 1rem;
+  }
+
+  .city-environment-controls {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .city-environment-controls select {
+    min-width: 4.6rem;
+    padding-right: 1.1rem;
+  }
+
+  .living-city-viewport {
+    min-height: 0;
+    aspect-ratio: 1440 / 820;
+  }
+
+  .building-inspector {
+    bottom: 3.5rem;
+    width: min(22rem, calc(100% - 1.4rem));
+    padding: 0.65rem 0.75rem;
+  }
+
+  .building-inspector h3 {
+    margin: 0.12rem 0;
+    font-size: 1.35rem;
+  }
+
+  .building-inspector p,
+  .building-inspector > small {
+    display: none;
+  }
+
+  .upgrade-building-button {
+    margin-top: 0.45rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .city-now-card {
+    top: 7.1rem;
+    right: 0.7rem;
+    width: min(17rem, 42%);
+    padding: 0.55rem 0.65rem;
+  }
+
+  .city-map-footer {
+    right: 0.65rem;
+    bottom: 0.65rem;
+    left: 0.65rem;
+    min-height: 2.2rem;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.35rem 0.55rem;
+  }
+
+  .city-map-footer > span {
+    display: none;
+  }
+}
+
+@media (max-width: 52rem) {
+  .login-page > .city-sky,
+  .login-page::before,
+  .login-page::after {
+    top: 0;
+  }
+
+  .entry-page > .city-sky,
+  .today-shell > .city-sky,
+  .archive-page > .city-sky,
+  .entry-page::before,
+  .today-shell::before,
+  .archive-page::before {
+    top: 4rem;
+  }
+
+  .login-page {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 1.25rem;
+    padding: 2rem 1rem;
+  }
+
+  .login-world {
+    display: block;
+  }
+
+  .login-world > div:last-child {
+    padding: 0;
+  }
+
+  .login-world h1 {
+    font-size: clamp(2.5rem, 13vw, 4.2rem);
+  }
+
+  .login-world p {
+    display: none;
+  }
+
+  .login-panel {
+    max-height: none;
+    padding: 1.35rem;
+    background: linear-gradient(145deg, rgba(24, 65, 55, 0.82), rgba(14, 50, 43, 0.72));
+  }
+
+  .entry-header {
+    min-height: 12rem;
+  }
+
+  .entry-header h1,
+  .city-dashboard-copy h1 {
+    font-size: clamp(2.5rem, 12vw, 4rem);
+  }
+
+  .entry-form,
+  .signal-log,
+  .decision-section,
+  .return-section,
+  .archive-header {
+    padding: 1.1rem;
+  }
+
+  .role-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .role-card {
+    min-height: 9.5rem;
+  }
+
+  .identity-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .city-dashboard-hero {
+    min-height: 25rem;
+  }
+
+  .mira-briefing {
+    width: 100%;
+  }
+
+  .today-shell .story-card {
+    min-height: auto;
+  }
+
+  .archive-header {
+    grid-template-columns: 1fr;
+  }
+
+  .living-city-heading {
+    top: 7.1rem;
+    width: min(22rem, calc(100% - 2rem));
+    padding: 0.55rem 0.7rem;
+  }
+
+  .living-city-heading h1 {
+    margin: 0.08rem 0 0;
+    font-size: 1.28rem;
+  }
+
+  .living-city-heading .eyebrow {
+    font-size: 0.48rem;
+  }
+
+  .living-city-heading .district-action-link {
+    margin-top: 0.25rem;
+    padding: 0.2rem 0;
+    font-size: 0.52rem;
+  }
+
+  .city-command-bar {
+    grid-template-columns: minmax(9rem, 1fr) auto;
+    min-height: 5.4rem;
+    gap: 0.4rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .city-command-title .eyebrow {
+    font-size: 0.48rem;
+  }
+
+  .city-command-title h2 {
+    font-size: 0.72rem;
+  }
+
+  .city-vitals {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .city-vitals div {
+    padding: 0.3rem 0.45rem;
+  }
+
+  .city-vitals dd {
+    font-size: 1rem;
+  }
+
+  .city-environment-controls {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .city-environment-controls select {
+    min-width: 4.6rem;
+    padding-right: 1.1rem;
+  }
+
+  .living-city-viewport {
+    min-height: 0;
+    aspect-ratio: 1440 / 820;
+  }
+
+  .building-inspector {
+    bottom: 3.5rem;
+    width: min(22rem, calc(100% - 1.4rem));
+    padding: 0.65rem 0.75rem;
+  }
+
+  .building-inspector h3 {
+    margin: 0.12rem 0;
+    font-size: 1.35rem;
+  }
+
+  .building-inspector p,
+  .building-inspector > small {
+    display: none;
+  }
+
+  .upgrade-building-button {
+    margin-top: 0.45rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .city-now-card {
+    top: 7.1rem;
+    right: 0.7rem;
+    width: min(17rem, 42%);
+    padding: 0.55rem 0.65rem;
+  }
+
+  .city-map-footer {
+    right: 0.65rem;
+    bottom: 0.65rem;
+    left: 0.65rem;
+    min-height: 2.2rem;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.35rem 0.55rem;
+  }
+
+  .city-map-footer > span {
+    display: none;
+  }
+}
+
+@media (max-width: 40rem) {
+  .living-city-viewport {
+    min-height: 34rem;
+    aspect-ratio: auto;
+  }
+
+  .city-environment-controls label > span {
+    display: none;
+  }
+
+  .city-environment-controls select {
+    width: 4.4rem;
+    min-width: 0;
+    font-size: 0.58rem;
+  }
+
+  .living-city-heading {
+    top: 6.8rem;
+  }
+
+  .city-now-card {
+    top: 12.8rem;
+    width: calc(100% - 1.4rem);
   }
 }

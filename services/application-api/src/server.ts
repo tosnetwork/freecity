@@ -21,6 +21,7 @@ import { requestCode, resolveSession, verifyCode } from "./auth.js";
 import {
   ackToday,
   buildArchive,
+  buildPublicCitySnapshot,
   buildToday,
   cursorAfterSequence,
   eventsAfter,
@@ -129,6 +130,14 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
   }
 
   app.get("/healthz", async (_request, reply) => reply.send({ ok: true }));
+
+  // Public presence is a sanitized projection of committed runtime state.
+  // It contains resident names, civic roles, public destinations and source
+  // event ids — never email, account, wallet, Focus or private card state.
+  app.get("/api/city/public", async (_request, reply) => {
+    reply.header("cache-control", "no-store");
+    return reply.send(await buildPublicCitySnapshot(pool, config));
+  });
 
   if (opts.enableTestControls === true && opts.authMode === "dev") {
     const controlKey = opts.testControlKey;

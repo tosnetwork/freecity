@@ -8,6 +8,6 @@ export { buildServer } from "./server.js";
 export type { ServerOptions } from "./server.js";
 export { enterSeason, findMembership, ensureDistrict } from "./season.js";
 export type { Membership, SeasonConfig } from "./season.js";
-export { buildToday, buildArchive, eventsAfter } from "./queries.js";
+export { buildToday, buildArchive, buildPublicCitySnapshot, eventsAfter } from "./queries.js";
 export type { TodayView, CommittedEventView } from "./queries.js";
 export { AUTHORED_CARDS } from "./authored-cards.js";

@@ -238,7 +238,7 @@ export default function DistrictPage() {
           <dl className="city-vitals" aria-label="District resources">
             <div>
               <dt>Residents</dt>
-              <dd>{world.city.population}</dd>
+              <dd>{Object.keys(scene.residents).length}</dd>
             </div>
             <div>
               <dt>Prosperity</dt>

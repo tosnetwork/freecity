@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 
 import { NavBar } from "../components/NavBar";
 import "./globals.css";
+import "./hud.css";
+import "./city-motion.css";
 
 export const metadata = {
   title: "FreeCity · District Zero",

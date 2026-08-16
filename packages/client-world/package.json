@@ -5,6 +5,16 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./projection": {
+      "types": "./src/projection.ts",
+      "default": "./src/projection.ts"
+    }
+  },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },

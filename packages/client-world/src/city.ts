@@ -57,6 +57,73 @@ export interface CityScene {
   latestIntent: VisualIntent | null;
 }
 
+/**
+ * Public, privacy-minimal presence projected from committed district state.
+ * It deliberately excludes Focus, cards and private relationship links. A
+ * visitor can see who is in the city and what public place they currently
+ * animate toward, but not a resident's private decision state.
+ */
+export interface PublicResidentPresence {
+  residentId: string;
+  displayName: string;
+  kind: WorldResident["kind"];
+  role: Role;
+  placeId: CityPlaceId;
+  placeName: string;
+  activity: string;
+  sourceEventId: string | null;
+}
+
+export interface PublicCitySnapshot {
+  districtId: string;
+  seasonId: string;
+  committedAt: string;
+  lastEventId: string;
+  /** Complete committed census count; `residents` is the bounded viewport projection. */
+  residentCount: number;
+  residents: PublicResidentPresence[];
+}
+
+type ViewportResident = Pick<PublicResidentPresence, "residentId" | "kind" | "sourceEventId">;
+
+export interface ViewportResidentLimits {
+  human: number;
+  ai: number;
+  total: number;
+}
+
+function eventRank(resident: ViewportResident): number {
+  if (!resident.sourceEventId) return 0;
+  const [sequence, eventSequence] = resident.sourceEventId.split(":").map(Number);
+  return (sequence ?? 0) * 1000 + (eventSequence ?? 0);
+}
+
+/**
+ * Selects a stable, bounded viewport population without ever creating crowd
+ * stand-ins. District guides stay visible, then the most recently active
+ * humans and AI are chosen independently so both sides of the city remain
+ * legible at cohort scale.
+ */
+export function selectResidentsForViewport<T extends ViewportResident>(
+  residents: T[],
+  limits: ViewportResidentLimits = { human: 16, ai: 10, total: 28 },
+): T[] {
+  const guides = residents.filter(
+    (resident) =>
+      resident.residentId === "ai-district-nia" || resident.residentId === "ai-district-orin",
+  );
+  const guideIds = new Set(guides.map((resident) => resident.residentId));
+  const recent = residents
+    .filter((resident) => !guideIds.has(resident.residentId))
+    .sort(
+      (left, right) =>
+        eventRank(right) - eventRank(left) || left.residentId.localeCompare(right.residentId),
+    );
+  const humans = recent.filter((resident) => resident.kind === "human").slice(0, limits.human);
+  const ai = recent.filter((resident) => resident.kind === "ai").slice(0, limits.ai);
+  return [...guides, ...humans, ...ai].slice(0, limits.total);
+}
+
 const PLACE_DEFINITIONS: Record<CityPlaceId, Omit<CityPlace, "status" | "intensity">> = {
   "arrival-hall": {
     placeId: "arrival-hall",
@@ -348,5 +415,38 @@ export function projectCityScene(state: WorldState): CityScene {
     places,
     residents,
     latestIntent,
+  };
+}
+
+/**
+ * Produces the public resident layer from the same rebuildable world state
+ * used by the authenticated District projection. Every returned figure maps
+ * to one committed ResidentState; this function never fabricates crowd
+ * members to make the city look busier.
+ */
+export function projectPublicCitySnapshot(
+  state: WorldState,
+  identity: { districtId: string; seasonId: string; committedAt: string },
+): PublicCitySnapshot {
+  const scene = projectCityScene(state);
+  const allResidents = Object.values(scene.residents)
+    .map((resident) => ({
+      residentId: resident.residentId,
+      displayName: resident.displayName,
+      kind: resident.kind,
+      role: resident.role,
+      placeId: resident.placeId,
+      placeName: scene.places[resident.placeId].name,
+      activity: resident.activity,
+      sourceEventId: resident.sourceEventId,
+    }))
+    .sort((left, right) => left.residentId.localeCompare(right.residentId));
+  const residents = selectResidentsForViewport(allResidents);
+
+  return {
+    ...identity,
+    lastEventId: `${state.cursor.sequence}:${state.cursor.eventSeq}`,
+    residentCount: allResidents.length,
+    residents,
   };
 }

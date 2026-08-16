@@ -7,6 +7,7 @@ import type { CommittedEventView } from "@freecity/client-world";
 
 import { fetchArchive, isNotAResident } from "../../lib/api";
 import { storyForCardId } from "../../lib/story";
+import { CitySky } from "../../components/CitySky";
 
 export default function ArchivePage() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function ArchivePage() {
 
   return (
     <div className="archive-page">
+      <CitySky compact />
       <header className="archive-header">
         <div>
           <span className="eyebrow">PERSONAL CITY MEMORY · REPLAYABLE</span>

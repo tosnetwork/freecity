@@ -70,8 +70,8 @@ export default function EnterPage() {
 
   return (
     <div className="entry-page">
+      <CitySky compact />
       <section className="entry-header">
-        <CitySky compact />
         <div>
           <span className="eyebrow">ARRIVAL HALL · IDENTITY DESK</span>
           <h1>Who will the city meet tonight?</h1>

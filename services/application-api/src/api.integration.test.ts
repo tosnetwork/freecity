@@ -40,6 +40,19 @@ function authHeaders() {
 }
 
 describe("auth", () => {
+  it("publishes a sanitized committed resident layer without authentication", async () => {
+    const response = await app.inject({ method: "GET", url: "/api/city/public" });
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["cache-control"]).toBe("no-store");
+    const body = response.json();
+    expect(body.residents.map((resident: { displayName: string }) => resident.displayName)).toEqual(
+      expect.arrayContaining(["Nia", "Orin"]),
+    );
+    expect(body.residentCount).toBeGreaterThanOrEqual(body.residents.length);
+    expect(body.residents[0]).not.toHaveProperty("focus");
+    expect(body.residents[0]).not.toHaveProperty("sponsoredAiResidentId");
+  });
+
   it("rejects unauthenticated access", async () => {
     const response = await app.inject({ method: "GET", url: "/api/today" });
     expect(response.statusCode).toBe(401);
@@ -100,6 +113,20 @@ describe("season entry and Today", () => {
     });
     expect(again.json().residentId).toBe(residentId); // idempotent per account
     expect(again.json().role).toBe("builder");
+
+    const publicCity = await app.inject({ method: "GET", url: "/api/city/public" });
+    const publicResidents = publicCity.json().residents as {
+      residentId: string;
+      displayName: string;
+      sourceEventId: string | null;
+    }[];
+    expect(publicResidents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ residentId, displayName: "Ada" }),
+        expect.objectContaining({ residentId: enter.json().aiResidentId, displayName: "Mira" }),
+      ]),
+    );
+    expect(publicResidents.every((resident) => resident.sourceEventId !== null)).toBe(true);
   });
 
   it("exposes the membership for identity recovery, and 409s before entry", async () => {

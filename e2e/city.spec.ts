@@ -7,6 +7,15 @@ test("the city can be upgraded and expanded through committed state", async ({ p
   await page.getByRole("link", { name: "District" }).click();
   await page.waitForURL("**/district");
 
+  const ledgerOnly = page.getByRole("checkbox", { name: "Use accessible ledger only" });
+  if (await ledgerOnly.isChecked()) await ledgerOnly.uncheck();
+  const canvas = page.getByTestId("city-canvas");
+  await expect(canvas).toHaveAttribute("data-projected-residents", /\d+/);
+  const projectedResidents = Number(await canvas.getAttribute("data-projected-residents"));
+  const totalResidents = Number(await canvas.getAttribute("data-total-residents"));
+  expect(projectedResidents).toBeGreaterThan(0);
+  expect(projectedResidents).toBeLessThanOrEqual(totalResidents);
+
   const beacon = page.locator(".building-hotspot", { hasText: "Beacon Tower" });
   await expect(beacon).toContainText("LEVEL 1");
   await beacon.click();
