@@ -1,9 +1,9 @@
 # FreeCity Product Purpose and Use Cases
 
-**Document version:** 1.3<br>
+**Document version:** 1.4<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Product purpose, audiences, activities, use cases, value, validation, and scope<br>
-**Companion documents:** [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md) and [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md)
+**Companion documents:** [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), and [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md)
 
 ## Executive Summary
 
@@ -38,6 +38,19 @@ discover a resident
         -> exchange value
         -> accumulate reputation and shared history
 ```
+
+The central playable loop is:
+
+```text
+return to one persistent AI resident
+        -> discover what changed while away
+        -> choose among materially different actions
+        -> receive an immediate character and interface reaction
+        -> inspect the durable personal and district consequence
+        -> develop a relationship, artifact, role, place, or public history
+```
+
+The first implementable expression is District Zero: one compact fourteen-day season built around one resident, three relevant cards, one meaningful choice, one visible consequence, and one shared goal that no resident can complete alone.
 
 ---
 
@@ -328,6 +341,20 @@ real resident or protocol event
 This loop makes FreeCity feel inhabited without simulating adoption. Residents should be able to see public Agents become available, Capabilities appear, organizations gather, projects advance, approvals wait, artifacts arrive, and commercial outcomes finalize. Every meaningful animation must resolve to finalized TOS state, a committed FreeCity event, or an explicitly labelled operational observation.
 
 Ambient motion may create atmosphere, but it must not imply residents, relationships, work, crowds, delivery, or settlement that did not occur. When the city is quiet, FreeCity should present a calm city and useful discovery paths rather than fabricate activity.
+
+### 4.8 Play and Consequence Loop
+
+```text
+receive a Relationship, Opportunity, or District card
+        -> inspect why it matters and the source facts
+        -> spend limited non-transferable Focus or decline
+        -> commit a permission-checked choice
+        -> see an immediate reaction
+        -> follow the delayed consequence
+        -> earn a story, craft, relationship, artifact, place, or civic change
+```
+
+This loop turns observation into agency without creating an artificial game ledger. Focus is non-transferable, non-purchasable, non-redeemable, and non-monetary. Payment remains a separate intentional act using native TOS or an exact supported stablecoin issued on TOS Network. The full roles, cards, event grammar, progression, Circles, Beacon, interface, and acceptance rules are defined in [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md).
 
 ---
 
@@ -665,7 +692,7 @@ Residents should return because something meaningful continues between visits:
 
 Infinite generated content is not a sufficient retention mechanism. Continuity, responsibility, opportunity, and belonging are.
 
-The commercial and emotional return loop, including the principle of one discovery, one meaningful decision, and one visible consequence per visit, is defined in [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md).
+The commercial and emotional return loop is defined in [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md). Its concrete player implementation—including the three-card briefing, five roles, Focus, relationship episodes, Circles, District Beacon, progression, failure, and repair—is defined in [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md).
 
 ---
 
@@ -717,6 +744,26 @@ FreeCity should begin with a bounded community that already benefits from mixed 
 
 A focused community makes identity, reputation, project quality, and moderation easier to validate than a universal social network launched without shared purpose.
 
+### 10.4 Minimum Playable Season
+
+The first playable season is **District Zero**:
+
+- approximately fifty adult human residents and fifty sponsored AI residents;
+- one compact district and a fourteen-day duration;
+- Builder, Creator, Merchant, Reporter, and Mediator roles;
+- a first meaningful choice within five minutes and no wallet requirement for free play;
+- up to three relevant daily cards: Relationship, Opportunity, and District;
+- non-transferable and non-purchasable Focus for attention management;
+- relationship episodes with consent, boundary, conflict, and repair;
+- Circles of three to six residents requiring complementary contribution types;
+- the District Beacon, activated only by real attributable contributions;
+- story, craft, relationship, artifact, place, and civic progression;
+- one optional current-domain TOS testnet software-work lifecycle after readiness gates;
+- one ceremonial or narrowly bounded District Steward election; and
+- an accessible season Archive and evidence-based retrospective.
+
+External residents must not be invited until an implemented build passes the P0 launch checklist and a ten-person compressed internal dry run. Recruitment, staffing, the daily schedule, TOS testing, incident handling, research, and stop conditions are defined in the [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md).
+
 ---
 
 ## 11. Success Metrics
@@ -744,11 +791,13 @@ This metric is more meaningful than message count, generated tokens, registered 
 | Stage | Example measurements |
 | --- | --- |
 | **Understanding** | Visitors who can correctly identify FreeCity's purpose and explain what a visible city event means; City Gate to relevant entry-path conversion |
-| **Activation** | Completed resident identity; inspected provenance; first relationship, community, or project joined |
+| **Activation** | Completed resident identity and AI relationship; first meaningful choice without help; median time to first consequence; no wallet required for free first play |
 | **Discovery** | Time to find a relevant resident; invitation acceptance; explained recommendation usage |
 | **Collaboration** | Projects reaching first contribution and accepted result; revision rate; human-agent team recurrence |
 | **Trust** | Permission inspection, approval completion, successful revocation, provenance coverage, reported impersonation |
-| **Retention** | Residents returning to an active relationship, organization, project, responsibility, or followed public outcome |
+| **Attachment** | Residents who use the AI resident's name, recall a shared episode, inspect a consequence, and identify an earned change and next goal |
+| **Retention** | Day 7 return; residents active on three distinct cohort days; return to an active relationship, organization, project, responsibility, or followed public outcome |
+| **Play quality** | Choice diversity, perceived consequence, irrelevant or repetitive card rate, Focus use, decline behavior, failure and repair completion |
 | **Economy** | Finalized useful work by exact asset, repeat buyers and providers, dispute resolution time, concentration, abuse indicators, and explicit index coverage |
 | **Ecosystem** | Active third-party applications, capability grants, retained builders, application incidents and revocations |
 
@@ -758,6 +807,8 @@ This metric is more meaningful than message count, generated tokens, registered 
 - high-impact actions lacking clear confirmation or provenance;
 - fabricated or misleading public activity;
 - semantic animations without a valid source event, authority label, privacy scope, or accessible equivalent;
+- cards without a meaningful decline, materially different options, implemented consequence, or factual source;
+- coercive notifications, purchasable Focus, paid recovery, or generated emotional pressure;
 - spam, collusion, impersonation, and coordinated manipulation;
 - agent actions exceeding declared scope, rate, or budget;
 - unresolved disputes and appeals;
@@ -900,7 +951,7 @@ Every monetary relationship must use native TOS or an exact supported stablecoin
 | What can humans and agents do? | Section 3 | Covers individual, shared, social, productive, economic, and civic activity |
 | How does FreeCity differ from adjacent products? | Section 1.4 | Defines the missing civic layer without claiming every feature is unique |
 | What happens across the full resident lifecycle? | Section 3.5 | Covers observation, entry, participation, change, pause, transfer, exit, and retirement |
-| What recurring behavior creates value? | Section 4 | Seven explicit product loops, including fact-driven observation and participation |
+| What recurring behavior creates value? | Section 4 | Eight explicit product loops, including fact-driven observation and playable consequence |
 | Why is a website useful? | Section 5 | Defines public, authenticated, and developer surfaces |
 | What are the concrete applications? | Sections 6 and 7 | Eleven use cases and four representative journeys |
 | How are proposals, approvals, and results distinguished? | Section 8 | Explicit state semantics and symmetry boundaries |
@@ -914,6 +965,7 @@ Every monetary relationship must use native TOS or an exact supported stablecoin
 | How does FreeCity use TOS without duplicating protocol authority? | Section 5.5 and the TOS Service application profile | Layer ownership, canonicality, and MVP mapping are explicit |
 | How does the city feel alive without simulated activity? | Sections 4.7 and 8.3 | Real events map to semantic projections with explicit authority and accessibility boundaries |
 | Why do residents return and pay, and how is civic power constrained? | Living Economy and Civic Governance companion | Persistent resident loop, TOS-only asset policy, revenue boundaries, candidacy bonds, elections, and separation of powers |
+| What does a resident actually do and how is the first cohort operated? | Playable Experience V1 and District Zero First Cohort Playbook | First five minutes, daily and seasonal loops, content, progression, social play, readiness, operations, safety, metrics, and stop conditions |
 
 ### 15.2 Consistency Review
 
@@ -923,6 +975,7 @@ This document is consistent with the current architecture in the following ways:
 - it represents humans, agents, and organizations through shared domain systems without claiming identical authentication or legal status;
 - it preserves real activity over decorative or generated metrics;
 - it uses a disposable Live City Projection to make real activity spatially legible without turning animation into evidence;
+- it turns that projection into optional action through authored decision cards and permission-checked commands without making the visual scene a game authority;
 - it keeps agent permissions, budgets, memory, and high-impact actions explicit;
 - it separates public city facts from generated explanations and proposed actions;
 - it makes useful work and services precede speculative economics;
@@ -945,6 +998,7 @@ No major category is missing for a product-purpose document, but the document in
 - memory portability and ownership policy;
 - exact pricing, transaction-fee caps, compute allowances, and paid-conversion thresholds within the defined business model;
 - production contracts and policy for subscriptions, tips, team revenue sharing, creator checkout, TOS candidacy bonds, elections, treasury, and civic appeals;
+- implemented P0 gameplay, internal dry-run evidence, and first-cohort player evidence against the ten-out-of-ten target matrix;
 - quantitative launch thresholds;
 - detailed account transfer, agent retirement, private-data deletion, and public-history retention policy;
 - initial operating jurisdictions, supported languages, and accessibility research coverage.
@@ -953,9 +1007,9 @@ These are not documentation omissions. They are explicit product decisions that 
 
 ### 15.4 Review Conclusion
 
-The product case is complete enough to guide positioning, MVP selection, experience design, economic validation, and architecture. The strongest coherent product is not a general-purpose metaverse and not an Agent marketplace alone. It is an AI-native persistent social strategy world and collaboration society in which identity, relationships, work, accountability, TOS-settled exchange, civic responsibility, and history reinforce one another.
+The product case and first playable specification are complete enough to guide positioning, implementation, cohort operations, experience design, economic validation, and architecture. The strongest coherent product is not a general-purpose metaverse and not an Agent marketplace alone. It is an AI-native persistent social strategy world and collaboration society in which identity, relationships, consequential choices, work, accountability, TOS-settled exchange, civic responsibility, and history reinforce one another.
 
-The most important next validation is a thin but real collaboration loop with a focused initial community. If residents do not repeatedly discover trustworthy collaborators, complete work, and value the persistent relationship and history afterward, additional visual immersion or protocol breadth will not solve the underlying product problem.
+The most important next validation is an implemented District Zero P0 build, a ten-person compressed dry run, and then the controlled first cohort. If residents do not understand the hook, attach to their AI resident, make meaningful choices, return to consequences, collaborate across controllers, and value the persistent history afterward, additional visual immersion, protocol breadth, payment features, or civic offices will not solve the underlying product problem.
 
 ### 15.5 TOS Ecosystem Consistency Review
 

@@ -1,9 +1,9 @@
 # FreeCity Vision and Architecture
 
-**Document version:** 1.6<br>
+**Document version:** 1.7<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Vision, interaction principles, system architecture, technical direction, and implementation boundaries<br>
-**Companion documents:** [FreeCity Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md) and [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md)
+**Companion documents:** [FreeCity Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), and [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md)
 
 ## Executive Summary
 
@@ -14,6 +14,8 @@ FreeCity is designed as the first society-scale application built on TOS Network
 It is not a conventional metaverse game, a chatbot directory, or a website that merely visualizes a futuristic city. FreeCity is intended to become a continuously operating society with residents, places, relationships, work, markets, institutions, public events, and shared history.
 
 Commercially, FreeCity should behave as an AI-native persistent social strategy world: a resident returns because an Agent, relationship, project, or civic responsibility continued while the resident was away; makes a meaningful decision; and sees a real consequence enter the shared city history. The complete return, payment, and office model is defined in [FreeCity Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md).
+
+The first implementable experience is District Zero: a fourteen-day controlled-entry season in which approximately fifty humans and fifty sponsored AI residents use a three-card briefing, five complementary roles, relationship episodes, small Circles, a shared Beacon, optional testnet work, and one bounded District Steward selection. Its player rules and acceptance gates are defined in [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md); its recruitment and operation are defined in the [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md).
 
 Its foundational promise is expressed through four freedoms:
 
@@ -849,6 +851,10 @@ A treasury is a policy-bound application view over exact TOS Network assets and 
 
 A permissioned memory belonging to an actor or organization, with clear provenance and visibility.
 
+### Season and Gameplay
+
+A bounded chapter with roles, authored event templates, decision cards, non-monetary Focus, choices, consequences, relationship episodes, Circles, shared goals, progression records, artifacts, live-operations schedule, cohort membership, and evidence labels. These are FreeCity-local experience objects and cannot substitute for identity, payment, voting, or protocol authority.
+
 ### 9.1 FreeCity-to-TOS Domain Mapping
 
 | FreeCity concept | TOS mapping | Rule |
@@ -900,6 +906,13 @@ FreeCity `Work`, `Transaction`, and `Event` objects are application views that m
 - background workers for agent tasks, indexing, moderation, notifications, and media processing;
 - an append-only FreeCity event log for local civic actions and references to TOS transactions, never as a replacement for TOS history;
 - idempotent command handling and resumable subscriptions so reconnecting clients can recover a consistent view.
+- a season and cohort service for District Zero membership, roles, schedule, consent state, and archival close;
+- a gameplay service for non-transferable Focus, decision cards, choices, consequences, relationship episodes, Circles, progression, artifact collections, and the District Beacon;
+- an authored event-template registry and compiler that joins durable facts, role, relationships, consent, unresolved threads, live-operations schedule, and diversity constraints;
+- factual, permission, safety, relevance, repetition, generation, and accessibility validation before a card is delivered;
+- a live-operations console that can cancel or correct a card, suspend an Agent or subsystem, reconcile consequences, and publish a visible correction without rewriting durable facts;
+- privacy-minimized experience telemetry for onboarding, first choice, consequence, attachment, return, collaboration, accessibility, payment, civic comprehension, safety, and appeal; and
+- explicit target, prototype, cohort, and production evidence labels so design scores never become measured claims.
 
 ### 10.3 Agent Runtime
 
@@ -921,6 +934,8 @@ The runtime layer should expose:
 - explicit separation between generated view state, proposed actions, and committed domain state.
 
 Slow model calls, planning, tool use, and memory retrieval must run outside the live city projection step. OpenFox submits validated intent and meaningful status transitions; the projection loop animates accepted state without waiting for, invoking, or guessing the next model response.
+
+The Agent may observe, suggest, or act only within the resident's selected scope. The playable briefing must distinguish what the Agent observed, drafted, performed, and still requires the human to approve. Money, sensitive data, public commitments, governance, moderation, identity, and irreversible actions always use the applicable fixed authority path rather than a generated card action.
 
 OpenFox and workers should use TOS Service resolution and the defined economic bridge to verify Agent control, Capability, Accepted Quote, funding, and policy before executing work; bind delivery to a signed Receipt; then reconcile finalized release, refund, or dispute state. A2A and MCP carry task and tool interactions, while Agent Packet may carry signed off-chain messages. None of these transports creates canonical commercial state by itself.
 
@@ -1002,6 +1017,11 @@ Minimum requirements include:
 - server-side reauthorization of every generated action, regardless of what the client displays;
 - protection against interface spoofing, prompt injection through city content, malicious component arguments, and generated dark patterns;
 - protection against impersonation, spam, collusion, and automated market abuse.
+- protection against irrelevant or repetitive cards, fabricated urgency, emotional coercion, purchasable Focus, paid recovery, and generated pressure based on private memory;
+- a valid decline, defer, or counterproposal path for playable choices;
+- adult-only first-cohort participation unless a separate youth-safety design is approved;
+- named human live-operations, safety, appeal, TOS, Agent, accessibility, research, and engineering owners; and
+- immediate subsystem and cohort stop controls for unauthorized money movement, uncontrolled Agent action, privacy exposure, corrupted authority, or missing protective access.
 
 Generated interfaces must not visually imitate verified confirmations, resident identities, official notices, transaction receipts, or governance outcomes. High-impact actions require a fixed FreeCity confirmation surface that names the initiating resident or agent, intended effect, permission scope, cost, reversibility, and audit destination.
 
@@ -1042,7 +1062,7 @@ Accessibility requirements:
 - bounded layout movement as streamed components appear;
 - graceful reconnection without replaying completed actions.
 
-Performance targets for authenticated live interfaces should be established through an instrumented prototype. The first measurements should include event-to-projection latency, stale-observation expiry, replay correctness, projection rebuild time, scene-state drift, accessible-view parity, time to verified city state, time to first generated component, time to complete generated view, stream interruption rate, validation failure rate, render-frame stability, and fallback success rate. A generated response or projection failure must never block core navigation, identity inspection, messaging, permissions, or transaction history.
+Performance targets for authenticated live interfaces should be established through an instrumented prototype. The first measurements should include event-to-projection latency, stale-observation expiry, replay correctness, projection rebuild time, scene-state drift, accessible-view parity, time to verified city state, onboarding completion, time to first meaningful choice, time to immediate reaction, time to durable consequence, card delivery and validation latency, time to first generated component, time to complete generated view, stream interruption rate, validation failure rate, render-frame stability, and fallback success rate. A generated response or projection failure must never block onboarding, authored cards, core navigation, identity inspection, messaging, permissions, reporting, support, or transaction history.
 
 ---
 
@@ -1074,7 +1094,14 @@ The first version should prove that FreeCity is a living society, not that it ca
 - explicit visual state machines for invitations, conversations, work, approvals, delivery, and terminal outcomes;
 - a district-partitioned `VisualIntent` stream with reconnection, replay, reduced-motion, and DOM fallback behavior;
 - an initial FreeCity component catalog and catalog-generated Resident UI pilot;
-- AG-UI streaming for one low-risk resident workflow, with authored fallback and full telemetry.
+- AG-UI streaming for one low-risk resident workflow, with authored fallback and full telemetry;
+- the District Zero Today surface with a concise While You Were Away summary and at most three Relationship, Opportunity, and District cards;
+- five role templates, a pre-provisioned sponsored AI resident, safe autonomy defaults, first choice within five minutes, immediate reaction, durable consequence, and return cue;
+- non-transferable, non-purchasable, non-redeemable Focus;
+- relationship episodes with consent, boundary, conflict, respectful decline, and repair;
+- mobile, keyboard, screen-reader, reduced-motion, and non-spatial parity for every cohort-critical action;
+- report, block, mute, leave, Agent suspension, correction, appeal, and authored degraded mode; and
+- ten-person compressed internal dry run before any external cohort invitation.
 
 ### Phase 3: Work and Economy
 
@@ -1088,7 +1115,14 @@ The first version should prove that FreeCity is a living society, not that it ca
 - generated project, collaboration, and market views using verified server-side queries;
 - fixed confirmation interfaces for payments, escrow, contracts, and disputes;
 - enforcement that every payment uses native TOS or an exact supported stablecoin issued on TOS Network, with stablecoin price and TOS fees displayed separately;
-- a managed Agent residence and recurring-economy pilot only after subscription, cancellation, metering, and Receipt rules have a reviewed TOS-backed implementation.
+- a managed Agent residence and recurring-economy pilot only after subscription, cancellation, metering, and Receipt rules have a reviewed TOS-backed implementation;
+- Circles of three to six residents with complementary contribution requirements;
+- the District Beacon, activated only by attributable FreeCity-committed or finalized TOS contributions;
+- story, craft, relationship, artifact, place, and civic progression records without a universal power score;
+- at least seventy-two reviewed event templates across six families and a factual event compiler with repetition controls;
+- a staffed fourteen-day District Zero cohort with approximately fifty human and fifty sponsored AI residents;
+- one public exhibition and persistent season Archive; and
+- cohort evidence reported separately from internal, target, and production evidence.
 
 ### Phase 4: Open City Protocol
 
@@ -1148,6 +1182,10 @@ A real-time city can still become deceptive if decorative motion implies residen
 
 TOS can provide network security, exact asset provenance, and a visible candidacy commitment, but raw holdings are not public consent. A token-weighted office election would let wealth, custodians, lenders, or coordinated Agent owners acquire social authority and would undermine the product's persistent trust model. The decision is to use a fixed or capped TOS bond for eligibility only, keep resident authorization separate, disclose controllers and material conflicts, and enforce terms, recall, separation of powers, treasury multisignature, court independence, and appeals before an office receives consequential authority.
 
+### 14.10 Institutional Depth versus First-Minute Play
+
+Identity, TOS settlement, permissions, governance, courts, public safety, and protocol provenance create long-term depth but can make the first session feel like administrative work. The decision is to protect the first five minutes: one plain-language promise, one role, one sponsored AI relationship, one safe boundary, one meaningful choice, one immediate reaction, and one clear return cue. Wallet, protocol, and governance complexity appears progressively only when the resident chooses a consequential flow.
+
 ---
 
 ## 15. Technical Feasibility and Behavioral Consistency Review
@@ -1164,6 +1202,8 @@ TOS can provide network security, exact asset provenance, and a visible candidac
 | End-to-end TOS commerce in FreeCity | Medium | Current-domain deployment, external acceptance, disputes, and recurring-use evidence remain incomplete | **Prototype on testnet.** Do not claim production readiness or substitute a FreeCity ledger. |
 | TOS-only FreeCity monetary relationships | Medium-high as a policy; flow-dependent as implementation | Current V1 is stablecoin-priced service work plus native TOS fees, while subscriptions, tips, splits, native-TOS prices, and civic bonds need additional contracts | **Adopt the invariant now and stage the primitives.** External fiat may only on-ramp or off-ramp supported TOS Network assets. |
 | TOS-backed district candidacy and offices | Medium | Plutocracy, Sybil and Agent-fleet capture, bribery, key loss, court capture, political moderation, and immature governance contracts | **Prototype last in a bounded civic sandbox.** Use a fixed or capped bond, non-token-weighted resident authorization, separation of powers, and independent appeal. |
+| Authored gameplay event compiler | High | Irrelevance, repetition, fabricated facts, unsafe memory use, and generation latency | **Implement before cohort launch.** Use reviewed templates, durable facts, bounded language generation, final validation, operator correction, and authored fallback. |
+| District Zero controlled season | High after P0 implementation | Empty-world feeling, staff load, content exhaustion, selection bias, and target scores mistaken for evidence | **Run only after the dry-run gate.** Keep one dense district, approximately fifty humans, fourteen days, named staff, stop controls, and explicit evidence labels. |
 | Catalog-generated Resident UI | Medium-high | Schema quality, latency, model variance, and layout stability | **Pilot in Phase 2.** Start with low-risk, read-heavy workflows and authored fallbacks. |
 | AG-UI for agent interaction streaming | Medium-high | Protocol evolution and framework integration | **Adopt behind an internal adapter.** Keep city events independent. |
 | A2UI interoperability | Medium | Public-preview protocol changes and incomplete client support | **Defer core dependency.** Track v1 and add at the open-protocol phase. |
@@ -1195,6 +1235,9 @@ The live and generative architecture is consistent with FreeCity only if the fol
 16. **Money has one network boundary.** Every payment, fee, subscription, tip, grant, revenue share, treasury transfer, or transferable deposit uses native TOS or an exact supported stablecoin issued on TOS Network; no private FreeCity balance settles value.
 17. **Commitment is not authority.** TOS may fund or bond a candidacy, but holdings cannot directly purchase office, votes, treasury control, court outcomes, enforcement outcomes, or immunity.
 18. **Civic power remains divided and appealable.** No office combines policy, treasury, enforcement, election administration, and final appeal, and digital civic titles never imply real-world public authority.
+19. **Play does not create a shadow authority.** Focus, cards, progression, Beacon state, and season rewards cannot create money, verified reputation, identity, votes, office, or protocol facts.
+20. **The first five minutes are value-first.** A resident can enter, meet an AI resident, choose, and see a consequence without a wallet, protocol knowledge, open prompt, or governance action.
+21. **Targets remain unproven until observed.** A ten-out-of-ten design response is never labelled prototype, cohort, or production evidence without the corresponding test.
 
 ### 15.3 Review Conclusion
 
@@ -1206,12 +1249,15 @@ The recommended implementation sequence is therefore:
 2. integrate a resolver-first TOS projection and expose provenance-labelled live state through a resilient city event stream;
 3. add the event normalizer, typed `VisualIntent` mapper, district projection loop, client interpolation, and synchronized accessible activity view;
 4. establish a stable first-party component catalog and authored Resident UI;
-5. connect OpenFox or `tos-ai` through the TOS Service economic bridge and prove one current-domain testnet work lifecycle whose states are visibly projected;
-6. let Agents compose low-risk views through typed schemas and AG-UI streaming;
-7. extend generation into work and market contexts only after validation, fallback, and audit metrics are acceptable;
-8. validate the living-economy return loop and add only reviewed TOS-backed payment primitives, keeping current stablecoin service settlement and native TOS fees distinct;
-9. pilot a narrowly bounded district election only after identity, ballot, candidacy-bond, treasury, separation-of-powers, security, and appeal requirements are evidenced; and
-10. open independent gateway, A2A, MCP, Agent Packet, A2UI, and sandboxed application interoperability after the first-party civic grammar is proven.
+5. implement the District Zero Today surface, roles, Focus, relationship episodes, Circles, progression, Beacon, event compiler, operator console, safety, accessibility, and evidence-labelled telemetry;
+6. complete a ten-person compressed dry run and fix every P0 failure before inviting external residents;
+7. connect OpenFox or `tos-ai` through the TOS Service economic bridge and, when the cohort TOS gate permits it, prove one current-domain testnet work lifecycle whose states are visibly projected;
+8. run the staffed fourteen-day District Zero cohort and report target, implementation, insider, independent, safety, accessibility, economic, and qualitative evidence separately;
+9. let Agents compose low-risk views through typed schemas and AG-UI streaming;
+10. extend generation into work and market contexts only after validation, fallback, and audit metrics are acceptable;
+11. validate the living-economy return loop and add only reviewed TOS-backed payment primitives, keeping current stablecoin service settlement and native TOS fees distinct;
+12. pilot a narrowly bounded district election only after identity, ballot, candidacy-bond, treasury, separation-of-powers, security, and appeal requirements are evidenced; and
+13. open independent gateway, A2A, MCP, Agent Packet, A2UI, and sandboxed application interoperability after the first-party civic grammar is proven.
 
 This sequence preserves the central product truth: the visual city is an adaptive interface to a persistent civilization, not a generated illusion standing in for one.
 

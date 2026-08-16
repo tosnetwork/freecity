@@ -1,9 +1,9 @@
 # FreeCity Living Economy and Civic Governance
 
-**Document version:** 1.0<br>
+**Document version:** 1.1<br>
 **Last updated:** 2026-08-16<br>
 **Document role:** Commercial positioning, recurring play, economic relationships, TOS asset policy, civic offices, elections, and institutional safeguards<br>
-**Companion documents:** [FreeCity Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md) and [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md)<br>
+**Companion documents:** [FreeCity Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md), [FreeCity Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md), [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md), and [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md)<br>
 **Normative protocol reference:** [TOS Service FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md)
 
 ## Executive Summary
@@ -13,6 +13,8 @@ FreeCity should be positioned commercially as an **AI-native persistent social s
 The product promise is:
 
 > Your AI resident continues to live, work, build relationships, and discover opportunities while you are away. When you return, you see what changed, make a meaningful decision, create or trade with others, and leave a visible consequence in the city.
+
+The first playable proof is District Zero: approximately fifty humans and fifty sponsored AI residents share one compact district for fourteen days, receive a Relationship, Opportunity, and District card, spend non-monetary Focus on meaningful choices, form small Circles, activate a shared Beacon through real contributions, and close the season with an Archive and one bounded District Steward selection. Its implementation source is [FreeCity Playable Experience V1](FREECITY_PLAYABLE_EXPERIENCE_V1.md).
 
 FreeCity must earn payment by creating attachment, agency, useful outcomes, expression, and shared history. It must not depend on gambling mechanics, purchased reputation, artificial land scarcity, fabricated activity, or an expectation that a token price will rise.
 
@@ -128,6 +130,8 @@ The first residents should be independent creators, open-source builders, Agent 
 - communities that can create one dense district instead of an empty universal world.
 
 Casual residents may observe, socialize, attend events, customize a home, support creators, and participate in civic play for free. Mass-market entertainment should expand after one focused district demonstrates attachment, recurring activity, and real payment.
+
+The first cohort must not require a wallet during onboarding or ordinary free play. Payment appears only after a resident understands a specific counterparty, outcome, price, asset, fee, authority, and recovery path. The cohort operations and evidence rules are defined in the [District Zero First Cohort Playbook](FREECITY_DISTRICT_ZERO_FIRST_COHORT_PLAYBOOK.md).
 
 ### 2.3 Product Structure
 
@@ -555,12 +559,14 @@ Ordinary resident holdings should not become a public wealth leaderboard by defa
 
 ### Phase 1: One Real Economic Relationship
 
-- one dense builder or creator district;
-- one human sponsor and one persistent AI resident;
+- one implemented District Zero P0 build and ten-person compressed internal dry run;
+- one dense builder and creator district with approximately fifty humans and fifty sponsored AI residents;
+- one persistent AI resident relationship, three-card daily briefing, meaningful choice, and visible consequence per activated human;
 - one machine-checkable Capability and stablecoin-priced work contract;
 - finalized Quote, escrow, execution, Receipt, release or refund;
-- a truthful "while you were away" consequence; and
-- no elected economic authority.
+- a truthful "while you were away" consequence;
+- no elected economic authority; and
+- no wallet requirement before a resident intentionally enters an economic action.
 
 ### Phase 2: Recurring Resident Economy
 
@@ -594,6 +600,7 @@ City-wide Mayor, Chief Civic Justice, and Public Safety Chief elections should f
 The living economy should measure:
 
 - residents who return to inspect a personally relevant consequence;
+- median time to first meaningful choice, resident-name recall, relationship episode recall, and earned next-goal comprehension;
 - meaningful decisions per returning resident without notification pressure;
 - recurring human-Agent and Agent-Agent relationships;
 - completed and repeated paid outcomes;
@@ -608,6 +615,8 @@ The living economy should measure:
 - concentration of campaign funding, controller power, treasury approvals, and enforcement actions.
 
 Registration, wallet count, TOS volume, animated population, campaign messages, and token price are not sufficient measures of product success.
+
+The ten-out-of-ten target thresholds, first-cohort segmentation, willingness-to-pay evidence standard, and proceed, repeat, narrow, or stop decisions live in the playable specification and cohort playbook. Testnet transfer is technical evidence and never counts as real paid conversion.
 
 ---
 
@@ -627,6 +636,9 @@ Registration, wallet count, TOS volume, animated population, campaign messages, 
 12. **Every consequential payment, election, office, treasury, court, and moderation state has provenance, status, and an accessible explanation.**
 13. **Play and story may create meaning, not false economic or civic facts.**
 14. **The city remains valuable before speculation and usable without premium status.**
+15. **Value precedes wallet setup.** Free onboarding, the first meaningful choice, basic relationships, Circles, Beacon contribution, and critical civic access do not require a wallet.
+16. **Play resources are not shadow money.** Focus and other non-transferable progression records cannot be purchased, transferred, redeemed, marketed as investments, or substituted for TOS Network payment.
+17. **Target scores are not player evidence.** Ten-out-of-ten design targets remain unvalidated until an implemented cohort meets the published gates.
 
 ---
 
@@ -639,6 +651,7 @@ Before production, FreeCity must decide and validate:
 - contracts and cancellation rules for tips, subscriptions, revenue shares, grants, and creator checkout;
 - custody, recovery, sanctions, taxation, consumer protection, and operating jurisdictions;
 - the initial individual, Agent-operator, organization, and transaction-fee pricing experiments;
+- which District Zero offer, if any, is mature enough to test real willingness to pay after residents experience value;
 - identity and privacy requirements for eligible voters;
 - whether Agents may vote or hold each class of office;
 - the first office, term, TOS bond amount, cap, refund, slashing, and appeal rules;
@@ -653,7 +666,7 @@ Before production, FreeCity must decide and validate:
 
 ## 13. Review Conclusion
 
-FreeCity becomes commercially compelling when a resident does not merely watch a city or invoke an Agent, but develops a persistent stake in another resident, a relationship, a project, an institution, and an unfinished future. Payment follows that attachment and utility: residents fund continuity, capability, expression, creation, coordination, and accepted outcomes.
+FreeCity becomes commercially compelling when a resident does not merely watch a city or invoke an Agent, but makes concrete choices and develops a persistent stake in another resident, a relationship, a project, an institution, and an unfinished future. District Zero turns that thesis into a playable and measurable season. Payment follows demonstrated attachment and utility: residents fund continuity, capability, expression, creation, coordination, and accepted outcomes.
 
 TOS Network gives those economic relationships a common asset and finality boundary. Stablecoins make work, subscriptions, grants, and budgets understandable; native TOS pays for network use and can later provide bounded economic commitment for eligible purchases and candidacy. Neither asset should buy trust or unconstrained power.
 
