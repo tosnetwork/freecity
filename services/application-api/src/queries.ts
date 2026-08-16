@@ -1,0 +1,135 @@
+import {
+  districtEventSchema,
+  districtStateSchema,
+  type DistrictEvent,
+  type ResidentState,
+} from "@freecity/contracts";
+import type { Pool } from "@freecity/district-runtime";
+
+import type { SeasonConfig } from "./season.js";
+
+export interface CommittedEventView {
+  sequence: number;
+  eventSeq: number;
+  event: DistrictEvent;
+}
+
+export interface TodayView {
+  residentId: string;
+  focus: number;
+  stateVersion: number;
+  lastSequence: number;
+  activeCards: ResidentState["activeCards"];
+  pendingConsequences: ResidentState["pendingConsequences"];
+  /** Committed events involving this resident since the last Today view. */
+  whileYouWereAway: CommittedEventView[];
+}
+
+function eventInvolvesResident(event: DistrictEvent, residentId: string): boolean {
+  return "residentId" in event && event.residentId === residentId;
+}
+
+async function residentEvents(
+  pool: Pool,
+  config: SeasonConfig,
+  residentId: string,
+  afterSequence: number,
+): Promise<{ views: CommittedEventView[]; lastSequence: number }> {
+  const result = await pool.query(
+    `SELECT district_sequence, event_seq, payload
+       FROM district.district_event
+      WHERE district_id = $1 AND season_id = $2 AND district_sequence > $3
+      ORDER BY district_sequence, event_seq`,
+    [config.districtId, config.seasonId, afterSequence],
+  );
+  const views: CommittedEventView[] = [];
+  let lastSequence = afterSequence;
+  for (const row of result.rows) {
+    const sequence = Number(row.district_sequence);
+    lastSequence = Math.max(lastSequence, sequence);
+    const event = districtEventSchema.parse(row.payload);
+    if (eventInvolvesResident(event, residentId)) {
+      views.push({ sequence, eventSeq: Number(row.event_seq), event });
+    }
+  }
+  return { views, lastSequence };
+}
+
+/**
+ * The Today view: current Focus and cards from committed runtime state, plus
+ * a While You Were Away list built exclusively from committed district
+ * events since the resident's last Today view (never from predictions).
+ */
+export async function buildToday(
+  pool: Pool,
+  config: SeasonConfig,
+  residentId: string,
+): Promise<TodayView> {
+  const runtime = await pool.query(
+    `SELECT state, last_sequence FROM district.district_runtime
+      WHERE district_id = $1 AND season_id = $2`,
+    [config.districtId, config.seasonId],
+  );
+  const runtimeRow = runtime.rows[0];
+  if (!runtimeRow) throw new Error("district not initialized");
+  const state = districtStateSchema.parse(runtimeRow.state);
+  const resident = state.residents[residentId];
+  if (!resident) throw new Error(`resident ${residentId} not provisioned`);
+
+  const member = await pool.query(
+    `SELECT last_today_sequence FROM app.season_member
+      WHERE district_id = $1 AND season_id = $2 AND resident_id = $3`,
+    [config.districtId, config.seasonId, residentId],
+  );
+  const lastTodaySequence = Number(member.rows[0]?.last_today_sequence ?? 0);
+
+  const { views } = await residentEvents(pool, config, residentId, lastTodaySequence);
+  const lastSequence = Number(runtimeRow.last_sequence);
+  await pool.query(
+    `UPDATE app.season_member SET last_today_sequence = $4
+      WHERE district_id = $1 AND season_id = $2 AND resident_id = $3`,
+    [config.districtId, config.seasonId, residentId, lastSequence],
+  );
+
+  return {
+    residentId,
+    focus: resident.focus,
+    stateVersion: state.stateVersion,
+    lastSequence,
+    activeCards: resident.activeCards,
+    pendingConsequences: resident.pendingConsequences,
+    whileYouWereAway: views,
+  };
+}
+
+/** Archive: the resident's committed ArchiveEntryRecorded events, oldest first. */
+export async function buildArchive(
+  pool: Pool,
+  config: SeasonConfig,
+  residentId: string,
+): Promise<CommittedEventView[]> {
+  const { views } = await residentEvents(pool, config, residentId, 0);
+  return views.filter((v) => v.event.eventType === "ArchiveEntryRecorded");
+}
+
+/** Committed events after a client's acknowledged sequence, for SSE resume. */
+export async function eventsAfter(
+  pool: Pool,
+  config: SeasonConfig,
+  afterSequence: number,
+  limit = 500,
+): Promise<CommittedEventView[]> {
+  const result = await pool.query(
+    `SELECT district_sequence, event_seq, payload
+       FROM district.district_event
+      WHERE district_id = $1 AND season_id = $2 AND district_sequence > $3
+      ORDER BY district_sequence, event_seq
+      LIMIT $4`,
+    [config.districtId, config.seasonId, afterSequence, limit],
+  );
+  return result.rows.map((row) => ({
+    sequence: Number(row.district_sequence),
+    eventSeq: Number(row.event_seq),
+    event: districtEventSchema.parse(row.payload),
+  }));
+}

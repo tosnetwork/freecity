@@ -2,7 +2,6 @@ import { randomBytes } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { runner as runMigrations } from "node-pg-migrate";
 import pg from "pg";
 
 import { createPool, type Pool } from "./db.js";
@@ -41,6 +40,9 @@ export async function createTestDatabase(): Promise<TestDatabase> {
   url.pathname = `/${name}`;
   const databaseUrl = url.toString();
 
+  // Lazy so that importing the package index never loads this dev-only
+  // dependency in a production process.
+  const { runner: runMigrations } = await import("node-pg-migrate");
   await runMigrations({
     databaseUrl,
     dir: MIGRATIONS_DIR,

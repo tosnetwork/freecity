@@ -145,7 +145,8 @@ pnpm test                 # Vitest unit + integration
 pnpm test:e2e             # Playwright end-to-end (starts the web dev server)
 pnpm lint && pnpm format && pnpm typecheck
 pnpm replay -- --district <id> --season <id>   # replay verification (release gate)
-pnpm dev                  # web app (api joins in PR4)
+pnpm dev                  # web app
+pnpm dev:api              # application API on :3001 (AUTH_MODE=dev by default)
 ```
 
 Local Postgres maps to host port **5433** (5432 is taken by a locally
