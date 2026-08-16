@@ -95,8 +95,47 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(401, null);
   }
   const body: unknown = await response.json();
-  if (!response.ok && response.status !== 409) throw new ApiError(response.status, body);
+  if (!response.ok) throw new ApiError(response.status, body);
   return body as T;
+}
+
+/** true when the error is the API telling us this account has not entered yet. */
+export function isNotAResident(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    error.status === 409 &&
+    typeof error.body === "object" &&
+    error.body !== null &&
+    (error.body as Record<string, unknown>)["error"] === "not_a_resident"
+  );
+}
+
+/**
+ * Command submissions surface a 409 as a structured rejection instead of a
+ * thrown error: a rejected command body already has the CommandResponse
+ * shape, and an idempotency-key conflict is normalized into one.
+ */
+async function commandRequest(path: string, payload: unknown): Promise<CommandResponse> {
+  try {
+    return await api<CommandResponse>(path, { method: "POST", body: JSON.stringify(payload) });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 409) {
+      const body = error.body as Record<string, unknown>;
+      if (typeof body["status"] === "string") return error.body as CommandResponse;
+      return {
+        commandId: typeof body["originalCommandId"] === "string" ? body["originalCommandId"] : "",
+        duplicate: false,
+        status: "rejected",
+        districtSequence: null,
+        result: {
+          ok: false,
+          code: typeof body["error"] === "string" ? body["error"].toUpperCase() : "REJECTED",
+          ...(typeof body["message"] === "string" ? { message: body["message"] } : {}),
+        },
+      };
+    }
+    throw error;
+  }
 }
 
 export function requestCode(email: string): Promise<{ sent: boolean; devCode?: string }> {
@@ -115,6 +154,19 @@ export function fetchToday(): Promise<TodayResponse> {
   return api("/api/today");
 }
 
+/**
+ * Returns the stored membership, refetching it from the API when local
+ * storage lost it (e.g. after sign-out/sign-in on the same account).
+ * Throws not_a_resident for accounts that have not entered yet.
+ */
+export async function ensureMembership(): Promise<Membership> {
+  const stored = getMembership();
+  if (stored) return stored;
+  const fetched = await api<Membership>("/api/membership");
+  setMembership(fetched);
+  return fetched;
+}
+
 export function fetchArchive(): Promise<{ entries: CommittedEventView[] }> {
   return api("/api/archive");
 }
@@ -125,15 +177,12 @@ export function ackToday(sequence: number): Promise<{ acknowledged: number }> {
 }
 
 export function chooseOption(cardId: string, optionId: string): Promise<CommandResponse> {
-  return api(`/api/cards/${encodeURIComponent(cardId)}/choose`, {
-    method: "POST",
-    body: JSON.stringify({ optionId, expectedStateVersion: null }),
+  return commandRequest(`/api/cards/${encodeURIComponent(cardId)}/choose`, {
+    optionId,
+    expectedStateVersion: null,
   });
 }
 
 export function declineCard(cardId: string): Promise<CommandResponse> {
-  return api(`/api/cards/${encodeURIComponent(cardId)}/decline`, {
-    method: "POST",
-    body: JSON.stringify({ reason: null }),
-  });
+  return commandRequest(`/api/cards/${encodeURIComponent(cardId)}/decline`, { reason: null });
 }

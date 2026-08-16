@@ -101,21 +101,33 @@ export async function buildToday(
 }
 
 /**
- * Advances the While You Were Away marker to `sequence` (monotonic: an older
- * or duplicate ack is a no-op). Explicit and idempotent by design.
+ * Advances the While You Were Away marker toward `sequence`. Monotonic (an
+ * older or duplicate ack is a no-op) AND clamped to the district's current
+ * committed `last_sequence` — a client cannot acknowledge the future and
+ * thereby hide events that have not been committed yet. Returns the cursor
+ * actually saved.
  */
 export async function ackToday(
   pool: Pool,
   config: SeasonConfig,
   residentId: string,
   sequence: number,
-): Promise<void> {
-  await pool.query(
-    `UPDATE app.season_member
-        SET last_today_sequence = GREATEST(last_today_sequence, $4)
-      WHERE district_id = $1 AND season_id = $2 AND resident_id = $3`,
+): Promise<number> {
+  const result = await pool.query(
+    `UPDATE app.season_member m
+        SET last_today_sequence = GREATEST(
+              m.last_today_sequence,
+              LEAST($4::bigint, r.last_sequence)
+            )
+       FROM district.district_runtime r
+      WHERE r.district_id = $1 AND r.season_id = $2
+        AND m.district_id = $1 AND m.season_id = $2 AND m.resident_id = $3
+      RETURNING m.last_today_sequence`,
     [config.districtId, config.seasonId, residentId, sequence],
   );
+  const row = result.rows[0];
+  if (!row) throw new Error(`no membership for resident ${residentId}`);
+  return Number(row.last_today_sequence);
 }
 
 /** Archive: the resident's committed ArchiveEntryRecorded events, oldest first. */

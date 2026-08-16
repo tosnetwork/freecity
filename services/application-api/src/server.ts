@@ -136,6 +136,13 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     return reply.send(membership);
   });
 
+  app.get("/api/membership", async (request, reply) => {
+    const auth = await requireMembership(request);
+    if (!auth) return reply.code(401).send({ error: "unauthorized" });
+    if (!auth.membership) return reply.code(409).send({ error: "not_a_resident" });
+    return reply.send(auth.membership);
+  });
+
   app.get("/api/today", async (request, reply) => {
     const auth = await requireMembership(request);
     if (!auth) return reply.code(401).send({ error: "unauthorized" });
@@ -151,8 +158,8 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
     if (!auth) return reply.code(401).send({ error: "unauthorized" });
     if (!auth.membership) return reply.code(409).send({ error: "not_a_resident" });
     const body = ackSchema.parse(request.body);
-    await ackToday(pool, config, auth.membership.residentId, body.sequence);
-    return reply.send({ acknowledged: body.sequence });
+    const saved = await ackToday(pool, config, auth.membership.residentId, body.sequence);
+    return reply.send({ acknowledged: saved });
   });
 
   app.get("/api/archive", async (request, reply) => {

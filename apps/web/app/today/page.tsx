@@ -4,14 +4,16 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { CardInstance } from "@freecity/contracts";
-import { createWorldState, summarizeEvent } from "@freecity/client-world";
+import { summarizeCommittedViews } from "@freecity/client-world";
 
 import {
   ackToday,
   chooseOption,
   declineCard,
+  ensureMembership,
   fetchToday,
   getMembership,
+  isNotAResident,
   type CommandResponse,
   type TodayResponse,
 } from "../../lib/api";
@@ -42,17 +44,22 @@ export default function TodayPage() {
     if (loadInFlight.current) return;
     loadInFlight.current = true;
     try {
+      // Recover the membership identity if local storage lost it (sign-out /
+      // sign-in) so WYWA summaries can always resolve the display name.
+      await ensureMembership();
       const response = await fetchToday();
-      if ("error" in (response as unknown as Record<string, unknown>)) {
-        router.replace("/enter"); // not a resident yet
-        return;
-      }
       setToday(response);
       // Acknowledge explicitly after the list is in hand — reading Today has
       // no side effect, so a refresh before this ack still shows the list.
       if (response.whileYouWereAway.length > 0) {
         await ackToday(response.lastSequence);
       }
+    } catch (error) {
+      if (isNotAResident(error)) {
+        router.replace("/enter");
+        return;
+      }
+      throw error;
     } finally {
       loadInFlight.current = false;
       setLoading(false);
@@ -112,7 +119,22 @@ export default function TodayPage() {
   if (!today) return <p role="alert">Today could not be loaded.</p>;
 
   const membership = getMembership();
-  const world = createWorldState();
+  // Reduce the WYWA views in order, pre-seeded with this resident's identity
+  // so summaries show display names even after the provisioning events were
+  // acknowledged away — never raw resident ids.
+  const wywaItems = summarizeCommittedViews(
+    today.whileYouWereAway,
+    membership
+      ? [
+          {
+            residentId: membership.residentId,
+            displayName: membership.displayName,
+            kind: "human",
+            role: membership.role,
+          },
+        ]
+      : [],
+  );
 
   return (
     <>
@@ -128,8 +150,8 @@ export default function TodayPage() {
           <p className="muted">Nothing new since your last visit. The district is calm.</p>
         ) : (
           <ul data-testid="wywa">
-            {today.whileYouWereAway.map((view) => (
-              <li key={`${view.sequence}:${view.eventSeq}`}>{summarizeEvent(world, view.event)}</li>
+            {wywaItems.map((item) => (
+              <li key={item.id}>{item.summary}</li>
             ))}
           </ul>
         )}

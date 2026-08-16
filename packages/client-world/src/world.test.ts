@@ -134,6 +134,54 @@ describe("applyEventView", () => {
   });
 });
 
+describe("summarizeCommittedViews", () => {
+  it("resolves names via seeds when provisioning events are outside the list", async () => {
+    const { summarizeCommittedViews } = await import("./world.js");
+    const items = summarizeCommittedViews(
+      [
+        view(7, 0, {
+          eventType: "FocusSpent",
+          residentId: "human-c544-uuid",
+          cardId: "c",
+          optionId: "o",
+          amount: 1,
+          remaining: 2,
+        }),
+        view(7, 1, {
+          eventType: "ChoiceCommitted",
+          residentId: "human-c544-uuid",
+          cardId: "c",
+          optionId: "o",
+        }),
+      ],
+      [{ residentId: "human-c544-uuid", displayName: "Ada", kind: "human", role: "builder" }],
+    );
+    expect(items.map((i) => i.summary)).toEqual([
+      "Ada spent 1 Focus (2 remaining)",
+      "Ada made a choice",
+    ]);
+    for (const item of items) {
+      expect(item.summary).not.toContain("human-c544-uuid"); // no raw resident ids
+    }
+  });
+
+  it("reduces in order so in-list provisioning still names later events", async () => {
+    const { summarizeCommittedViews } = await import("./world.js");
+    const items = summarizeCommittedViews([
+      view(1, 0, provisionAda),
+      view(2, 0, {
+        eventType: "FocusSpent",
+        residentId: "human-1",
+        cardId: "c",
+        optionId: "o",
+        amount: 1,
+        remaining: 2,
+      }),
+    ]);
+    expect(items[1]?.summary).toBe("Ada spent 1 Focus (2 remaining)");
+  });
+});
+
 describe("summarizeEvent", () => {
   it("resolves display names and produces accessible text", () => {
     const state = seeded();

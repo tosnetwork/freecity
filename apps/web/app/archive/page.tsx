@@ -1,17 +1,27 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import type { CommittedEventView } from "@freecity/client-world";
 
-import { fetchArchive } from "../../lib/api";
+import { fetchArchive, isNotAResident } from "../../lib/api";
 
 export default function ArchivePage() {
+  const router = useRouter();
   const [entries, setEntries] = useState<CommittedEventView[] | null>(null);
 
   useEffect(() => {
-    void fetchArchive().then((response) => setEntries(response.entries));
-  }, []);
+    void fetchArchive()
+      .then((response) => setEntries(response.entries))
+      .catch((error: unknown) => {
+        if (isNotAResident(error)) {
+          router.replace("/enter");
+          return;
+        }
+        throw error;
+      });
+  }, [router]);
 
   if (entries === null) return <p>Loading Archive…</p>;
 

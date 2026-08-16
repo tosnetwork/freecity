@@ -155,3 +155,31 @@ export function applyEventView(state: WorldState, view: CommittedEventView): Wor
   next.activity = [...state.activity, item].slice(-ACTIVITY_LIMIT);
   return next;
 }
+
+/** A known resident identity used to seed name resolution for summaries. */
+export interface SeedResident {
+  residentId: string;
+  displayName: string;
+  kind: ResidentKind;
+  role: Role;
+}
+
+/**
+ * Summarizes an ordered list of committed event views by reducing them in
+ * sequence, optionally pre-seeded with known residents so summaries resolve
+ * display names even when the provisioning events are outside the list
+ * (e.g. a While You Were Away view after its provision was acknowledged).
+ */
+export function summarizeCommittedViews(
+  views: CommittedEventView[],
+  seeds: SeedResident[] = [],
+): ActivityItem[] {
+  let state = createWorldState();
+  for (const seed of seeds) {
+    state.residents[seed.residentId] = { ...seed, focus: 0, activeCardCount: 0 };
+  }
+  for (const view of views) {
+    state = applyEventView(state, view);
+  }
+  return state.activity;
+}

@@ -96,6 +96,25 @@ describe("season entry and Today", () => {
     expect(again.json().role).toBe("builder");
   });
 
+  it("exposes the membership for identity recovery, and 409s before entry", async () => {
+    const stranger = await loginAs("stranger@example.com");
+    const notYet = await app.inject({
+      method: "GET",
+      url: "/api/membership",
+      headers: { authorization: `Bearer ${stranger}` },
+    });
+    expect(notYet.statusCode).toBe(409);
+    expect(notYet.json().error).toBe("not_a_resident");
+
+    const mine = await app.inject({
+      method: "GET",
+      url: "/api/membership",
+      headers: authHeaders(),
+    });
+    expect(mine.statusCode).toBe(200);
+    expect(mine.json()).toMatchObject({ residentId, role: "builder", displayName: "Ada" });
+  });
+
   it("Today is side-effect free; the WYWA marker advances only on explicit ack", async () => {
     const today = await app.inject({ method: "GET", url: "/api/today", headers: authHeaders() });
     expect(today.statusCode).toBe(200);
@@ -477,6 +496,47 @@ describe("P1 regression: malformed request bodies are 400, not 500", () => {
     });
     expect(emptyJsonBody.statusCode).toBe(400);
     expect(emptyJsonBody.json().error).toBe("invalid_request");
+  });
+});
+
+describe("P2 regression: ack cannot advance into the future", () => {
+  it("clamps a future ack to the committed sequence so later events still surface", async () => {
+    const henryToken = await loginAs("henry@example.com");
+    const headers = { authorization: `Bearer ${henryToken}` };
+    const enter = await app.inject({
+      method: "POST",
+      url: "/api/season/enter",
+      headers,
+      payload: { role: "builder", displayName: "Henry" },
+    });
+    const henryResidentId = enter.json().residentId as string;
+
+    const today = await app.inject({ method: "GET", url: "/api/today", headers });
+    const lastSequence = today.json().lastSequence as number;
+
+    const futureAck = await app.inject({
+      method: "POST",
+      url: "/api/today/ack",
+      headers,
+      payload: { sequence: lastSequence + 1000 },
+    });
+    expect(futureAck.statusCode).toBe(200);
+    expect(futureAck.json().acknowledged).toBe(lastSequence); // clamped, and the saved cursor is returned
+
+    // Events committed after the over-ack must still appear in WYWA.
+    const choose = await app.inject({
+      method: "POST",
+      url: `/api/cards/relationship-boundary-test:${henryResidentId}/choose`,
+      headers,
+      payload: { optionId: "opt-private" },
+    });
+    expect(choose.statusCode).toBe(200);
+
+    const after = await app.inject({ method: "GET", url: "/api/today", headers });
+    const types = after
+      .json()
+      .whileYouWereAway.map((v: { event: { eventType: string } }) => v.event.eventType);
+    expect(types).toContain("ChoiceCommitted");
   });
 });
 
