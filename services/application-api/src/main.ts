@@ -15,6 +15,7 @@ const app = await buildServer({
   pool: createPool(databaseUrl),
   config: { districtId: "district-zero", seasonId: "season-0" },
   authMode,
+  webOrigin: process.env["FREECITY_WEB_ORIGIN"] ?? "http://localhost:3000",
 });
 
 await app.listen({ port, host: "0.0.0.0" });

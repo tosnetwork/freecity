@@ -96,7 +96,7 @@ describe("season entry and Today", () => {
     expect(again.json().role).toBe("builder");
   });
 
-  it("Today shows Focus, three cards, and a committed-events-only WYWA", async () => {
+  it("Today is side-effect free; the WYWA marker advances only on explicit ack", async () => {
     const today = await app.inject({ method: "GET", url: "/api/today", headers: authHeaders() });
     expect(today.statusCode).toBe(200);
     const body = today.json();
@@ -108,8 +108,30 @@ describe("season entry and Today", () => {
     expect(types).toContain("ResidentProvisioned");
     expect(types.filter((t: string) => t === "CardAssigned")).toHaveLength(3);
 
+    // A duplicate fetch (refresh, strict-mode double load) sees the same list.
     const second = await app.inject({ method: "GET", url: "/api/today", headers: authHeaders() });
-    expect(second.json().whileYouWereAway).toHaveLength(0); // marker advanced
+    expect(second.json().whileYouWereAway).toHaveLength(body.whileYouWereAway.length);
+
+    const ack = await app.inject({
+      method: "POST",
+      url: "/api/today/ack",
+      headers: authHeaders(),
+      payload: { sequence: body.lastSequence },
+    });
+    expect(ack.statusCode).toBe(200);
+
+    const third = await app.inject({ method: "GET", url: "/api/today", headers: authHeaders() });
+    expect(third.json().whileYouWereAway).toHaveLength(0); // marker advanced by ack
+
+    // Acks are monotonic: an older ack cannot rewind the marker.
+    await app.inject({
+      method: "POST",
+      url: "/api/today/ack",
+      headers: authHeaders(),
+      payload: { sequence: 0 },
+    });
+    const fourth = await app.inject({ method: "GET", url: "/api/today", headers: authHeaders() });
+    expect(fourth.json().whileYouWereAway).toHaveLength(0);
   });
 });
 

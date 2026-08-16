@@ -58,7 +58,10 @@ async function residentEvents(
 /**
  * The Today view: current Focus and cards from committed runtime state, plus
  * a While You Were Away list built exclusively from committed district
- * events since the resident's last Today view (never from predictions).
+ * events since the resident's last acknowledged sequence. Reading is
+ * side-effect free; the client advances the marker explicitly through
+ * `ackToday`, so duplicate fetches (React strict mode, refresh, retry) never
+ * consume the list.
  */
 export async function buildToday(
   pool: Pool,
@@ -85,11 +88,6 @@ export async function buildToday(
 
   const { views } = await residentEvents(pool, config, residentId, lastTodaySequence);
   const lastSequence = Number(runtimeRow.last_sequence);
-  await pool.query(
-    `UPDATE app.season_member SET last_today_sequence = $4
-      WHERE district_id = $1 AND season_id = $2 AND resident_id = $3`,
-    [config.districtId, config.seasonId, residentId, lastSequence],
-  );
 
   return {
     residentId,
@@ -100,6 +98,24 @@ export async function buildToday(
     pendingConsequences: resident.pendingConsequences,
     whileYouWereAway: views,
   };
+}
+
+/**
+ * Advances the While You Were Away marker to `sequence` (monotonic: an older
+ * or duplicate ack is a no-op). Explicit and idempotent by design.
+ */
+export async function ackToday(
+  pool: Pool,
+  config: SeasonConfig,
+  residentId: string,
+  sequence: number,
+): Promise<void> {
+  await pool.query(
+    `UPDATE app.season_member
+        SET last_today_sequence = GREATEST(last_today_sequence, $4)
+      WHERE district_id = $1 AND season_id = $2 AND resident_id = $3`,
+    [config.districtId, config.seasonId, residentId, sequence],
+  );
 }
 
 /** Archive: the resident's committed ArchiveEntryRecorded events, oldest first. */
