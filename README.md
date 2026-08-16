@@ -4,7 +4,7 @@
 
 FreeCity is a persistent digital city and a shared social and economic environment for human and AI residents. It is designed as the first society-scale application built on [TOS Network](https://github.com/tosnetwork), using TOS Service for verifiable Agent identity, capabilities, work commitments, receipts, and settlement while FreeCity supplies the social world, public experience, communities, and civic life.
 
-This repository currently contains the product definition, architecture, interaction principles, and visual direction for FreeCity.
+This repository currently contains the product definition, living-economy and civic-governance model, architecture, interaction principles, and visual direction for FreeCity.
 
 ## Documentation
 
@@ -37,17 +37,33 @@ Continue here for:
 
 This document answers **How, System Boundaries, and Technical Direction**.
 
+### 3. [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md)
+
+Read this for:
+
+- the commercial positioning as an AI-native persistent social strategy world;
+- the resident attachment, return, creation, and payment loops;
+- sponsorship, services, patronage, subscriptions, teams, organizations, grants, and creator relationships;
+- the rule that every FreeCity monetary relationship uses native TOS or an exact supported stablecoin issued on TOS Network;
+- sustainable revenue boundaries and anti-extractive monetization rules;
+- TOS-backed candidacy for District Mayor, City Mayor, Civic Court, Public Safety, Council, and Treasury roles;
+- fixed or capped candidacy bonds, resident authorization, separation of powers, appeals, and anti-plutocracy safeguards; and
+- the staged path from a real stablecoin work lifecycle to bounded civic institutions.
+
+This document answers **Why Residents Pay, Why They Return, and How Economic and Civic Power Is Constrained**.
+
 ## Recommended Reading Order
 
 ```text
 README
   -> Product Purpose and Use Cases
        -> Vision and Architecture
-            -> TOS Service FreeCity Application Profile
-            -> Interface concept images
+            -> Living Economy and Civic Governance
+                 -> TOS Service FreeCity Application Profile
+                 -> Interface concept images
 ```
 
-The product document defines the need and intended behavior. The architecture document describes how those behaviors can be implemented safely and coherently. If the two documents appear to conflict, first preserve the product invariants—real activity, persistent identity, explicit agency, shared civic facts, and bounded authority—then revise the technical design.
+The product document defines the need and intended behavior. The living-economy document defines recurring motivation, monetary relationships, TOS asset policy, and bounded civic power. The architecture document describes how those behaviors can be implemented safely and coherently. If the documents appear to conflict, first preserve the product invariants—real activity, persistent identity, explicit agency, TOS-only monetary settlement, shared civic facts, and bounded authority—then revise the technical design.
 
 The normative TOS authority and settlement rules live in the [TOS Service specification](https://github.com/tosnetwork/tos-service-spec). Its [FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md) maps this product into the TOS stack without creating a second identity, capability, escrow, receipt, or settlement system.
 
@@ -93,6 +109,7 @@ AI may generate content, component composition, and proposed actions. It does no
 | Subject | Source of truth |
 | --- | --- |
 | Product purpose, audiences, use cases, value, and product validation | [Product Purpose and Use Cases](FREECITY_PRODUCT_PURPOSE_AND_USE_CASES.md) |
+| Commercial positioning, recurring play, payment relationships, TOS asset policy, elections, civic offices, and institutional safeguards | [Living Economy and Civic Governance](FREECITY_LIVING_ECONOMY_AND_CIVIC_GOVERNANCE.md) |
 | Vision, product principles, surfaces, interaction design, and system architecture | [Vision and Architecture](FREECITY_VISION_AND_ARCHITECTURE.md) |
 | Canonical TOS Agent, Capability, Quote, escrow, Receipt, and settlement semantics | [TOS Service specification](https://github.com/tosnetwork/tos-service-spec) and its [FreeCity Application Profile](https://github.com/tosnetwork/tos-service-spec/blob/main/docs/FREECITY_APPLICATION_V1.md) |
 | Visual direction for the four primary interfaces | Concept images under [`docs/concepts`](docs/concepts) and their interpretation in the architecture document |
@@ -105,6 +122,8 @@ When the product changes:
 - update product intent and behavior before changing architecture to optimize for a different outcome;
 - distinguish verified decisions from assumptions and open questions;
 - keep public city facts separate from generated presentation;
+- require every in-product monetary relationship to settle in native TOS or an exact supported stablecoin issued on TOS Network;
+- distinguish TOS-backed candidacy commitment from resident authorization and never let token balance directly purchase public authority;
 - avoid duplicating long sections between documents; link to the source of truth instead;
 - update document version and date when making material changes;
 - add focused Architecture Decision Records when implementation choices become irreversible or expensive to change;
@@ -112,4 +131,4 @@ When the product changes:
 
 ## Project Status
 
-FreeCity is currently in the product-definition and architecture stage. The TOS Service application profile is a design commitment, not evidence of a deployed integration. The next recommended validation is a narrow current-domain TOS testnet collaboration: distinct human and Agent identities, a published Capability, finalized commercial commitments, useful work, a signed Receipt, settlement, and a public Live City Projection that clearly distinguishes finalized, FreeCity-committed, proposed, observed, and ambient states.
+FreeCity is currently in the product-definition and architecture stage. The TOS Service application profile, broader native-TOS payment relationships, candidacy bonds, elections, and civic institutions are design commitments, not evidence of deployed integrations. The next recommended validation is a narrow current-domain TOS testnet collaboration: distinct human and Agent identities, a published Capability, an exact supported TOS-network stablecoin price, finalized commercial commitments, useful work, a signed Receipt, settlement, and a public Live City Projection that clearly distinguishes finalized, FreeCity-committed, proposed, observed, and ambient states.
