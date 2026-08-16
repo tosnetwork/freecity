@@ -308,6 +308,136 @@ describe("P1 regression: idempotency keys are resident-scoped", () => {
   });
 });
 
+describe("P1 regression: concurrent first entry yields one authoritative identity", () => {
+  it("parallel enters with different roles return the same resident and role", async () => {
+    const frankToken = await loginAs("frank@example.com");
+    const enter = (role: string) =>
+      app.inject({
+        method: "POST",
+        url: "/api/season/enter",
+        headers: { authorization: `Bearer ${frankToken}` },
+        payload: { role, displayName: `Frank-${role}` },
+      });
+    const [a, b] = await Promise.all([enter("builder"), enter("reporter")]);
+    expect(a.statusCode).toBe(200);
+    expect(b.statusCode).toBe(200);
+
+    // Both responses describe the same winner — never two identities.
+    expect(a.json().residentId).toBe(b.json().residentId);
+    expect(a.json().role).toBe(b.json().role);
+    expect(a.json().displayName).toBe(b.json().displayName);
+
+    // Database identity, membership, and runtime identity all agree.
+    const frankResidentId = a.json().residentId as string;
+    const dbRow = await db.pool.query(
+      `SELECT r.role AS resident_role, m.role AS member_role
+         FROM app.resident r
+         JOIN app.season_member m ON m.resident_id = r.resident_id
+        WHERE r.resident_id = $1`,
+      [frankResidentId],
+    );
+    expect(dbRow.rows[0].resident_role).toBe(a.json().role);
+    expect(dbRow.rows[0].member_role).toBe(a.json().role);
+
+    const runtime = await db.pool.query(
+      `SELECT state->'residents'->$3->>'role' AS runtime_role,
+              jsonb_array_length(state->'residents'->$3->'activeCards') AS cards
+         FROM district.district_runtime
+        WHERE district_id = $1 AND season_id = $2`,
+      [CONFIG.districtId, CONFIG.seasonId, frankResidentId],
+    );
+    expect(runtime.rows[0].runtime_role).toBe(a.json().role);
+    expect(Number(runtime.rows[0].cards)).toBe(3); // provisioned exactly once
+  });
+});
+
+describe("P1 regression: idempotency key reuse for a different request is an explicit conflict", () => {
+  it("returns 409 idempotency_key_reused instead of swallowing the second choice", async () => {
+    const graceToken = await loginAs("grace@example.com");
+    const graceEnter = await app.inject({
+      method: "POST",
+      url: "/api/season/enter",
+      headers: { authorization: `Bearer ${graceToken}` },
+      payload: { role: "merchant", displayName: "Grace" },
+    });
+    const graceResidentId = graceEnter.json().residentId as string;
+    const headers = (key?: string) => ({
+      authorization: `Bearer ${graceToken}`,
+      ...(key ? { "idempotency-key": key } : {}),
+    });
+
+    const first = await app.inject({
+      method: "POST",
+      url: `/api/cards/relationship-boundary-test:${graceResidentId}/choose`,
+      headers: headers("grace-key"),
+      payload: { optionId: "opt-private" },
+    });
+    expect(first.statusCode).toBe(200);
+
+    // Same key, different card: refused loudly, nothing journaled.
+    const conflicting = await app.inject({
+      method: "POST",
+      url: `/api/cards/district-competing-plans:${graceResidentId}/choose`,
+      headers: headers("grace-key"),
+      payload: { optionId: "opt-exhibition" },
+    });
+    expect(conflicting.statusCode).toBe(409);
+    expect(conflicting.json().error).toBe("idempotency_key_reused");
+    expect(conflicting.json().originalCommandId).toBe(first.json().commandId);
+
+    // The second card is untouched and still choosable with its own key.
+    const retry = await app.inject({
+      method: "POST",
+      url: `/api/cards/district-competing-plans:${graceResidentId}/choose`,
+      headers: headers(),
+      payload: { optionId: "opt-exhibition" },
+    });
+    expect(retry.statusCode).toBe(200);
+    expect(retry.json().status).toBe("applied");
+
+    // An exact retry of the first request still deduplicates normally.
+    const exactRetry = await app.inject({
+      method: "POST",
+      url: `/api/cards/relationship-boundary-test:${graceResidentId}/choose`,
+      headers: headers("grace-key"),
+      payload: { optionId: "opt-private" },
+    });
+    expect(exactRetry.json().duplicate).toBe(true);
+    expect(exactRetry.json().commandId).toBe(first.json().commandId);
+  });
+});
+
+describe("P1 regression: malformed request bodies are 400, not 500", () => {
+  it("rejects invalid payloads with structured issues", async () => {
+    const badEmail = await app.inject({
+      method: "POST",
+      url: "/api/auth/request-code",
+      payload: { email: "not-an-email" },
+    });
+    expect(badEmail.statusCode).toBe(400);
+    expect(badEmail.json().error).toBe("invalid_request");
+    expect(badEmail.json().issues[0].path).toBe("email");
+
+    const badRole = await app.inject({
+      method: "POST",
+      url: "/api/season/enter",
+      headers: authHeaders(),
+      payload: { role: "wizard", displayName: "Ada" },
+    });
+    expect(badRole.statusCode).toBe(400);
+    expect(badRole.json().error).toBe("invalid_request");
+
+    const missingOption = await app.inject({
+      method: "POST",
+      url: `/api/cards/whatever/choose`,
+      headers: authHeaders(),
+      payload: {},
+    });
+    expect(missingOption.statusCode).toBe(400);
+    expect(missingOption.json().issues[0].path).toBe("optionId");
+  });
+});
+
 describe("P1 regression: season entry heals from partial state", () => {
   it("recovers when membership was committed but runtime commands were lost", async () => {
     const carolToken = await loginAs("carol@example.com");

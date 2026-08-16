@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
 import {
   roleSchema,
@@ -49,6 +49,20 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
   const { pool, config } = opts;
   const now = opts.now ?? (() => new Date().toISOString());
   const app = Fastify({ logger: false });
+
+  // Malformed input is the client's error, never a 500.
+  app.setErrorHandler((error, _request, reply) => {
+    if (error instanceof ZodError) {
+      return reply.code(400).send({
+        error: "invalid_request",
+        issues: error.issues.map((issue) => ({
+          path: issue.path.join("."),
+          message: issue.message,
+        })),
+      });
+    }
+    return reply.code(500).send({ error: "internal_error" });
+  });
 
   await ensureDistrict(pool, config, now());
 
@@ -141,6 +155,16 @@ export async function buildServer(opts: ServerOptions): Promise<FastifyInstance>
       payload: command.payload,
     };
     const enqueue = await enqueueCommand(pool, envelope);
+    if (enqueue.keyConflict) {
+      // The same resident reused this key for a different command; refusing
+      // loudly beats silently returning the unrelated original result.
+      return reply.code(409).send({
+        error: "idempotency_key_reused",
+        message:
+          "This Idempotency-Key was already used for a different request; retry with a new key.",
+        originalCommandId: enqueue.commandId,
+      });
+    }
     if (!enqueue.duplicate || enqueue.status === "received") {
       await processDistrict(pool, config.districtId, config.seasonId, { stepTime: now() });
     }

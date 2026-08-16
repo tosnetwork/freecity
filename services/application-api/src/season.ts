@@ -97,14 +97,10 @@ export async function enterSeason(
   requestedDisplayName: string,
   now: string,
 ): Promise<Membership> {
-  // A pre-existing membership pins role and display name; the request only
-  // supplies them on first entry.
-  const existing = await findMembership(pool, config, accountId);
-  const role = existing?.role ?? requestedRole;
-  const displayName = existing?.displayName ?? requestedDisplayName;
-
-  const residentId = existing?.residentId ?? `human-${accountId}`;
-  const aiResidentId = existing?.aiResidentId ?? `ai-${accountId}`;
+  // Resident identities are deterministic per account; the requested role and
+  // display name only matter if this request wins the first insert.
+  const candidateResidentId = `human-${accountId}`;
+  const candidateAiResidentId = `ai-${accountId}`;
   const aiDisplayName = "Mira";
 
   await withTransaction(pool, async (client) => {
@@ -112,22 +108,36 @@ export async function enterSeason(
       `INSERT INTO app.resident (resident_id, account_id, kind, role, display_name)
        VALUES ($1, $2, 'human', $3, $4)
        ON CONFLICT (resident_id) DO NOTHING`,
-      [residentId, accountId, role, displayName],
+      [candidateResidentId, accountId, requestedRole, requestedDisplayName],
     );
     await client.query(
       `INSERT INTO app.resident (resident_id, account_id, kind, role, display_name)
        VALUES ($1, NULL, 'ai', 'mediator', $2)
        ON CONFLICT (resident_id) DO NOTHING`,
-      [aiResidentId, aiDisplayName],
+      [candidateAiResidentId, aiDisplayName],
     );
+    // Role is copied from the committed resident row, not from this
+    // request, so interleaved winners can never leave the two tables
+    // disagreeing about the role.
     await client.query(
       `INSERT INTO app.season_member
          (district_id, season_id, resident_id, role, sponsored_ai_resident_id)
-       VALUES ($1, $2, $3, $4, $5)
+       SELECT $1, $2, r.resident_id, r.role, $4
+         FROM app.resident r WHERE r.resident_id = $3
        ON CONFLICT DO NOTHING`,
-      [config.districtId, config.seasonId, residentId, role, aiResidentId],
+      [config.districtId, config.seasonId, candidateResidentId, candidateAiResidentId],
     );
   });
+
+  // Concurrent first entries can both pass the "not yet a member" check, so
+  // the inserts race and ON CONFLICT picks one winner. Re-read the
+  // authoritative membership and build every command and the response from
+  // it — never from this request's local values.
+  const authoritative = await findMembership(pool, config, accountId);
+  if (!authoritative) {
+    throw new Error(`membership for account ${accountId} missing after upsert`);
+  }
+  const { residentId, aiResidentId, role, displayName } = authoritative;
 
   const commands: { command: DistrictCommand; key: string }[] = [
     {
@@ -168,7 +178,15 @@ export async function enterSeason(
     })),
   ];
   for (const { command, key } of commands) {
-    await enqueueCommand(pool, systemEnvelope(config, command, key, now, `account:${accountId}`));
+    const enqueue = await enqueueCommand(
+      pool,
+      systemEnvelope(config, command, key, now, `account:${accountId}`),
+    );
+    if (enqueue.keyConflict) {
+      // Impossible when all payloads derive from the authoritative
+      // membership; failing loudly beats provisioning a divergent identity.
+      throw new Error(`provisioning key conflict for ${key}`);
+    }
   }
   await processDistrict(pool, config.districtId, config.seasonId, { stepTime: now });
 

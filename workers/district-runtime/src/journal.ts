@@ -1,4 +1,5 @@
 import {
+  canonicalJson,
   districtCommandEnvelopeSchema,
   districtCommandSchema,
   type DistrictCommandEnvelope,
@@ -10,17 +11,27 @@ export interface EnqueueResult {
   /** The journaled command id — the original one on duplicate delivery. */
   commandId: string;
   status: "received" | "applied" | "rejected";
-  /** true when this envelope was a duplicate of an earlier idempotency key. */
+  /**
+   * true when this envelope repeats an earlier idempotency key with the SAME
+   * command type and payload — the retry case.
+   */
   duplicate: boolean;
+  /**
+   * true when the idempotency key was already used for a DIFFERENT command
+   * type or payload. Nothing was journaled; the caller must surface an
+   * explicit conflict instead of silently returning the original result.
+   */
+  keyConflict: boolean;
   /** The stored result for an already-processed duplicate; null otherwise. */
   result: unknown;
 }
 
 /**
  * Journals a command envelope. Duplicate delivery (same district, season, and
- * idempotency key) never creates a second journal row; the caller receives
- * the original command's identity and, if already processed, its original
- * result (Runtime §5).
+ * idempotency key) never creates a second journal row. A true retry (same
+ * command fingerprint) receives the original command's identity and stored
+ * result; the same key with a different fingerprint is reported as a key
+ * conflict (Runtime §5: an idempotency key is scoped to one intended effect).
  */
 export async function enqueueCommand(
   pool: Pool,
@@ -58,12 +69,13 @@ export async function enqueueCommand(
       commandId: parsedEnvelope.commandId,
       status: "received",
       duplicate: false,
+      keyConflict: false,
       result: null,
     };
   }
 
   const original = await pool.query(
-    `SELECT command_id, status, result
+    `SELECT command_id, status, result, command_type, payload
        FROM district.district_command
       WHERE district_id = $1 AND season_id = $2 AND idempotency_key = $3`,
     [parsedEnvelope.districtId, parsedEnvelope.seasonId, parsedEnvelope.idempotencyKey],
@@ -72,10 +84,24 @@ export async function enqueueCommand(
   if (!row) {
     throw new Error("idempotency conflict raced with a deleted command row");
   }
+
+  const sameFingerprint =
+    row.command_type === parsedEnvelope.commandType &&
+    canonicalJson(row.payload) === canonicalJson(parsedEnvelope.payload);
+  if (!sameFingerprint) {
+    return {
+      commandId: row.command_id as string,
+      status: row.status as EnqueueResult["status"],
+      duplicate: false,
+      keyConflict: true,
+      result: null,
+    };
+  }
   return {
     commandId: row.command_id as string,
     status: row.status as EnqueueResult["status"],
     duplicate: true,
+    keyConflict: false,
     result: row.result ?? null,
   };
 }
