@@ -1,0 +1,291 @@
+{
+  "name": "bounded-catch-up",
+  "initialState": {
+    "districtId": "district-zero",
+    "seasonId": "season-0",
+    "stateVersion": 0,
+    "sequence": 0,
+    "stepTime": "2026-09-01T08:00:00.000Z",
+    "rulesetVersion": "district-zero-r0",
+    "rngSeed": "fixture-seed-2",
+    "residents": {}
+  },
+  "steps": [
+    {
+      "stepTime": "2026-09-01T08:00:00.000Z",
+      "input": {
+        "commandId": "cmd-1",
+        "sequence": 1,
+        "command": {
+          "type": "season.provision_resident",
+          "payload": {
+            "residentId": "human-1",
+            "kind": "human",
+            "role": "reporter",
+            "displayName": "Noor",
+            "sponsoredAiResidentId": "ai-1"
+          }
+        }
+      }
+    },
+    {
+      "stepTime": "2026-09-01T08:01:00.000Z",
+      "input": {
+        "commandId": "cmd-2",
+        "sequence": 2,
+        "command": {
+          "type": "card.assign",
+          "payload": {
+            "residentId": "human-1",
+            "card": {
+              "cardId": "c1",
+              "templateId": "tpl-short-window",
+              "eventFamily": "discovery",
+              "expiresAfterHours": 1,
+              "options": [
+                {
+                  "optionId": "a",
+                  "label": "Inspect provenance before contact",
+                  "focusCost": 1,
+                  "reactionText": "The provenance record opens.",
+                  "consequenceDelayMinutes": 30,
+                  "consequenceText": "The controller history checked out."
+                },
+                {
+                  "optionId": "b",
+                  "label": "Ignore for now",
+                  "focusCost": 0,
+                  "reactionText": "The suggestion is set aside.",
+                  "consequenceDelayMinutes": 30,
+                  "consequenceText": "The unfamiliar Agent moved on."
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "stepTime": "2026-09-01T08:01:00.000Z",
+      "input": {
+        "commandId": "cmd-3",
+        "sequence": 3,
+        "command": {
+          "type": "card.assign",
+          "payload": {
+            "residentId": "human-1",
+            "card": {
+              "cardId": "c2",
+              "templateId": "tpl-short-window",
+              "eventFamily": "discovery",
+              "expiresAfterHours": 1,
+              "options": [
+                {
+                  "optionId": "a",
+                  "label": "Inspect provenance before contact",
+                  "focusCost": 1,
+                  "reactionText": "The provenance record opens.",
+                  "consequenceDelayMinutes": 30,
+                  "consequenceText": "The controller history checked out."
+                },
+                {
+                  "optionId": "b",
+                  "label": "Ignore for now",
+                  "focusCost": 0,
+                  "reactionText": "The suggestion is set aside.",
+                  "consequenceDelayMinutes": 30,
+                  "consequenceText": "The unfamiliar Agent moved on."
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "stepTime": "2026-09-01T08:01:00.000Z",
+      "input": {
+        "commandId": "cmd-4",
+        "sequence": 4,
+        "command": {
+          "type": "card.assign",
+          "payload": {
+            "residentId": "human-1",
+            "card": {
+              "cardId": "c3",
+              "templateId": "tpl-short-window",
+              "eventFamily": "discovery",
+              "expiresAfterHours": 1,
+              "options": [
+                {
+                  "optionId": "a",
+                  "label": "Inspect provenance before contact",
+                  "focusCost": 1,
+                  "reactionText": "The provenance record opens.",
+                  "consequenceDelayMinutes": 30,
+                  "consequenceText": "The controller history checked out."
+                },
+                {
+                  "optionId": "b",
+                  "label": "Ignore for now",
+                  "focusCost": 0,
+                  "reactionText": "The suggestion is set aside.",
+                  "consequenceDelayMinutes": 30,
+                  "consequenceText": "The unfamiliar Agent moved on."
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "stepTime": "2026-09-04T08:00:00.000Z",
+      "input": {
+        "commandId": "cmd-5",
+        "sequence": 5,
+        "command": {
+          "type": "runtime.run_due_effects",
+          "payload": {
+            "limit": 2
+          }
+        }
+      }
+    },
+    {
+      "stepTime": "2026-09-04T08:00:00.000Z",
+      "input": {
+        "commandId": "cmd-6",
+        "sequence": 6,
+        "command": {
+          "type": "runtime.run_due_effects",
+          "payload": {
+            "limit": 10
+          }
+        }
+      }
+    }
+  ],
+  "expected": {
+    "finalChecksum": "7b97a6e3fab599e3831ce48074b535330aa391d4731ec3a8039d5185cfcbfd5d",
+    "outcomes": [
+      {
+        "sequence": 1,
+        "ok": true,
+        "rejectionCode": null,
+        "events": [
+          {
+            "eventType": "ResidentProvisioned",
+            "residentId": "human-1",
+            "kind": "human",
+            "role": "reporter",
+            "displayName": "Noor",
+            "sponsoredAiResidentId": "ai-1",
+            "initialFocus": 3
+          }
+        ]
+      },
+      {
+        "sequence": 2,
+        "ok": true,
+        "rejectionCode": null,
+        "events": [
+          {
+            "eventType": "CardAssigned",
+            "residentId": "human-1",
+            "cardId": "c1",
+            "templateId": "tpl-short-window",
+            "expiresAt": "2026-09-01T09:01:00.000Z"
+          }
+        ]
+      },
+      {
+        "sequence": 3,
+        "ok": true,
+        "rejectionCode": null,
+        "events": [
+          {
+            "eventType": "CardAssigned",
+            "residentId": "human-1",
+            "cardId": "c2",
+            "templateId": "tpl-short-window",
+            "expiresAt": "2026-09-01T09:01:00.000Z"
+          }
+        ]
+      },
+      {
+        "sequence": 4,
+        "ok": true,
+        "rejectionCode": null,
+        "events": [
+          {
+            "eventType": "CardAssigned",
+            "residentId": "human-1",
+            "cardId": "c3",
+            "templateId": "tpl-short-window",
+            "expiresAt": "2026-09-01T09:01:00.000Z"
+          }
+        ]
+      },
+      {
+        "sequence": 5,
+        "ok": true,
+        "rejectionCode": null,
+        "events": [
+          {
+            "eventType": "CardExpired",
+            "residentId": "human-1",
+            "cardId": "c1"
+          },
+          {
+            "eventType": "ArchiveEntryRecorded",
+            "residentId": "human-1",
+            "entryType": "card_expired",
+            "cardId": "c1",
+            "consequenceId": null,
+            "summary": "A discovery card expired without a decision"
+          },
+          {
+            "eventType": "CardExpired",
+            "residentId": "human-1",
+            "cardId": "c2"
+          },
+          {
+            "eventType": "ArchiveEntryRecorded",
+            "residentId": "human-1",
+            "entryType": "card_expired",
+            "cardId": "c2",
+            "consequenceId": null,
+            "summary": "A discovery card expired without a decision"
+          }
+        ]
+      },
+      {
+        "sequence": 6,
+        "ok": true,
+        "rejectionCode": null,
+        "events": [
+          {
+            "eventType": "CardExpired",
+            "residentId": "human-1",
+            "cardId": "c3"
+          },
+          {
+            "eventType": "ArchiveEntryRecorded",
+            "residentId": "human-1",
+            "entryType": "card_expired",
+            "cardId": "c3",
+            "consequenceId": null,
+            "summary": "A discovery card expired without a decision"
+          },
+          {
+            "eventType": "FocusRefreshed",
+            "residentId": "human-1",
+            "focus": 3,
+            "dayKey": "2026-09-04"
+          }
+        ]
+      }
+    ]
+  }
+}

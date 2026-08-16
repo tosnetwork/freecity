@@ -108,7 +108,7 @@ pub/sub, session cache. All rebuildable.
 | `card.assign` | system (compiler stub reads `authored_card`) | cardId, templateId, residentId, expiry |
 | `card.commit_choice` | human | cardId, optionId, expectedRuntimeVersion |
 | `card.decline` | human | cardId, reason? |
-| `runtime.run_due_effects` | system (scheduler) | stepTime, limit |
+| `runtime.run_due_effects` | system (scheduler) | limit (the explicit stepTime is a step argument, not payload) |
 
 Phase 1 event types: `ResidentProvisioned`, `CardAssigned`, `FocusSpent`,
 `ChoiceCommitted`, `CardDeclined`, `ImmediateReactionRecorded`,
@@ -208,30 +208,31 @@ demonstrably executable.
 1. **Auth for Phase 1** (PR4): Playable P0 requires "passkey or equally
    low-friction entry". Proposal: dev email-code login now, passkeys before
    the external cohort. Needs confirmation.
-2. **Focus refresh rule** (PR2): spec says "3 per day, humane cadence" but not
-   the reset boundary. Proposal: refresh to 3 at a fixed season-timezone
-   rollover recorded as a scheduled effect; catch-up grants at most one
-   missed refresh (Playable §6.1 limited catch-up).
-3. **Card expiry** (PR2): expiry duration per template is unspecified.
-   Proposal: template-defined `expiresAfterHours`, default 48h, expiry emits
-   `CardExpired` (a valid non-punitive outcome).
+2. **Focus refresh rule** — **resolved in PR2**: refresh sets Focus to at
+   least 3 at the UTC day-key rollover, applied inside
+   `runtime.run_due_effects`; being away several days grants at most one
+   refresh (`lastFocusRefreshDayKey` guard). Season-timezone (non-UTC)
+   rollover deferred until a cohort needs it.
+3. **Card expiry** — **resolved in PR2**: template-defined
+   `expiresAfterHours` (default 48, max 336); expiry emits `CardExpired`
+   plus a non-punitive Archive entry.
 4. **SSE vs WebSocket** (PR4): Runtime allows either. Proposal: SSE
    (simpler reconnection semantics, no bidirectional need — commands go over
    HTTP POST).
-5. **Immediate reaction representation** (PR2/PR4): authored per option;
-   stored as an `ImmediateReactionRecorded` event referencing the template —
-   confirm it is an event, not derived UI text.
-6. **Consequence delay** (PR2): authored per option (`delayMinutes`);
-   dry-run compression needs a season-level time-scale knob — is a
-   per-season `timeScale` acceptable, or should compressed seasons author
-   shorter delays instead? Proposal: shorter authored delays; no time-scale
-   multiplier inside deterministic logic.
+5. **Immediate reaction representation** — **resolved in PR2**: it is a
+   committed `ImmediateReactionRecorded` event carrying the authored
+   reaction text, not derived UI text.
+6. **Consequence delay** — **resolved in PR2**: authored per option as
+   `consequenceDelayMinutes`; compressed seasons author shorter delays; no
+   time-scale multiplier exists inside deterministic logic.
 7. **AI resident in Phase 1** (PR4): purely authored persona (name, style,
    controller note); it "acts" only through authored card copy. No runtime,
    no autonomy levels yet. Confirm this satisfies the slice's
    "pre-provisioned AI resident" requirement.
-8. **Checksum canonicalization** (PR2): SHA-256 over RFC 8785-style canonical
-   JSON of `DistrictState`. Needs one shared implementation in `contracts`.
+8. **Checksum canonicalization** — **resolved in PR2**: SHA-256 over
+   sorted-key, integer-only canonical JSON; single shared implementation in
+   `contracts` (`canonicalJson` / `computeChecksum`, WebCrypto-based so it
+   runs in Node and browsers).
 9. **Three cards at once vs per-return** (PR4): slice assigns all three
    authored cards on provisioning; per-return re-ranking is post-slice.
 10. **Telemetry** (PR4+): Playable §15.4 event list — implement the ~10 events
