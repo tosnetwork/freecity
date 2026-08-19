@@ -1,5 +1,0 @@
-packages:
-  - apps/*
-  - services/*
-  - workers/*
-  - packages/*
