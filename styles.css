@@ -417,6 +417,55 @@ button { color: inherit; }
 }
 .footerbar div { display: flex; align-items: center; gap: 7px; }
 
+.stage-head-left { min-width: 0; }
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.crumb {
+  border: 0;
+  padding: 2px 4px;
+  background: transparent;
+  color: #55647a;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .18s ease;
+}
+.crumb:hover { color: #cfe8ff; }
+.crumb.dim { color: #38445a; }
+.crumb.active {
+  color: var(--cyan);
+  text-shadow: 0 0 14px rgba(101, 231, 255, .35);
+}
+.crumb-sep { color: #2f3a4d; font-style: normal; font-size: 9px; }
+
+.drill-hint {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  transform: translateX(-50%);
+  z-index: 4;
+  padding: 6px 11px;
+  border-radius: 20px;
+  border: 1px solid rgba(139, 181, 255, .1);
+  background: rgba(8, 13, 22, .6);
+  backdrop-filter: blur(10px);
+  color: #5d6d84;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
 body.mode-MONEY { --cyan: #ffd166; --blue: #ff8a5b; }
 body.mode-SOCIAL { --cyan: #b390ff; --blue: #6e9dff; }
 body.mode-MIND { --cyan: #ff7fd1; --blue: #916dff; }

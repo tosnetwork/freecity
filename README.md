@@ -12,6 +12,63 @@ The core idea is simple:
 
 ---
 
+## Run the demo
+
+This repository contains a running GOD MODE prototype — plain HTML, CSS and Canvas
+2D, no build step and no dependencies.
+
+```bash
+python3 -m http.server 8080
+# then open http://localhost:8080
+```
+
+Opening `index.html` directly from disk also works.
+
+### The zoom ladder
+
+The demo implements the continuous drill-down described in section 1. It is one
+logarithmic zoom axis, not a set of separate screens: each layer is drawn at
+`F^(z - peak)` and cross-fades with its neighbours, so a child scene grows out of
+the point in its parent that you clicked.
+
+```text
+PLANET        TOS shards on a rotating globe, settlement arcs between them
+   ↓
+FREECITY      isometric districts, landmark buildings, street traffic
+   ↓
+TOWER         building cutaway: floors, residents, elevator, floor economics
+   ↓
+AGENT         one agent's intent, wallet, memory, model, trust, capability
+   ↓
+LIVING GRAPH  the causal chain: Intent → Planner → Scout → Tool → Verify →
+              Decision → Wallet → TOS → Exchange → Liquidity
+   ↓
+RUNTIME       edge labels, tool.call, tokens, latency, prompt/context/signature
+```
+
+### Controls
+
+| Input | Effect |
+| --- | --- |
+| Scroll | continuous zoom across the whole ladder |
+| Click a marker | select it, and drill into it when it is drillable |
+| Drag | pan |
+| `Esc` / right-click / `↑` | pull back one layer |
+| `1`–`6` | jump to a layer |
+| Breadcrumb / left rail | jump to a layer |
+| `Space` | pause and resume the simulation |
+| Speed select | `0.5×` – `4×` on simulation time, events, particles and causal chain |
+
+The eight GOD Eyes (`CITY / LIFE / MONEY / SOCIAL / MIND / COMPUTE / TIME /
+CAUSE`) re-project whichever layer is on screen rather than replacing it: MONEY
+lights the TOS value path on the globe, the market district, and floor revenue;
+COMPUTE lights the GPU → model → agent chain; SOCIAL lights relationships.
+
+All figures in the demo are synthetic. It is a prototype of the visual language,
+not a view of live network state.
+
+---
+
 ## 1. Vision
 
 Most multi-agent systems are difficult to understand because their real activity is hidden in logs, queues, traces, databases, wallets, and model calls.
