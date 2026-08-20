@@ -1,0 +1,81 @@
+:root{
+  --fc-cyan:#65e7ff;
+  --fc-green:#70ffb6;
+  --fc-gold:#ffd166;
+  --fc-violet:#b390ff;
+  --fc-pink:#ff7fd1;
+  --fc-red:#ff8b73;
+}
+
+.god-console-launcher{
+  position:absolute;
+  right:18px;
+  bottom:18px;
+  z-index:30;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  border:1px solid rgba(101,231,255,.28);
+  background:rgba(4,9,16,.82);
+  color:#dffbff;
+  border-radius:999px;
+  padding:9px 13px;
+  font:600 11px/1.1 Inter,system-ui,sans-serif;
+  letter-spacing:.08em;
+  cursor:pointer;
+  backdrop-filter:blur(16px);
+  box-shadow:0 12px 40px rgba(0,0,0,.28),0 0 0 1px rgba(101,231,255,.04) inset;
+}
+.god-console-launcher:hover{border-color:rgba(101,231,255,.65);transform:translateY(-1px)}
+.god-console-launcher .pulse-orb{
+  width:8px;height:8px;border-radius:50%;background:var(--fc-cyan);
+  box-shadow:0 0 0 0 rgba(101,231,255,.5);animation:fcPulse 1.8s infinite;
+}
+
+.god-console{
+  position:absolute;
+  right:18px;
+  bottom:62px;
+  z-index:31;
+  width:min(390px,calc(100% - 36px));
+  border:1px solid rgba(101,231,255,.22);
+  border-radius:14px;
+  background:linear-gradient(180deg,rgba(6,12,22,.96),rgba(3,8,15,.95));
+  box-shadow:0 28px 80px rgba(0,0,0,.45),0 0 50px rgba(101,231,255,.06);
+  backdrop-filter:blur(22px);
+  overflow:hidden;
+  opacity:0;
+  transform:translateY(12px) scale(.985);
+  pointer-events:none;
+  transition:.2s ease;
+}
+.god-console.open{opacity:1;transform:none;pointer-events:auto}
+.god-console-head{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-bottom:1px solid rgba(143,182,221,.12)}
+.god-console-head strong{font-size:11px;letter-spacing:.12em;color:#eafbff}
+.god-console-head span{font:500 9px/1 SFMono-Regular,Consolas,monospace;color:#60748d}
+.god-console-close{width:28px;height:28px;border:0;background:transparent;color:#7990aa;cursor:pointer;border-radius:7px}.god-console-close:hover{background:rgba(255,255,255,.05);color:white}
+.god-console-body{padding:12px 14px 14px}
+.god-console-search{display:flex;gap:8px;margin-bottom:12px}
+.god-console-search input{flex:1;min-width:0;border:1px solid rgba(143,182,221,.16);background:rgba(4,10,18,.85);color:#dff6ff;border-radius:8px;padding:9px 10px;font:500 11px/1.2 SFMono-Regular,Consolas,monospace;outline:none}
+.god-console-search input:focus{border-color:rgba(101,231,255,.5);box-shadow:0 0 0 2px rgba(101,231,255,.07)}
+.god-console-search button,.god-action{border:1px solid rgba(143,182,221,.16);background:rgba(10,18,30,.82);color:#b9cadf;border-radius:8px;cursor:pointer}
+.god-console-search button{padding:0 12px;font-size:11px}.god-console-search button:hover,.god-action:hover{color:#ecfbff;border-color:rgba(101,231,255,.38);background:rgba(15,28,44,.92)}
+.god-console-section{margin-top:12px}.god-console-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;font:600 9px/1 SFMono-Regular,Consolas,monospace;letter-spacing:.12em;color:#536a85}.god-console-label b{color:#65e7ff;font-weight:500}
+.god-action-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.god-action{position:relative;text-align:left;padding:10px 10px 9px;min-height:54px}.god-action strong{display:block;color:#d8e9f7;font-size:10px;margin-bottom:4px}.god-action small{display:block;color:#52677f;font:500 8px/1.25 SFMono-Regular,Consolas,monospace}.god-action[data-accent="gold"]::before,.god-action[data-accent="violet"]::before,.god-action[data-accent="green"]::before,.god-action[data-accent="red"]::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:2px;border-radius:3px}.god-action[data-accent="gold"]::before{background:var(--fc-gold)}.god-action[data-accent="violet"]::before{background:var(--fc-violet)}.god-action[data-accent="green"]::before{background:var(--fc-green)}.god-action[data-accent="red"]::before{background:var(--fc-red)}
+
+.mission-strip{position:absolute;left:50%;top:18px;z-index:28;transform:translate(-50%,-12px);opacity:0;pointer-events:none;min-width:360px;max-width:calc(100% - 42px);border:1px solid rgba(101,231,255,.2);border-radius:10px;background:rgba(3,9,16,.82);backdrop-filter:blur(14px);padding:9px 12px;transition:.24s ease}.mission-strip.show{transform:translate(-50%,0);opacity:1}.mission-strip-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.mission-strip strong{font:600 10px/1.1 Inter,system-ui,sans-serif;color:#e9fbff;letter-spacing:.08em}.mission-strip span{font:500 8px/1 SFMono-Regular,Consolas,monospace;color:#65e7ff}.mission-track{height:2px;background:rgba(143,182,221,.12);margin-top:8px;overflow:hidden;border-radius:2px}.mission-progress{height:100%;width:0;background:linear-gradient(90deg,var(--fc-cyan),var(--fc-violet));box-shadow:0 0 12px rgba(101,231,255,.55);transition:width .8s ease}
+
+.god-toast-stack{position:absolute;left:18px;bottom:18px;z-index:35;display:flex;flex-direction:column;gap:7px;pointer-events:none}.god-toast{min-width:260px;max-width:360px;border:1px solid rgba(143,182,221,.15);border-left:2px solid var(--fc-cyan);background:rgba(4,10,18,.9);border-radius:7px;padding:9px 10px;box-shadow:0 12px 30px rgba(0,0,0,.32);backdrop-filter:blur(12px);animation:toastIn .22s ease}.god-toast strong{display:block;font-size:9px;color:#dceefd;margin-bottom:3px;letter-spacing:.06em}.god-toast small{display:block;font:500 8px/1.3 SFMono-Regular,Consolas,monospace;color:#647a92}.god-toast.gold{border-left-color:var(--fc-gold)}.god-toast.violet{border-left-color:var(--fc-violet)}.god-toast.green{border-left-color:var(--fc-green)}.god-toast.red{border-left-color:var(--fc-red)}
+
+.graph-wrap.fc-surge::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(101,231,255,.1),transparent 52%);animation:surgeFlash 1.2s ease-out}
+.graph-wrap.fc-economic::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 72% 48%,rgba(255,209,102,.12),transparent 48%);animation:surgeFlash 1.4s ease-out}
+.graph-wrap.fc-social::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 35% 60%,rgba(179,144,255,.12),transparent 48%);animation:surgeFlash 1.4s ease-out}
+
+.event-row.injected{animation:eventGlow 1.5s ease-out}
+
+@keyframes fcPulse{0%{box-shadow:0 0 0 0 rgba(101,231,255,.45)}70%{box-shadow:0 0 0 8px rgba(101,231,255,0)}100%{box-shadow:0 0 0 0 rgba(101,231,255,0)}}
+@keyframes toastIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+@keyframes surgeFlash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+@keyframes eventGlow{0%{background:rgba(101,231,255,.16)}100%{background:transparent}}
+
+@media (max-width:980px){.god-console{right:10px;bottom:56px}.god-console-launcher{right:10px;bottom:10px}.god-toast-stack{left:10px;bottom:10px}.mission-strip{top:10px;min-width:0;width:calc(100% - 24px)}}
