@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#05070b" />
+  <title>FreeCity — GOD MODE / Living Graph</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="noise"></div>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">F</div>
+        <div>
+          <div class="eyebrow">FREECITY / GOD MODE</div>
+          <div class="title">Living Graph</div>
+        </div>
+      </div>
+
+      <nav class="god-eyes" aria-label="GOD Eyes">
+        <button class="eye-tab active" data-mode="CITY">CITY</button>
+        <button class="eye-tab" data-mode="LIFE">LIFE</button>
+        <button class="eye-tab" data-mode="MONEY">MONEY</button>
+        <button class="eye-tab" data-mode="SOCIAL">SOCIAL</button>
+        <button class="eye-tab" data-mode="MIND">MIND</button>
+        <button class="eye-tab" data-mode="COMPUTE">COMPUTE</button>
+        <button class="eye-tab" data-mode="TIME">TIME</button>
+        <button class="eye-tab" data-mode="CAUSE">CAUSE</button>
+      </nav>
+
+      <div class="top-actions">
+        <div class="status-pill"><span class="dot"></span> LIVE</div>
+        <button id="resetView" class="icon-button" title="Reset view">⌾</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="rail">
+        <button class="rail-item active" data-rail="graph"><span>◫</span><small>Graph</small></button>
+        <button class="rail-item"><span>◎</span><small>World</small></button>
+        <button class="rail-item"><span>⌁</span><small>Agents</small></button>
+        <button class="rail-item"><span>◇</span><small>Events</small></button>
+        <button class="rail-item"><span>▧</span><small>Assets</small></button>
+        <button class="rail-item"><span>⚙</span><small>System</small></button>
+      </aside>
+
+      <section class="stage-card">
+        <div class="stage-header">
+          <div>
+            <div class="eyebrow">SEMANTIC ZOOM / REAL-TIME CAUSALITY</div>
+            <h1 id="modeTitle">CITY — AI civilization runtime</h1>
+          </div>
+          <div class="stage-stats">
+            <div><span id="agentCount">12,483</span><small>ACTIVE AGENTS</small></div>
+            <div><span id="eventRate">1,927/s</span><small>EVENT RATE</small></div>
+            <div><span id="tosRate">48.2K</span><small>TOS / MIN</small></div>
+          </div>
+        </div>
+
+        <div id="graphWrap" class="graph-wrap">
+          <canvas id="graphCanvas"></canvas>
+          <div class="scanline"></div>
+
+          <div class="zoom-hint glass">
+            <span>SCROLL</span>
+            <strong>Semantic zoom</strong>
+            <small id="zoomLabel">CITY / 100%</small>
+          </div>
+
+          <div class="legend glass" id="legend">
+            <div><i class="swatch agent"></i>Agent</div>
+            <div><i class="swatch task"></i>Task</div>
+            <div><i class="swatch tool"></i>Tool</div>
+            <div><i class="swatch chain"></i>TOS</div>
+          </div>
+
+          <div class="selection-card glass" id="selectionCard">
+            <div class="selection-top">
+              <div>
+                <div class="eyebrow">SELECTED ENTITY</div>
+                <h3 id="selectedName">Alice / Agent A-055721</h3>
+              </div>
+              <span class="signal">THINKING</span>
+            </div>
+            <div class="selection-grid">
+              <div><small>ROLE</small><strong id="selectedRole">Market strategist</strong></div>
+              <div><small>WALLET</small><strong id="selectedWallet">18,493 TOS</strong></div>
+              <div><small>LATENCY</small><strong id="selectedLatency">482 ms</strong></div>
+              <div><small>MODEL</small><strong id="selectedModel">Reasoner-32B</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-bar">
+          <button id="playPause" class="play-button">Ⅱ</button>
+          <button id="replay" class="timeline-button">↺</button>
+          <div class="timecode">
+            <span id="clock">2030-05-20 14:35:22</span>
+            <small>SIMULATION TIME</small>
+          </div>
+          <div class="timeline-track"><div id="timelineProgress" class="timeline-progress"></div></div>
+          <label class="speed-control">SPEED
+            <select id="speedSelect">
+              <option value="0.5">0.5×</option>
+              <option value="1" selected>1×</option>
+              <option value="2">2×</option>
+              <option value="4">4×</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <aside class="inspector">
+        <section class="panel">
+          <div class="panel-title"><span>WORLD PULSE</span><b>LIVE</b></div>
+          <div class="metric-grid">
+            <div><small>Population</small><strong>10.73M</strong><em>+0.8%</em></div>
+            <div><small>Autonomous agents</small><strong>2.72M</strong><em>+3.4%</em></div>
+            <div><small>Economic volume</small><strong>15.8B</strong><em>TOS</em></div>
+            <div><small>GPU load</small><strong>72%</strong><em>stable</em></div>
+          </div>
+          <canvas id="sparkCanvas" height="84"></canvas>
+        </section>
+
+        <section class="panel compact">
+          <div class="panel-title"><span>CAUSAL CHAIN</span><b id="chainStatus">RUNNING</b></div>
+          <ol class="causal-list" id="causalList">
+            <li class="done"><span>01</span><div><strong>Intent created</strong><small>Alice / buy-liquidity</small></div></li>
+            <li class="active"><span>02</span><div><strong>Planner decomposes</strong><small>4 subtasks emitted</small></div></li>
+            <li><span>03</span><div><strong>Scouts gather signals</strong><small>web + city + chain</small></div></li>
+            <li><span>04</span><div><strong>Verifier scores evidence</strong><small>confidence threshold</small></div></li>
+            <li><span>05</span><div><strong>TOS settlement</strong><small>signed transaction</small></div></li>
+          </ol>
+        </section>
+
+        <section class="panel event-panel">
+          <div class="panel-title"><span>LIVE EVENT STREAM</span><b id="eventsPerSec">1.9K/s</b></div>
+          <div class="event-stream" id="eventStream"></div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="footerbar">
+      <div><span class="dot cyan"></span> WORLD SHARD 07 / TOKYO</div>
+      <div id="renderStats">NODES 24 · EDGES 32 · PARTICLES 48</div>
+      <div>FREECITY RUNTIME / LOCAL DEMO</div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
