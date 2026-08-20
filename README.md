@@ -69,6 +69,91 @@ not a view of live network state.
 
 ---
 
+## Event Gateway
+
+Nothing in GOD MODE talks to an event source directly. Every source publishes
+the canonical envelope of section 11 into one gateway, and every consumer —
+the Living Graph, the event stream, the causal chain panel, TIME replay,
+CAUSE — reads only from that gateway. Swapping the local simulation for a
+real runtime is a configuration change, not a rewrite.
+
+```text
+sim.civilization ─┐
+sim.scripted     ─┤
+god.console      ─┼─→ gateway.publish() ─→ validate ─→ log + causal index ─→ subscribers
+runtime.ws       ─┤                                                            │
+tos.node         ─┘                                          Living Graph ─────┤
+                                                             Event stream ─────┤
+                                                             CAUSE / TIME ─────┘
+```
+
+| File | Role |
+| --- | --- |
+| `gateway.js` | Envelope validation, ordered log, de-duplication, causal index, replay clock, source registry. No DOM, no domain logic. |
+| `adapters.js` | The five sources. Each one only maps its wire format to the envelope. |
+| `gateway-view.js` | The single consumer that renders the stream, causal chain, scrubber and source badge. |
+
+### Adapter contract
+
+```js
+{
+  id, label, kind,        // kind: synthetic | operator | runtime | chain
+  describe(),             // one line shown in the source badge tooltip
+  start(publish, ctx),    // publish(envelope); ctx.setStatus(status, message)
+  stop()
+}
+```
+
+An adapter maps and nothing else. It renders nothing, holds no state a
+consumer needs, and cannot reach the log. Registering one is the entire cost
+of adding a source:
+
+```js
+FreeCity.gateway.registerSource(myAdapter);
+FreeCity.gateway.startSource('my.adapter');
+```
+
+### Pointing at real sources
+
+The runtime and chain adapters are real clients — a reconnecting WebSocket
+and a JSON-RPC poller. Unconfigured they report `idle` and publish nothing;
+they never fabricate traffic to look busy.
+
+```bash
+# an agent runtime pushing events over a socket
+open "http://localhost:8080/?runtime=ws://localhost:8787/events"
+
+# a TOS node polled for finalized blocks
+open "http://localhost:8080/?tos=https://node.example/rpc&tosMethod=get_block&tosPollMs=4000"
+```
+
+The runtime adapter accepts a ready-made envelope, or the compact
+`{id, ts, type, from, to, run, cause, data}` form a runtime is likely to
+emit. The chain adapter maps a block to one `block.finalized` plus one
+`tx.confirmed` per transaction, each caused by its block. If a node's schema
+does not match, the adapter reports an error rather than inventing events,
+and the mapping is corrected in exactly one function.
+
+### Two clocks
+
+`timestamp` is the source's own world clock. A simulation may sit in 2030
+while a chain node reports today, so timestamps are **not** comparable across
+sources — a mixed log spans years. The gateway therefore stamps every event
+with `meta.ingested_at` on a single clock, and TIME replay scrubs that axis
+while displaying world time. Ordering is the gateway's; meaning stays the
+source's.
+
+### Guarantees
+
+- Malformed events are rejected with a specific reason and counted in
+  `gateway.stats().rejected`, never coerced into the log.
+- Redelivery is idempotent by `event_id`, so a reconnecting source cannot
+  duplicate history.
+- Envelopes are frozen once logged, so replay is deterministic.
+- Causal walks are depth-capped and cycle-guarded.
+
+---
+
 ## 1. Vision
 
 Most multi-agent systems are difficult to understand because their real activity is hidden in logs, queues, traces, databases, wallets, and model calls.

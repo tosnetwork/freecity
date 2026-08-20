@@ -30,12 +30,8 @@
     resetView: document.getElementById('resetView'),
     speed: document.getElementById('speedSelect'),
     clock: document.getElementById('clock'),
-    progress: document.getElementById('timelineProgress'),
-    stream: document.getElementById('eventStream'),
     renderStats: document.getElementById('renderStats'),
     shardLabel: document.getElementById('shardLabel'),
-    causal: [...document.querySelectorAll('#causalList li')],
-    chainStatus: document.getElementById('chainStatus'),
     selectionCard: document.getElementById('selectionCard'),
     selectedName: document.getElementById('selectedName'),
     selectedSignal: document.getElementById('selectedSignal'),
@@ -51,8 +47,7 @@
     statBLabel: document.getElementById('statBLabel'),
     statCLabel: document.getElementById('statCLabel'),
     pulseTitle: document.getElementById('pulseTitle'),
-    pulseGrid: document.getElementById('pulseGrid'),
-    eventsPerSec: document.getElementById('eventsPerSec')
+    pulseGrid: document.getElementById('pulseGrid')
   };
 
   /* ------------------------------ utils ----------------------------- */
@@ -238,7 +233,7 @@
     ['e8', 'Web → Verifier', 'evidence.push', '0.78'],
     ['e9', 'Oracle → Verifier', 'evidence.push', '0.94'],
     ['e10', 'FreeCity → Verifier', 'state.push', '0.91'],
-    ['e13', 'Verifier → Debate', 'counterfactual', '2 branches'],
+    ['e13', 'Verifier → Debate', 'debate.counterfactual', '2 branches'],
     ['e14', 'Debate → Decision', 'policy.score', 'BUY 0.87'],
     ['e16', 'Decision → Wallet', 'action.sign', '2,300 TOS'],
     ['e17', 'Wallet → TOS', 'tx.submit', '0x79…a21'],
@@ -1603,7 +1598,7 @@
     state.targetZ = clamp(z, 0, 5.2);
     state.targetPanX = 0;
     state.targetPanY = 0;
-    if (label) addEvent('GOD MODE', 'zoom.layer', label, true);
+    if (label) publishOperator('god.zoom', label);
   }
 
   function restoreFraming(fromPeak) {
@@ -1854,7 +1849,6 @@
         state.stepTime = 0;
         state.step = (state.step + 1) % sequence.length;
         emitCurrentEvent();
-        updateCausal();
       }
       if (state.eventAccumulator > 0.72) {
         state.eventAccumulator = 0;
@@ -1871,46 +1865,112 @@
 
   /* ------------------------------ events ---------------------------- */
 
+  /* ------------------------- gateway ingress ------------------------ *
+   * This scene renders the graph; it does not own events. Everything it
+   * produces goes out as a canonical envelope and comes back through the
+   * gateway, exactly like a real runtime would.
+   * ------------------------------------------------------------------ */
+
+  const SIM_EPOCH = Date.UTC(2030, 4, 20, 14, 35, 22);
+
+  // Graph node kinds → entity URN kinds.
+  const URN_KIND = {
+    agent: 'agent', task: 'task', system: 'service', tool: 'tool',
+    chain: 'chain', market: 'market', memory: 'memory',
+    compute: 'compute', social: 'agent', decision: 'decision'
+  };
+
+  // Ambient rows are scene atmosphere rather than named world entities, so
+  // their actor string is slugged into an addressable URN per layer.
+  const AMBIENT_KIND = { PLANET: 'shard', CITY: 'district', TOWER: 'building', AGENT: 'agent', GRAPH: 'service' };
+
+  function simNow() {
+    return SIM_EPOCH + state.simSeconds * 1000;
+  }
+
+  function nodeUrn(nodeId) {
+    const node = nodeMap[nodeId];
+    if (!node) return `entity:${nodeId}`;
+    return `${URN_KIND[node.kind] || 'entity'}:${nodeId}`;
+  }
+
+  function slugUrn(kind, label) {
+    const slug = String(label).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return `${kind}:${slug || 'unknown'}`;
+  }
+
+  function feeds() {
+    return window.FreeCity && window.FreeCity.feeds ? window.FreeCity.feeds : null;
+  }
+
+  function publishScripted(raw) {
+    const feed = feeds();
+    return feed ? feed.scripted(raw) : null;
+  }
+
+  /** Operator actions are world events too: recording them means TIME
+   *  replay shows what the observer did, not only what the world did. */
+  function publishOperator(type, detail, target) {
+    const feed = feeds();
+    if (!feed) return null;
+    return feed.console({
+      timestamp: simNow(),
+      type,
+      source: 'operator:god-mode',
+      target: target || null,
+      world: 'freecity',
+      correlation_id: `god_${Math.floor(state.simSeconds)}`,
+      payload: { detail: String(detail) }
+    });
+  }
+
+  let runId = null;
+  let lastScriptedId = null;
+
   function emitCurrentEvent() {
-    const [, actor, event, result] = sequence[state.step];
-    addEvent(actor, event, result, true);
+    const step = sequence[state.step];
+    if (!step) return;
+    const [edgeId, , type, result] = step;
+    const edge = edgeMap[edgeId];
+    if (state.step === 0 || !runId) {
+      runId = `run_${Math.round(simNow()).toString(36)}`;
+      lastScriptedId = null;
+    }
+    const envelope = publishScripted({
+      event_id: `${runId}_${state.step}`,
+      timestamp: simNow(),
+      type,
+      source: edge ? nodeUrn(edge.a) : 'agent:alice',
+      target: edge ? nodeUrn(edge.b) : null,
+      world: 'freecity',
+      causation_id: lastScriptedId,
+      correlation_id: runId,
+      payload: { detail: result, edge: edgeId, step: state.step + 1, of: sequence.length }
+    });
+    if (envelope) lastScriptedId = envelope.event_id;
   }
 
   let ambientIndex = 0;
   function emitAmbientEvent() {
-    const pool = chromeScene().ambient;
+    const scene = chromeScene();
+    const pool = scene.ambient;
     const row = pool[ambientIndex++ % pool.length];
-    addEvent(row[0], row[1], row[2], false);
-  }
-
-  function addEvent(actor, event, result, primary) {
-    const d = new Date(Date.UTC(2030, 4, 20, 14, 35, 22) + state.simSeconds * 1000);
-    const time = d.toISOString().slice(11, 19);
-    const el = document.createElement('div');
-    el.className = 'event-row';
-    el.innerHTML = `<time>${time}</time><strong>${escapeHtml(actor)} · ${escapeHtml(event)}</strong><b>${escapeHtml(result)}</b>`;
-    if (primary) el.style.background = `linear-gradient(90deg, ${hexAlpha(accent(), 0.065)}, transparent)`;
-    ui.stream.prepend(el);
-    while (ui.stream.children.length > 13) ui.stream.lastElementChild.remove();
-  }
-
-  function updateCausal() {
-    const progress = state.step / Math.max(1, sequence.length - 1);
-    const phase = Math.min(4, Math.floor(progress * 5));
-    ui.causal.forEach((li, i) => {
-      li.classList.toggle('done', i < phase);
-      li.classList.toggle('active', i === phase);
+    publishScripted({
+      timestamp: simNow(),
+      type: row[1],
+      source: slugUrn(AMBIENT_KIND[scene.key] || 'entity', row[0]),
+      target: null,
+      world: 'freecity',
+      payload: { detail: row[2], ambient: true, layer: scene.key }
     });
-    ui.chainStatus.textContent = state.running ? 'RUNNING' : 'PAUSED';
   }
 
   function updateClock() {
-    const d = new Date(Date.UTC(2030, 4, 20, 14, 35, 22) + state.simSeconds * 1000);
-    ui.clock.textContent = d.toISOString().replace('T', ' ').slice(0, 19);
-    const pct = ((state.step + Math.min(1, state.stepTime / 1.35)) / sequence.length) * 100;
-    ui.progress.style.width = `${pct}%`;
-    const jitter = Math.sin(state.simSeconds * 0.14);
-    ui.eventsPerSec.textContent = `${(1.9 + jitter * 0.1).toFixed(1)}K/s`;
+    const replay = window.FreeCity && window.FreeCity.gateway
+      ? window.FreeCity.gateway.replay.state()
+      : { active: false };
+    if (replay.active) return;
+    ui.clock.textContent = new Date(simNow()).toISOString().replace('T', ' ').slice(0, 19);
   }
 
   /* ---------------------------- selection --------------------------- */
@@ -2003,7 +2063,7 @@
   ui.playPause.addEventListener('click', togglePlay);
   ui.speed.addEventListener('change', () => {
     state.speed = Number(ui.speed.value) || 1;
-    addEvent('Simulation', 'time.scale', `${state.speed}×`, true);
+    publishOperator('god.time_scale', `${state.speed}×`);
   });
 
   window.addEventListener('resize', resize);
@@ -2020,8 +2080,7 @@
   function togglePlay() {
     state.running = !state.running;
     ui.playPause.textContent = state.running ? 'Ⅱ' : '▶';
-    ui.chainStatus.textContent = state.running ? 'RUNNING' : 'PAUSED';
-    addEvent('Simulation', state.running ? 'runtime.resume' : 'runtime.pause', state.running ? 'LIVE' : 'FROZEN', true);
+    publishOperator(state.running ? 'god.resume' : 'god.pause', state.running ? 'LIVE' : 'FROZEN');
   }
 
   function setMode(mode) {
@@ -2029,7 +2088,7 @@
     document.body.className = `mode-${mode}`;
     ui.tabs.forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
     ui.modeTitle.textContent = modeMeta[mode][0];
-    addEvent('GOD MODE', 'vision.changed', mode, true);
+    publishOperator('god.lens_changed', mode);
   }
 
   function resetView() {
@@ -2046,14 +2105,11 @@
     state.step = 0;
     state.stepTime = 0;
     state.simSeconds = 0;
-    ui.stream.innerHTML = '';
-    const pool = chromeScene().ambient;
-    for (let i = 0; i < 7; i++) {
-      const row = pool[(pool.length - 1 - i % pool.length + pool.length) % pool.length];
-      addEvent(row[0], row[1], row[2], false);
-    }
+    runId = null;
+    lastScriptedId = null;
+    ambientIndex = 0;
+    for (let i = 0; i < 5; i++) emitAmbientEvent();
     emitCurrentEvent();
-    updateCausal();
   }
 
   /* ------------------------------- boot ----------------------------- */

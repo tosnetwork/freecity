@@ -2,7 +2,6 @@
   'use strict';
 
   const wrap = document.getElementById('graphWrap');
-  const stream = document.getElementById('eventStream');
   const modeTabs = [...document.querySelectorAll('.eye-tab')];
   const rail = [...document.querySelectorAll('.rail-item')];
   const selectionCard = document.getElementById('selectionCard');
@@ -12,8 +11,7 @@
   const selectedWallet = document.getElementById('selectedWallet');
   const selectedLatency = document.getElementById('selectedLatency');
   const selectedModel = document.getElementById('selectedModel');
-  const causalItems = [...document.querySelectorAll('#causalList li')];
-  if (!wrap || !stream || !modeTabs.length || !rail.length) return;
+  if (!wrap || !modeTabs.length || !rail.length) return;
 
   const modeButton = mode => modeTabs.find(b => b.dataset.mode === mode);
   const jump = index => rail[index]?.click();
@@ -108,14 +106,45 @@
     return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   }
 
+  // Operator injections are events like any other: they enter through the
+  // gateway, carry causation, and therefore replay under TIME and trace
+  // under CAUSE instead of being decoration painted onto the stream.
+  let injectedCause = null;
+
+  function simClock() {
+    const gw = window.FreeCity?.gateway;
+    const span = gw?.span();
+    return span && span.count ? span.to + 1000 : Date.now();
+  }
+
   function injectEvent(actor, action, detail, tone = '') {
-    const row = document.createElement('div');
-    row.className = 'event-row injected';
-    const time = new Date().toLocaleTimeString([], {hour12:false});
-    row.innerHTML = `<span>${escapeHtml(time)}</span><strong>${escapeHtml(actor)}</strong><em>${escapeHtml(action)}</em><small>${escapeHtml(detail)}</small>`;
-    stream.prepend(row);
-    while (stream.children.length > 14) stream.lastElementChild?.remove();
-    if (tone) row.style.borderLeftColor = tone;
+    const feed = window.FreeCity?.feeds;
+    if (!feed) return null;
+    const type = action.includes('.') ? action : `god.${action}`;
+    const envelope = feed.console({
+      timestamp: simClock(),
+      type,
+      source: `operator:${slug(actor)}`,
+      target: null,
+      world: 'freecity',
+      causation_id: injectedCause,
+      correlation_id: correlationId,
+      payload: { detail, injected: true, color: tone || null }
+    });
+    if (envelope) injectedCause = envelope.event_id;
+    return envelope;
+  }
+
+  function slug(value) {
+    return String(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'god-mode';
+  }
+
+  let correlationId = `god_${Date.now().toString(36)}`;
+
+  /** Start a fresh causal thread so each scenario traces on its own. */
+  function newScenario(name) {
+    correlationId = `${slug(name)}_${Date.now().toString(36)}`;
+    injectedCause = null;
   }
 
   function flash(cls) {
@@ -147,12 +176,6 @@
     selectionCard.animate([{transform:'translateY(2px)',opacity:.82},{transform:'translateY(0)',opacity:1}],{duration:240,easing:'ease-out'});
   }
 
-  function chain(index) {
-    causalItems.forEach((li, i) => {
-      li.classList.toggle('done', i < index);
-      li.classList.toggle('active', i === index);
-    });
-  }
 
   const entityTargets = {
     alice: () => {
@@ -236,7 +259,7 @@
   document.getElementById('autoTour').addEventListener('click', runTour);
 
   document.getElementById('traceSettlement').addEventListener('click', () => {
-    ++tourEpoch;
+    ++tourEpoch; newScenario('trace-settlement');
     toggleConsole(false);
     jump(4); eye('MONEY');
     setSelection('Alice / Settlement trace','TRACE','Action → settlement','18.45 TOS','742 ms','TOS Network');
@@ -247,20 +270,20 @@
       ['TOS','tx.confirmed','finality 742 ms'],
       ['FREEX','liquidity.added','TOS / USDx pool']
     ];
-    seq.forEach((e, i) => setTimeout(() => { injectEvent(...e); chain(Math.min(i,4)); showMission('TRACE SETTLEMENT', i+1, seq.length); }, i * 650));
+    seq.forEach((e, i) => setTimeout(() => { injectEvent(...e); showMission('TRACE SETTLEMENT', i+1, seq.length); }, i * 650));
     setTimeout(() => { hideMission(); toast('Settlement confirmed','Alice → TOS → FreeX · causal chain complete','gold'); }, seq.length * 650 + 300);
     flash('fc-economic');
   });
 
   document.getElementById('followAlice').addEventListener('click', () => {
-    ++tourEpoch; toggleConsole(false); jump(3); eye('MIND');
+    ++tourEpoch; newScenario('follow-alice'); toggleConsole(false); jump(3); eye('MIND');
     setSelection('Alice / Agent A-055721','FOLLOWING','Market strategist','18,493 TOS','482 ms','Reasoner-32B');
     injectEvent('GOD','entity.follow','Alice / persistent focus');
     toast('Follow mode', 'Alice remains the semantic anchor', 'violet');
   });
 
   document.getElementById('computeTrace').addEventListener('click', () => {
-    ++tourEpoch; toggleConsole(false); jump(5); eye('COMPUTE');
+    ++tourEpoch; newScenario('compute-trace'); toggleConsole(false); jump(5); eye('COMPUTE');
     setSelection('Reasoner-32B / Run-8841','EXECUTING','Inference model','12.8K tokens','231 ms','Reasoner-32B');
     injectEvent('GPU-07','inference.started','Reasoner-32B / run-8841');
     setTimeout(() => injectEvent('MODEL','tool.call','web.search / Scout-21'), 500);
@@ -270,6 +293,7 @@
   });
 
   document.getElementById('liquidityShock').addEventListener('click', () => {
+    newScenario('liquidity-shock');
     toggleConsole(false); jump(4); eye('CAUSE'); flash('fc-economic');
     injectEvent('GOD','cause.injected','market.depth -38% / FreeX');
     injectEvent('FREEX','liquidity.alert','spread widened to 2.8%');
@@ -278,6 +302,7 @@
   });
 
   document.getElementById('computeSurge').addEventListener('click', () => {
+    newScenario('compute-surge');
     toggleConsole(false); jump(5); eye('COMPUTE'); flash('fc-surge');
     injectEvent('GOD','cause.injected','GPU demand +64% / shard 07');
     injectEvent('RUNTIME','load.rebalance','H200 pool → 91%');
@@ -286,6 +311,7 @@
   });
 
   document.getElementById('socialCascade').addEventListener('click', () => {
+    newScenario('social-cascade');
     toggleConsole(false); jump(3); eye('SOCIAL'); flash('fc-social');
     injectEvent('GOD','cause.injected','Alice influence seed / 0.92');
     injectEvent('SOCIAL','cascade.propagating','342 related agents');
@@ -294,6 +320,7 @@
   });
 
   document.getElementById('policyIntervention').addEventListener('click', () => {
+    newScenario('policy-intervention');
     toggleConsole(false); jump(1); eye('CAUSE'); flash('fc-economic');
     injectEvent('GOD','policy.proposed','transaction fee floor +12%');
     injectEvent('AUDIT','intervention.recorded','cause-id god-2030-051');

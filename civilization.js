@@ -2,7 +2,6 @@
   'use strict';
 
   const wrap = document.getElementById('graphWrap');
-  const stream = document.getElementById('eventStream');
   const playPause = document.getElementById('playPause');
   const replay = document.getElementById('replay');
   const speedSelect = document.getElementById('speedSelect');
@@ -12,7 +11,6 @@
   const statALabel = document.getElementById('statALabel');
   const statBLabel = document.getElementById('statBLabel');
   const statCLabel = document.getElementById('statCLabel');
-  const eventsPerSec = document.getElementById('eventsPerSec');
   const selectionCard = document.getElementById('selectionCard');
   const selectedName = document.getElementById('selectedName');
   const selectedSignal = document.getElementById('selectedSignal');
@@ -23,7 +21,7 @@
   const modeTabs = [...document.querySelectorAll('.eye-tab')];
   const rail = [...document.querySelectorAll('.rail-item')];
 
-  if (!wrap || !stream) return;
+  if (!wrap) return;
 
   const VERSION = '0.3.0';
   const STEP_MS = 920;
@@ -425,7 +423,6 @@
     if (state.events.length > MAX_EVENTS) state.events.length = MAX_EVENTS;
     state.activeCorrelation = event.correlationId;
     spawnEffect(event);
-    prependEventRow(event);
     renderAll(event);
     window.dispatchEvent(new CustomEvent('freecity:civilization-event', { detail: event }));
   }
@@ -688,17 +685,6 @@
     return `rgba(${number >> 16 & 255},${number >> 8 & 255},${number & 255},${clamp(alpha, 0, 1)})`;
   }
 
-  function prependEventRow(event) {
-    const row = document.createElement('div');
-    row.className = 'event-row civilization-event';
-    row.style.setProperty('--ce-event-color', event.color);
-    row.title = `${entityName(event.source)} → ${entityName(event.target)}\n${event.type}\n${event.detail}`;
-    const time = new Date(event.timestamp).toISOString().slice(11, 19);
-    row.innerHTML = `<time>${time}</time><strong>${escapeHtml(entityName(event.source))} → ${escapeHtml(entityName(event.target))}</strong><b>${escapeHtml(shortType(event.type))}</b>`;
-    row.addEventListener('click', () => focusEvent(event));
-    stream.prepend(row);
-    while (stream.children.length > 18) stream.lastElementChild?.remove();
-  }
 
   function shortType(type) {
     const pieces = type.split('.');
@@ -781,7 +767,6 @@
     if (statBLabel) statBLabel.textContent = 'EVENT RATE';
     if (statC) statC.textContent = formatCompact(metrics.tosPerMinute);
     if (statCLabel) statCLabel.textContent = 'TOS / MIN';
-    if (eventsPerSec) eventsPerSec.textContent = `${formatCompact(metrics.eventRate, 1)}/s`;
   }
 
   function renderRunState() {
