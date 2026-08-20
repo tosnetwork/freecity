@@ -1,0 +1,313 @@
+:root{
+  --ce-cyan:#65e7ff;
+  --ce-green:#70ffb6;
+  --ce-gold:#ffd166;
+  --ce-violet:#b390ff;
+  --ce-pink:#ff7fd1;
+  --ce-red:#ff8b73;
+}
+
+.civilization-overlay{
+  position:absolute;
+  inset:0;
+  z-index:3;
+  width:100%;
+  height:100%;
+  display:block;
+  pointer-events:none;
+  mix-blend-mode:screen;
+}
+
+.civilization-engine{
+  --ce-accent:var(--cyan,var(--ce-cyan));
+  position:absolute;
+  left:14px;
+  top:50px;
+  z-index:8;
+  width:286px;
+  border:1px solid rgba(101,231,255,.22);
+  border:1px solid color-mix(in srgb,var(--ce-accent) 24%,rgba(143,182,221,.14));
+  border-radius:11px;
+  background:linear-gradient(180deg,rgba(6,12,21,.92),rgba(4,9,16,.86));
+  box-shadow:0 22px 68px rgba(0,0,0,.38),0 0 40px color-mix(in srgb,var(--ce-accent) 6%,transparent),inset 0 1px rgba(255,255,255,.025);
+  backdrop-filter:blur(18px);
+  overflow:hidden;
+  transition:width .22s ease,transform .22s ease,opacity .22s ease,border-color .22s ease;
+  user-select:none;
+}
+
+.civilization-engine:hover{
+  border-color:color-mix(in srgb,var(--ce-accent) 42%,rgba(143,182,221,.14));
+}
+
+.civilization-engine.collapsed{width:210px}
+.civilization-engine.collapsed .ce-body,
+.civilization-engine.collapsed .ce-footer{display:none}
+
+.ce-head{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 10px 9px 11px;
+  border-bottom:1px solid rgba(143,182,221,.1);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--ce-accent) 7%,transparent),transparent 62%);
+}
+
+.ce-title{
+  min-width:0;
+  display:grid;
+  grid-template-columns:10px minmax(0,1fr);
+  column-gap:8px;
+  align-items:center;
+}
+
+.ce-title .ce-core{
+  grid-row:1 / span 2;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--ce-accent);
+  box-shadow:0 0 0 0 color-mix(in srgb,var(--ce-accent) 45%,transparent),0 0 13px color-mix(in srgb,var(--ce-accent) 70%,transparent);
+  animation:ceCore 1.9s ease-out infinite;
+}
+
+.ce-title strong{
+  overflow:hidden;
+  color:#e7f7ff;
+  font:700 9px/1.1 Inter,system-ui,sans-serif;
+  letter-spacing:.13em;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+.ce-title small{
+  margin-top:3px;
+  color:#58708a;
+  font:500 7px/1 SFMono-Regular,Consolas,monospace;
+  letter-spacing:.08em;
+}
+
+.ce-head-actions{display:flex;align-items:center;gap:5px}
+.ce-status{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  color:#75eebb;
+  font:700 7px/1 SFMono-Regular,Consolas,monospace;
+  letter-spacing:.08em;
+}
+.ce-status::before{
+  content:"";
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:currentColor;
+  box-shadow:0 0 9px currentColor;
+}
+.ce-status.paused{color:#ffb96b}
+
+.ce-icon{
+  width:24px;
+  height:24px;
+  border:0;
+  border-radius:6px;
+  background:transparent;
+  color:#657a93;
+  cursor:pointer;
+}
+.ce-icon:hover{color:#e8faff;background:rgba(255,255,255,.045)}
+
+.ce-body{padding:10px}
+
+.ce-kpis{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+}
+.ce-kpi{
+  min-width:0;
+  padding:8px 8px 7px;
+  border:1px solid rgba(143,182,221,.08);
+  border-radius:7px;
+  background:rgba(255,255,255,.018);
+}
+.ce-kpi strong{
+  display:block;
+  color:#dcefff;
+  font:650 13px/1 Inter,system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;
+}
+.ce-kpi span{
+  display:block;
+  margin-top:4px;
+  color:#53677f;
+  font:600 7px/1 SFMono-Regular,Consolas,monospace;
+  letter-spacing:.1em;
+}
+.ce-kpi em{
+  float:right;
+  color:#6ee6b3;
+  font-style:normal;
+  font-size:7px;
+}
+
+.ce-section{margin-top:10px}
+.ce-section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:7px;
+  color:#5a7089;
+  font:650 7px/1 SFMono-Regular,Consolas,monospace;
+  letter-spacing:.11em;
+}
+.ce-section-head b{color:var(--ce-accent);font-weight:600}
+
+.ce-district-list{display:grid;gap:6px}
+.ce-district{
+  display:grid;
+  grid-template-columns:73px minmax(0,1fr) 34px;
+  align-items:center;
+  gap:7px;
+}
+.ce-district span{
+  overflow:hidden;
+  color:#7f92a9;
+  font:550 7px/1 SFMono-Regular,Consolas,monospace;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.ce-district-track{
+  height:3px;
+  overflow:hidden;
+  border-radius:3px;
+  background:rgba(143,182,221,.1);
+}
+.ce-district-track i{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--ce-accent) 60%,#5685ff),var(--ce-accent));
+  box-shadow:0 0 9px color-mix(in srgb,var(--ce-accent) 42%,transparent);
+  transition:width .65s ease;
+}
+.ce-district b{
+  color:#596e86;
+  font:600 7px/1 SFMono-Regular,Consolas,monospace;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+.ce-thread{
+  position:relative;
+  min-height:64px;
+  padding:7px 7px 5px 9px;
+  border:1px solid rgba(143,182,221,.08);
+  border-radius:7px;
+  background:rgba(2,7,13,.46);
+}
+.ce-thread::before{
+  content:"";
+  position:absolute;
+  left:14px;
+  top:13px;
+  bottom:13px;
+  width:1px;
+  background:linear-gradient(var(--ce-accent),rgba(143,182,221,.07));
+}
+.ce-thread-row{
+  position:relative;
+  display:grid;
+  grid-template-columns:12px 1fr auto;
+  gap:6px;
+  align-items:center;
+  min-height:17px;
+  color:#63768e;
+  font:500 7px/1.1 SFMono-Regular,Consolas,monospace;
+  cursor:pointer;
+}
+.ce-thread-row:hover{color:#b8d3e7}
+.ce-thread-row i{
+  position:relative;
+  z-index:1;
+  width:5px;
+  height:5px;
+  margin-left:3px;
+  border-radius:50%;
+  background:#3b4b60;
+  box-shadow:0 0 0 2px rgba(4,9,16,.95);
+}
+.ce-thread-row.active i{background:var(--ce-accent);box-shadow:0 0 0 2px rgba(4,9,16,.95),0 0 8px var(--ce-accent)}
+.ce-thread-row strong{
+  overflow:hidden;
+  color:#879bb2;
+  font-weight:550;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.ce-thread-row.active strong{color:#d7effc}
+.ce-thread-row time{color:#465970;font-size:6px}
+
+.ce-footer{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:5px;
+  padding:8px 10px 10px;
+  border-top:1px solid rgba(143,182,221,.08);
+}
+.ce-control{
+  min-height:29px;
+  border:1px solid rgba(143,182,221,.12);
+  border-radius:6px;
+  background:rgba(10,18,29,.72);
+  color:#7388a0;
+  font:650 7px/1 Inter,system-ui,sans-serif;
+  letter-spacing:.07em;
+  cursor:pointer;
+}
+.ce-control:hover,.ce-control.active{
+  color:#e4f8ff;
+  border-color:color-mix(in srgb,var(--ce-accent) 38%,rgba(143,182,221,.12));
+  background:color-mix(in srgb,var(--ce-accent) 8%,rgba(10,18,29,.78));
+}
+.ce-control[data-tone="gold"].active{color:var(--ce-gold);border-color:rgba(255,209,102,.32)}
+
+.ce-birth-flash{
+  animation:ceBirth .75s ease-out;
+}
+
+.event-row.civilization-event{
+  border-left:2px solid var(--ce-event-color,var(--ce-cyan));
+  padding-left:7px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--ce-event-color,var(--ce-cyan)) 8%,transparent),transparent 76%);
+}
+.event-row.civilization-event b{color:var(--ce-event-color,var(--ce-cyan))}
+
+@keyframes ceCore{
+  0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ce-accent) 42%,transparent),0 0 13px color-mix(in srgb,var(--ce-accent) 70%,transparent)}
+  70%{box-shadow:0 0 0 8px transparent,0 0 13px color-mix(in srgb,var(--ce-accent) 45%,transparent)}
+  100%{box-shadow:0 0 0 0 transparent,0 0 13px color-mix(in srgb,var(--ce-accent) 70%,transparent)}
+}
+@keyframes ceBirth{
+  0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ce-accent) 38%,transparent),0 22px 68px rgba(0,0,0,.38)}
+  55%{box-shadow:0 0 0 9px transparent,0 22px 68px rgba(0,0,0,.38),0 0 46px color-mix(in srgb,var(--ce-accent) 13%,transparent)}
+  100%{box-shadow:0 22px 68px rgba(0,0,0,.38),0 0 40px color-mix(in srgb,var(--ce-accent) 6%,transparent)}
+}
+
+@media (max-width:1280px){
+  .civilization-engine{width:252px;top:48px}
+  .ce-body{padding:8px}
+  .ce-district{grid-template-columns:62px minmax(0,1fr) 30px}
+}
+
+@media (max-width:980px){
+  .civilization-engine{left:10px;top:46px;width:242px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .ce-title .ce-core{animation:none}
+  .civilization-engine,.ce-district-track i{transition:none}
+}
